@@ -1,6 +1,7 @@
 {
 	"extends": "/Users/steve/clab-one/oh-my-pi/tsconfig.base.json",
 	"compilerOptions": {
+		"allowImportingTsExtensions": true,
 		"typeRoots": ["/Users/steve/clab-one/oh-my-pi/types", "/Users/steve/clab-one/oh-my-pi/node_modules/@types"],
 		"paths": {
 			"@oh-my-pi/pi-coding-agent": ["/Users/steve/clab-one/oh-my-pi/packages/coding-agent/src/index.ts"],
@@ -9,5 +10,5 @@
 			"*": ["/Users/steve/clab-one/oh-my-pi/node_modules/*", "/Users/steve/clab-one/oh-my-pi/packages/coding-agent/node_modules/*"]
 		}
 	},
-	"files": ["thegram-memory.ts"]
+	"include": ["index.ts", "src/*.ts", "e2e/*.ts"]
 }

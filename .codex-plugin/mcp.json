@@ -1,0 +1,9 @@
+{
+	"mcpServers": {
+		"thegram": {
+			"command": "node",
+			"args": ["dist/thegram-memory.mjs", "mcp"],
+			"cwd": "."
+		}
+	}
+}

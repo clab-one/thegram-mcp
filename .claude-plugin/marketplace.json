@@ -1,0 +1,14 @@
+{
+	"name": "thegram-memory",
+	"owner": {
+		"name": "clab-one"
+	},
+	"description": "clab-one plugins that connect coding agents to Thegram memory.",
+	"plugins": [
+		{
+			"name": "thegram-memory",
+			"source": "./",
+			"description": "Thegram as the durable project memory for coding agents."
+		}
+	]
+}

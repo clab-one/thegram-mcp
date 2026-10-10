@@ -1,0 +1,56 @@
+{
+	"stamp": "20261010t050235",
+	"mode": "dev",
+	"package": {
+		"root": "/Users/steve/thegram/thegram-memory",
+		"head": "c6742365897eb4b17aae7cfd7ece142ca7985a07",
+		"dirty": true
+	},
+	"node": "v24.3.0",
+	"vault": "/Users/steve/gram",
+	"pass": true,
+	"results": [
+		{
+			"agent": "opencode1",
+			"version": "1.18.35",
+			"loaded": {
+				"root": "/Users/steve/thegram/thegram-memory",
+				"hash": "4e9dada32a2a24c1"
+			},
+			"folder": "zz-tgm-e2e-opencode1-20261010t050235",
+			"marker": "dec-cache-ttl-xlr6nu",
+			"read": {
+				"pass": true,
+				"code": 0,
+				"ms": 7229,
+				"answer": "zz-tgm-e2e-opencode1-20261010t050235/memory.gram#dec-cache-ttl-xlr6nu",
+				"stderr": "\u001b[0m\n> build · big-pickle\n\u001b[0m\n"
+			},
+			"write": {
+				"pass": true,
+				"code": 0,
+				"ms": 32328,
+				"commits": [
+					"4918e01e7421b4580da9ecd98a756d044deb8fba Cap retries at 5 attempts",
+					"7f1a7d566678c5030bce6e86541dcce1320f1d0d init"
+				],
+				"revisions": [
+					{
+						"rev": 1,
+						"by": "opencode",
+						"add": [
+							"dec-cap-retries-5 (decision)",
+							"ev-cap-retries-5 (event)"
+						],
+						"set": [
+							"doc"
+						]
+					}
+				],
+				"answer": "Commit hash: `4918e01e7421b4580da9ecd98a756d044deb8fba`\n\nRecorded in Thegram `zz-tgm-e2e-opencode1-20261010t050235/memory.gram` r1: `#dec-cap-retries-5` (retries capped at 5 with exponential backoff) and `#ev-cap-retries-5` (commit `4918e01`, implements the decision).",
+				"stderr": "cisions\"}},{\"op\":\"add\",\"record\":{\"type\":\"event\",\"id\":\"ev-cap-retries-5\",\"fields\":{\"t\":[\"Capped retries at 5 attempts\"],\"d\":[\"Added config/retry.json, docs/retry.md and src/retry.ts capping retries at 5 attempts with exponential backoff.\"],\"at\":[\"2026-10-10T05:02:36.195Z\"],\"ref\":[\"4918e01e7421b4580da9ecd98a756d044deb8fba\"]},\"links\":[[\"implements\",\"dec-cap-retries-5\"]]},\"place\":{\"section\":\"Log\"}}]}\n"
+			},
+			"pass": true
+		}
+	]
+}

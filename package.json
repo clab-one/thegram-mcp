@@ -1,0 +1,26 @@
+{
+	"name": "thegram-memory",
+	"version": "0.2.0",
+	"description": "Thegram as the durable project memory for Claude Code, Codex, opencode and OMP",
+	"private": true,
+	"type": "module",
+	"license": "UNLICENSED",
+	"repository": "github:clab-one/thegram-memory",
+	"engines": {
+		"node": ">=22"
+	},
+	"bin": {
+		"thegram-memory": "dist/thegram-memory.mjs"
+	},
+	"exports": {
+		".": "./src/opencode.ts"
+	},
+	"omp": {
+		"extensions": ["./src/omp.ts"]
+	},
+	"scripts": {
+		"build": "bun build src/cli.ts --target=node --format=esm --outfile=dist/thegram-memory.mjs --banner='#!/usr/bin/env node'",
+		"check": "/Users/steve/clab-one/oh-my-pi/node_modules/.bin/tsgo -p tsconfig.json --noEmit",
+		"e2e": "bun e2e/run.ts"
+	}
+}
