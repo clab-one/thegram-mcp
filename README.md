@@ -97,7 +97,7 @@ For a release, bump `version` in `package.json`, `.claude-plugin/plugin.json`, a
 
 - The official Thegram app release is still blocked (see the `thegram-desktop` README). Without the app, this plugin only displays an informational message.
 - `gram_profile {task: "memory"}` does not define the format for an add operation, so the policy and reminder document the verified format.
-- Thegram rejects unknown field keys with `E_FIELD`.
+- Core-valid extension field keys are stored and flagged with `W_EXTENSION_FIELD`; invalid field-key syntax fails with `E_FIELD`.
 - Semantic recall has no relevance floor: a relevant answer scored as low as 0.671 and an unrelated answer as high as 0.721 in codex memory. A single cutoff cannot separate them, so recall runs only for the first substantive prompt after the brief.
 - Repositories with the same name (`~/a/api`, `~/b/api`) share a vault folder. Separate them with `projects.json` when their memories must not mix.
 - The MCP proxy supports only session-based (legacy) Streamable HTTP. Clients using the 2026-07-28 stateless mode may be rejected by the app.
