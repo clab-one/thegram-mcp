@@ -31,7 +31,7 @@ A plugin that makes Thegram the durable project memory and canonical document st
 
 - The Thegram app on macOS, with agent access set to write.
 - Node 22 or later, with `node` on `PATH`. Hooks and the MCP server run `dist/thegram-memory.mjs` with Node.
-- This repository is private; installation requires Git credentials that can read `clab-one` repositories.
+- This repository is public, so installation needs no Git credentials. The Thegram app's Settings › Agent Connections runs each agent's install command below in Terminal and shows Connected once the agent records the install.
 
 ## Installation
 
