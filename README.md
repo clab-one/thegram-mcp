@@ -71,7 +71,7 @@ node dist/thegram-memory.mjs doctor [dir]
 ## 개발
 
 ```sh
-bun run build   # src → dist/thegram-memory.mjs (커밋한다: marketplace 설치는 빌드하지 않는다)
+bun run bundle  # src → dist/thegram-memory.mjs. dist는 커밋한다. 설치는 빌드하지 않고, `build`·`prepare` 같은 스크립트가 있으면 npm의 git 설치가 저장소 안에서 npm install을 돌리다 opencode에서 실패한다.
 bun run check   # 로컬 oh-my-pi 체크아웃 타입으로 검사
 bun run e2e [claude codex opencode opencode1 omp] [--installed] [--keep]
 ```
