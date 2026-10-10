@@ -1,6 +1,6 @@
 {
 	"name": "thegram-memory",
-	"version": "0.2.4",
+	"version": "0.2.5",
 	"description": "Thegram as the durable project memory: injects the project brief, reminds the agent to record outcomes, and connects the Thegram MCP tools.",
 	"keywords": ["memory", "thegram", "mcp"],
 	"mcpServers": "./.codex-plugin/mcp.json"

@@ -1,64 +1,71 @@
 # thegram-memory
 
-Thegram을 코딩 에이전트의 영구 프로젝트 메모리로 쓰게 하는 플러그인이다. 저장소 하나가 Claude Code, Codex, opencode(v1·v2)와 OMP의 플러그인으로 동작한다. Thegram MCP 연결, 메모리 주입 훅, 기록 정책과 `thegram-memory` 스킬을 함께 설치한다.
+A plugin that makes Thegram the durable project memory and canonical document store for coding agents. One repository supports Claude Code, Codex, opencode v1/v2, and OMP, installing Thegram MCP connectivity, memory/document-policy injection hooks, recording policy, and the `thegram-memory` skill.
 
-## 동작
+## Document rules
 
-| 구성 | 내용 |
+- Keep project memory in `memory.gram` in the mapped vault folder, using its existing five sections.
+- Write project documents as `.gram` by default. Use `.md` only for README files or explicit user requests. Keep `.gram` canonical without duplicate Markdown originals.
+- Choose other document names, folders, and divisions based on the content and existing structure. No fixed profiles or file lists are required. Ordinary document content is not limited by the permanent-fact filter for memory records.
+- Existing session-start/compaction policy-injection hooks and post-edit reminders communicate these defaults and user-requested exceptions. They do not block filesystem writes or classify user intent by keywords. Distinguish platform-read plugin inputs such as `policy.md` and `SKILL.md` from ordinary project documents, and preserve each platform tool's required input format.
+
+## Behavior
+
+| Component | Behavior |
 |---|---|
-| MCP | `thegram` 서버. `dist/thegram-memory.mjs mcp`가 stdio MCP를 Thegram 앱의 unix socket(`~/Library/Application Support/Thegram/mcp.json`의 `socket`)으로 전달한다. |
-| 읽기 주입 | 세션 시작과 압축 직후에 기록 정책과 프로젝트 brief를 넣는다. 첫 실질 프롬프트에는 `gram_recall` 결과를 넣고, 이후 프롬프트에는 다른 작성자의 변경만 넣는다. |
-| 쓰기 리마인더 | 한 턴에서 파일 편집이 3회 이상이거나 git commit이 있고 Thegram 쓰기가 없으면 한 번 알린다. 쓰기는 메인 에이전트가 `gram_patch`로 한다. 서브에이전트에는 리마인더를 넣지 않는다. |
-| 정책 | `policy.md`. 사용자별 규칙은 `~/.config/thegram-memory/policy.md`에 쓰면 모든 에이전트에서 정책 뒤에 붙는다. |
-| 스킬 | `skills/thegram-memory`. 도구 호출 형식, 기록 어휘, 오류 코드, 앱이 그리는 대시보드·Mermaid 규칙과 이력 backfill 절차(`backfill.md`)를 담는다. |
-| 앱이 없을 때 | 안내 한 줄만 넣고 세션은 계속한다. MCP 호출은 JSON-RPC 오류로 답한다. |
+| MCP | The `thegram` server. `dist/thegram-memory.mjs mcp` forwards stdio MCP to the Thegram app's Unix socket (`socket` in `~/Library/Application Support/Thegram/mcp.json`). |
+| Read injection | Injects recording policy and the project brief at session start and after compaction. Adds `gram_recall` results to the first substantive prompt; later prompts receive only changes by other authors. |
+| Write reminder | Reminds once if a turn has at least 3 file edits or a git commit and no Thegram write. The main agent writes with `gram_patch`; subagents do not receive the reminder. |
+| Policy | `policy.md`. Put user-specific rules in `~/.config/thegram-memory/policy.md` to append them after the policy for all agents. |
+| Skill | `skills/thegram-memory` documents tool-call formats, recording vocabulary, error codes, app-rendered dashboard and Mermaid rules, and history backfill (`backfill.md`). |
+| App unavailable | Adds one informational line and continues the session. MCP calls return a JSON-RPC error. |
 
-| 에이전트 | 읽는 경로 |
+| Agent | Loads |
 |---|---|
 | Claude Code | `.claude-plugin/plugin.json`, `hooks/hooks.json`, `.mcp.json`, `skills/` |
-| Codex | `.codex-plugin/plugin.json`, `.codex-plugin/mcp.json`(Codex는 MCP 인자의 `${CLAUDE_PLUGIN_ROOT}`를 풀지 않는다), `hooks/hooks.json`, `skills/`. 훅은 `hooks` 기능과 사용자 trust가 필요하다. |
-| OMP | marketplace 설치는 `package.json#omp.extensions`(`src/omp.ts`)를 로드한다. `claude-plugins`가 비활성화되어도 아래처럼 MCP와 스킬을 직접 설정하면 주입·읽기·쓰기가 동작한다. `skillful: false`에서는 `skill://thegram-memory`를 읽는다. |
-| opencode | `package.json#exports`(`src/opencode.ts`). 기본 export 하나로 v2 `setup()`과 v1 `server()`를 제공하고, MCP와 스킬을 스스로 등록한다. |
+| Codex | `.codex-plugin/plugin.json`, `.codex-plugin/mcp.json` (Codex does not expand `${CLAUDE_PLUGIN_ROOT}` in MCP arguments), `hooks/hooks.json`, `skills/`. Hooks require the `hooks` feature and user trust. |
+| OMP | Marketplace installation loads `package.json#omp.extensions` (`src/omp.ts`). With `claude-plugins` disabled, configure MCP and skills directly as below to enable injection, reading, and writing. With `skillful: false`, the skill is read from `skill://thegram-memory`. |
+| opencode | `package.json#exports` (`src/opencode.ts`). One default export supports v2 `setup()` and v1 `server()` and registers MCP and skills itself. |
 
-## 요구 사항
+## Requirements
 
-- macOS의 Thegram 앱. 에이전트 접근을 쓰기로 둔다.
-- Node 22 이상(`node`가 PATH에 있어야 한다). 훅과 MCP 서버가 `dist/thegram-memory.mjs`를 node로 실행한다.
-- 이 저장소는 private이다. 설치에는 `clab-one` 저장소를 읽을 수 있는 git 인증이 필요하다.
+- The Thegram app on macOS, with agent access set to write.
+- Node 22 or later, with `node` on `PATH`. Hooks and the MCP server run `dist/thegram-memory.mjs` with Node.
+- This repository is private; installation requires Git credentials that can read `clab-one` repositories.
 
-## 설치
+## Installation
 
 ```sh
 # Claude Code
-claude plugin marketplace add clab-one/thegram-memory
+claude plugin marketplace add clab-one/thegram-mcp
 claude plugin install thegram-memory@thegram-memory
 
-# Codex: 설치 뒤 첫 실행에서 "Trust all and continue"로 훅을 승인한다.
+# Codex: approve hooks with "Trust all and continue" on the first run after installation.
 codex features enable hooks
-codex plugin marketplace add clab-one/thegram-memory
+codex plugin marketplace add clab-one/thegram-mcp
 codex plugin add thegram-memory@thegram-memory
 
 # OMP
-omp plugin marketplace add clab-one/thegram-memory
+omp plugin marketplace add clab-one/thegram-mcp
 omp plugin install thegram-memory@thegram-memory
 
 # opencode v2
-opencode plugin add github:clab-one/thegram-memory
+opencode plugin add github:clab-one/thegram-mcp
 ```
 
-opencode v1은 `opencode.json`의 `plugin` 배열에 `github:clab-one/thegram-memory`를 넣는다. 같은 이름의 MCP 서버를 이미 수동으로 등록했다면 지운다. 설치 뒤에는 새 세션을 연다.
+For opencode v1, add `github:clab-one/thegram-mcp` to the `plugin` array in `opencode.json`. Remove any manually registered MCP server with the same name. Start a new session after installation.
 
-OMP에서 `claude-plugins`를 끄고 사용할 때 `~/.omp/agent/mcp.json`에 서버를 등록한다:
+To use OMP with `claude-plugins` disabled, register the server in `~/.omp/agent/mcp.json`:
 
 ```json
 {"mcpServers":{"thegram":{"type":"stdio","command":"/Applications/Thegram.app/Contents/MacOS/thegram-mcp","timeout":120000}}}
 ```
 
-OMP 설정에 `"skills": {"customDirectories": ["~/.omp/plugins/node_modules/thegram-memory/skills"]}`를 추가한다. `skillful: false`이면 `skill://thegram-memory`로 스킬을 읽는다.
+Add `"skills": {"customDirectories": ["~/.omp/plugins/node_modules/thegram-memory/skills"]}` to OMP settings. With `skillful: false`, read the skill from `skill://thegram-memory`.
 
-## 프로젝트 매핑
+## Project mapping
 
-git 저장소는 common dir 기준 저장소 이름과 같은 볼트 폴더에 연결된다. worktree는 원래 저장소의 폴더를 공유한다. 앱은 점으로 시작하는 폴더를 프로젝트 목록에서 숨긴다. 그래서 `.dotfiles` 같은 저장소는 앞의 점을 뗀 `dotfiles` 폴더에 연결된다. 예외는 `~/.config/thegram-memory/projects.json`에 디렉터리 접두사로 적는다. 가장 긴 접두사가 이긴다.
+A Git repository maps to a vault folder named after the repository, based on its common dir. Worktrees share the original repository's folder. The app hides dot-prefixed folders from the project list, so a repository such as `.dotfiles` maps to `dotfiles` (without the leading dot). Add exceptions as directory prefixes in `~/.config/thegram-memory/projects.json`; the longest matching prefix wins.
 
 ```json
 {
@@ -66,33 +73,31 @@ git 저장소는 common dir 기준 저장소 이름과 같은 볼트 폴더에 �
 }
 ```
 
-git 저장소도 아니고 매핑도 없는 디렉터리에서는 아무것도 주입하지 않는다.
+A directory that is neither a Git repository nor explicitly mapped receives no injection.
 
-## 점검
+## Diagnostics and development
 
 ```sh
 node dist/thegram-memory.mjs doctor [dir]
 ```
 
-앱 연결, 볼트, 디렉터리의 프로젝트 폴더, 로컬 설정과 훅 상태 경로를 보여 준다. 앱에 닿지 못하면 종료 코드 1이다.
-
-## 개발
+Shows app connectivity, the vault, the directory's project folder, local settings, and the hook-state path. Exits with code 1 if the app is unreachable.
 
 ```sh
-bun run bundle  # src → dist/thegram-memory.mjs. dist는 커밋한다. 설치는 빌드하지 않고, `build`·`prepare` 같은 스크립트가 있으면 npm의 git 설치가 저장소 안에서 npm install을 돌리다 opencode에서 실패한다.
-bun run check   # 로컬 oh-my-pi 체크아웃 타입으로 검사
+bun run bundle  # src → dist/thegram-memory.mjs. Commit dist. Installation does not build; adding scripts such as `build` or `prepare` makes npm's Git installation run npm install in the repository and fail in opencode.
+bun run check   # Type-check using types from the local oh-my-pi checkout.
 bun run e2e [claude codex opencode opencode1 omp] [--installed] [--keep]
 ```
 
-E2E는 에이전트마다 임시 git 저장소와 같은 이름의 볼트 폴더를 만든다. 결정 하나를 심은 뒤 두 가지를 확인한다. 하나는 도구 없이 주입된 메모리만으로 그 결정 id를 답하는지다. 다른 하나는 Thegram을 언급하지 않은 코딩 작업 뒤 에이전트가 스스로 Thegram에 기록하는지다. 결과는 `e2e/artifacts/*.json`에 남고 임시 폴더는 실패해도 지운다. `--installed`는 `--plugin-dir`·로컬 경로 없이 설치된 플러그인으로 실행한다. Codex는 언제나 플러그인 캐시의 사본을 실행한다. 그래서 dev 실행은 캐시와 작업 트리의 런타임 파일 해시가 다르면 시작하지 않는다. Claude dev 실행은 marketplace 설치본이 있으면 시작하지 않는다. OMP dev 실행은 `src/omp.ts`만 직접 싣고 MCP 서버는 사용자 설정에서 가져온다. 에이전트가 이 저장소의 HEAD나 파일을 바꾸면 하네스는 그 자리에서 멈춘다. Codex 실행은 훅 trust 화면에 답할 수 없어 `--dangerously-bypass-hook-trust`를 쓴다.
+E2E creates a temporary Git repository and same-named vault folder for each agent. It seeds one decision and checks that (1) the agent answers its decision ID using only injected memory, without tools, and (2) after a coding task that does not mention Thegram, the agent records to Thegram on its own. Results are saved in `e2e/artifacts/*.json`; temporary directories are removed even on failure. `--installed` runs the installed plugin without `--plugin-dir` or a local path. Codex always runs a copy from the plugin cache, so dev runs stop if runtime-file hashes differ from the working tree. Claude dev runs stop if a marketplace installation exists. OMP dev runs load only `src/omp.ts` directly and obtain the MCP server from user settings. The harness stops immediately if the agent changes this repository's HEAD or files. Codex runs use `--dangerously-bypass-hook-trust` because the harness cannot answer the hook-trust prompt.
 
-배포할 변경은 `package.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`의 `version`을 함께 올린다. Claude Code는 version이 같으면 새 커밋을 설치하지 않는다. Codex와 OMP도 설치 캐시 경로에 version을 쓴다.
+For a release, bump `version` in `package.json`, `.claude-plugin/plugin.json`, and `.codex-plugin/plugin.json` together. Claude Code does not install a new commit if the version is unchanged. Codex and OMP also use the version in their installation-cache paths.
 
-## 제한
+## Limitations
 
-- Thegram 앱 공식 release는 아직 막혀 있다(`thegram-desktop` README). 앱이 없으면 이 플러그인은 안내만 한다.
-- `gram_profile {task: "memory"}`에는 add 연산 형식이 없다. 그래서 정책과 리마인더에 검증된 형식을 적었다.
-- Thegram은 정해진 필드 키 외에는 `E_FIELD`로 거부한다.
-- 시맨틱 recall에는 관련도 하한이 없다. codex 메모리에서 관련 질문의 정답 유사도는 0.671까지 내려가고 무관한 질문의 최고 유사도는 0.721까지 올라가서 기준값 하나로 가를 수 없었다. 그래서 recall은 brief 뒤 첫 실질 프롬프트에만 한다.
-- 이름이 같은 서로 다른 저장소(`~/a/api`, `~/b/api`)는 같은 볼트 폴더를 쓴다. 섞이면 안 되면 `projects.json`으로 나눈다.
-- MCP 프록시는 세션 기반(legacy) Streamable HTTP만 중계한다. 2026-07-28 stateless 모드를 켠 클라이언트는 앱에서 거부될 수 있다.
+- The official Thegram app release is still blocked (see the `thegram-desktop` README). Without the app, this plugin only displays an informational message.
+- `gram_profile {task: "memory"}` does not define the format for an add operation, so the policy and reminder document the verified format.
+- Thegram rejects unknown field keys with `E_FIELD`.
+- Semantic recall has no relevance floor: a relevant answer scored as low as 0.671 and an unrelated answer as high as 0.721 in codex memory. A single cutoff cannot separate them, so recall runs only for the first substantive prompt after the brief.
+- Repositories with the same name (`~/a/api`, `~/b/api`) share a vault folder. Separate them with `projects.json` when their memories must not mix.
+- The MCP proxy supports only session-based (legacy) Streamable HTTP. Clients using the 2026-07-28 stateless mode may be rejected by the app.

@@ -1,11 +1,17 @@
 ---
 name: thegram-memory
-description: Read and write a project's Thegram memory (~/gram/<project>/*.gram) with the thegram MCP tools. Use it to orient in a project, to record decisions, events, risks and tasks as they happen instead of repository docs, to read past states, and to backfill a memory from git history.
+description: Read and write Thegram project memory and documents. Use .gram by default; .md only for README or explicit user requests. Supports decisions, history and backfill through thegram MCP tools.
 ---
 
 # Thegram project memory
 
-Decisions, status and history are recorded here, not in `docs/` or other md files. The tools are the `thegram` MCP server's `gram_<name>` tools; in OMP, call one by writing its JSON arguments to `xd://mcp__thegram_gram_<name>`. Tool behaviour below is for Thegram 0.5.2, where section lines carry ids, dates and values.
+Thegram holds canonical project memory and documents. The tools are the `thegram` MCP server's `gram_<name>` tools; in OMP, call one by writing its JSON arguments to `xd://mcp__thegram_gram_<name>`. Tool behaviour below is for Thegram 0.5.2, where section lines carry ids, dates and values.
+
+## Documents
+
+- Keep `<project>/memory.gram` with Overview, Architecture, Plan, Decisions and Log. Choose other filenames/folders freely; reuse existing documents.
+- Author project documents as `.gram` in the mapped vault. Use `.md` only for README or explicit user requests; keep `.gram` canonical without duplicate Markdown originals. Platform-required instruction/skill files keep their formats.
+- Documents support ordinary prose, tables and code. The durable-outcome filter applies only to memory records. Read `gram_profile {task: "create"}` or `{task: "rich"}` for authoring; use the rev/hash write protocol below.
 
 ## Session
 
@@ -76,7 +82,7 @@ A new project memory is one `gram_create`. Records in it may link to each other 
 
 ## What the app draws
 
-The desktop app draws a dashboard (대시보드) for every document from its records and history, and Mermaid flowcharts in the body.
+The desktop app draws a dashboard for every document from its records and history, and Mermaid flowcharts in the body.
 
 - A metric's chart is the history of that one record. Keep one `metric` per measured quantity with a stable id, and record each new measurement in one patch: `{"op":"set","entity":"met-<slug>","key":"value","value":"42"}` plus `{"op":"set","entity":"met-<slug>","key":"observed","value":"2026-10-10T09:00:00+09:00"}`. A new record per measurement or per era is a single point and never becomes a chart.
 - `value` is one plain number (`-?digits[.digits]`: no unit, `,`, `~` or `%`); anything else shows as text without a chart. Keep `unit` constant (`percent` shows as `%`); another unit starts a new series. `observed` is when the value was measured, as a full ISO time with a zone; when every point has one, the chart's axis is time.

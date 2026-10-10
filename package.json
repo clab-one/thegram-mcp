@@ -1,11 +1,11 @@
 {
 	"name": "thegram-memory",
-	"version": "0.2.4",
+	"version": "0.2.5",
 	"description": "Thegram as the durable project memory for Claude Code, Codex, opencode and OMP",
 	"private": true,
 	"type": "module",
 	"license": "UNLICENSED",
-	"repository": "github:clab-one/thegram-memory",
+	"repository": "github:clab-one/thegram-mcp",
 	"engines": {
 		"node": ">=22"
 	},

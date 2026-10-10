@@ -1,11 +1,11 @@
 {
 	"name": "thegram-memory",
-	"version": "0.2.4",
+	"version": "0.2.5",
 	"description": "Thegram as the durable project memory: injects the project brief, reminds the agent to record outcomes, and connects the Thegram MCP tools.",
 	"author": {
 		"name": "clab-one"
 	},
-	"repository": "https://github.com/clab-one/thegram-memory",
+	"repository": "https://github.com/clab-one/thegram-mcp",
 	"license": "UNLICENSED",
 	"keywords": ["memory", "thegram", "mcp"]
 }

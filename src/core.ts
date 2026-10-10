@@ -554,7 +554,8 @@ export function observeTool(state: MemoryState, call: ToolObservation): string |
 	const changed = `${turn.mutations} file edit${turn.mutations === 1 ? "" : "s"}${turn.committed ? ", a commit" : ""}`;
 	return (
 		`This turn changed the repository (${changed}) and nothing has been written to Thegram yet. ` +
-		`Before your final answer, record its durable outcomes in ${where}: decisions (x accepted, or set x superseded plus a replaces link), events with at and a commit/PR ref, new risks or tasks (x open), status changes with set x. ` +
+		`Before your final answer, record its durable memory outcomes in ${where}: decisions (x accepted, or set x superseded plus a replaces link), events with at and a commit/PR ref, new risks or tasks (x open), status changes with set x. ` +
+		"Docs: .gram by default; .md only for README or explicit user requests. " +
 		"If nothing qualifies, say in the final answer why no Thegram record was written.\n" +
 		'Add shape: {"op":"add","record":{"type":"decision","id":"dec-<slug>","fields":{"t":["…"],"d":["…"],"x":["accepted"]},"links":[["implements","<id>"]]},"place":{"section":"Decisions"}}; every field value is an array.'
 	);
