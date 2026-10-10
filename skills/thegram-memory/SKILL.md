@@ -7,6 +7,12 @@ description: Read and write Thegram project memory and documents. Use .gram by d
 
 Thegram holds canonical project memory and documents. The tools are the `thegram` MCP server's `gram_<name>` tools; in OMP, call one by writing its JSON arguments to `xd://mcp__thegram_gram_<name>`. Tool behaviour below is for Thegram 0.5.2, where section lines carry ids, dates and values.
 
+
+## Connected mounts
+
+gram_projects lists connected mounts with key, id, kind, display name, document count and effective access. Use the exact key as the first path component for every memory tool, such as @mounts/<id>/proj/memory.gram. The display name is not a path; @mounts is reserved in the local Thegram folder. The key itself as folder selects the entire mount. All tools retain their normal selectors and CAS behavior.
+
+Mounts follow the existing Thegram-folder agent approval and never widen it. Read-only writes fail with E_READ_ONLY. Vault mounts allow writes only to top-level .gram documents; nested writes fail with E_PATH. Reads use the locally synced copy; successful mount writes return sync.state and optional sync.error. Require sync.state == synced for confirmed sync. Semantic recall includes mounted .gram documents.
 ## Documents
 
 - Keep `<project>/memory.gram` with Overview, Architecture, Plan, Decisions and Log. Choose other filenames/folders freely; reuse existing documents.

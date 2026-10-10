@@ -9,6 +9,12 @@ A plugin that makes Thegram the durable project memory and canonical document st
 - Choose other document names, folders, and divisions based on the content and existing structure. No fixed profiles or file lists are required. Ordinary document content is not limited by the permanent-fact filter for memory records.
 - Existing session-start/compaction policy-injection hooks and post-edit reminders communicate these defaults and user-requested exceptions. They do not block filesystem writes or classify user intent by keywords. Distinguish platform-read plugin inputs such as `policy.md` and `SKILL.md` from ordinary project documents, and preserve each platform tool's required input format.
 
+## Connected Drive and vault mounts
+
+gram_projects lists each mount's key, id, kind, display name, document count and effective access. Use the exact key as the first path component for every gram_* tool, for example @mounts/<id>/project/memory.gram. The name is display-only; the reserved @mounts namespace cannot collide with local project names. Use the key itself as folder for the whole mount. The same brief, history, recall, context, CAS and patch semantics apply.
+
+Mounts use the existing Thegram-folder agent approval; it grants no additional access. Read-only writes fail with E_READ_ONLY. Vault mounts allow writes only to top-level .gram documents; nested writes fail with E_PATH. Reads use the latest locally synced mirror. Successful mount writes return sync.state (and sync.error when applicable); check for synced before relying on remote propagation. Semantic recall includes mounted .gram documents.
+
 ## Behavior
 
 | Component | Behavior |
