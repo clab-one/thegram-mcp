@@ -17,7 +17,7 @@ Thegram을 코딩 에이전트의 영구 프로젝트 메모리로 쓰게 하는
 |---|---|
 | Claude Code | `.claude-plugin/plugin.json`, `hooks/hooks.json`, `.mcp.json`, `skills/` |
 | Codex | `.codex-plugin/plugin.json`, `.codex-plugin/mcp.json`(Codex는 MCP 인자의 `${CLAUDE_PLUGIN_ROOT}`를 풀지 않는다), `hooks/hooks.json`, `skills/`. 훅은 `hooks` 기능과 사용자 trust가 필요하다. |
-| OMP | marketplace 설치: `skills/`, `.mcp.json`, `package.json#omp.extensions`(`src/omp.ts`) |
+| OMP | marketplace 설치: `skills/`, `.mcp.json`, `package.json#omp.extensions`(`src/omp.ts`). `skills/`와 `.mcp.json`은 `claude-plugins` provider가 읽는다. 설정의 `disabledProviders`에 `claude-plugins`가 있으면 MCP 서버와 스킬은 로드되지 않고 주입만 동작한다. |
 | opencode | `package.json#exports`(`src/opencode.ts`). 기본 export 하나로 v2 `setup()`과 v1 `server()`를 제공하고, MCP와 스킬을 스스로 등록한다. |
 
 ## 요구 사항
@@ -76,7 +76,9 @@ bun run check   # 로컬 oh-my-pi 체크아웃 타입으로 검사
 bun run e2e [claude codex opencode opencode1 omp] [--installed] [--keep]
 ```
 
-E2E는 에이전트마다 임시 git 저장소와 같은 이름의 볼트 폴더를 만든다. 결정 하나를 심은 뒤 두 가지를 확인한다. 하나는 도구 없이 주입된 메모리만으로 그 결정 id를 답하는지다. 다른 하나는 Thegram을 언급하지 않은 코딩 작업 뒤 에이전트가 스스로 Thegram에 기록하는지다. 결과는 `e2e/artifacts/*.json`에 남고 임시 폴더는 실패해도 지운다. `--installed`는 `--plugin-dir`·로컬 경로 없이 설치된 플러그인으로 실행한다. Codex는 언제나 플러그인 캐시의 사본을 실행한다. 그래서 dev 실행은 캐시와 작업 트리의 런타임 파일 해시가 다르면 시작하지 않는다. Claude dev 실행은 marketplace 설치본이 있으면 시작하지 않는다. 에이전트가 이 저장소의 HEAD나 파일을 바꾸면 하네스는 그 자리에서 멈춘다. Codex 실행은 훅 trust 화면에 답할 수 없어 `--dangerously-bypass-hook-trust`를 쓴다.
+E2E는 에이전트마다 임시 git 저장소와 같은 이름의 볼트 폴더를 만든다. 결정 하나를 심은 뒤 두 가지를 확인한다. 하나는 도구 없이 주입된 메모리만으로 그 결정 id를 답하는지다. 다른 하나는 Thegram을 언급하지 않은 코딩 작업 뒤 에이전트가 스스로 Thegram에 기록하는지다. 결과는 `e2e/artifacts/*.json`에 남고 임시 폴더는 실패해도 지운다. `--installed`는 `--plugin-dir`·로컬 경로 없이 설치된 플러그인으로 실행한다. Codex는 언제나 플러그인 캐시의 사본을 실행한다. 그래서 dev 실행은 캐시와 작업 트리의 런타임 파일 해시가 다르면 시작하지 않는다. Claude dev 실행은 marketplace 설치본이 있으면 시작하지 않는다. OMP dev 실행은 `src/omp.ts`만 직접 싣고 MCP 서버는 사용자 설정에서 가져온다. 에이전트가 이 저장소의 HEAD나 파일을 바꾸면 하네스는 그 자리에서 멈춘다. Codex 실행은 훅 trust 화면에 답할 수 없어 `--dangerously-bypass-hook-trust`를 쓴다.
+
+배포할 변경은 `package.json`, `.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`의 `version`을 함께 올린다. Claude Code는 version이 같으면 새 커밋을 설치하지 않는다. Codex와 OMP도 설치 캐시 경로에 version을 쓴다.
 
 ## 제한
 
