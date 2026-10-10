@@ -53,7 +53,7 @@ Each `gram_patch` or `gram_create` is one revision:
 ## Records
 
 - Types: `project goal requirement assumption decision task blocker risk event artifact evidence metric component system service source history knowledge context person agent run asset`. Any other type is rejected.
-- Fields: t (required, one line), d, x, p (high, medium, low), owner, tag, source, ref, s (scope tag); due on a task, at on an event, value, unit and observed on a metric. Unknown field keys fail with E_FIELD on create and patch; do not invent keys. source must name a source record; otherwise cite with ref.
+- Fields: t (required, one line), d, x, p (high, medium, low), owner, tag, source, ref, s (scope tag); due on a task, at on an event, value, unit and observed on a metric. These are the profile fields; the Core also accepts syntactically valid extension field keys. The app stores those and adds W_EXTENSION_FIELD to the receipt; prefer profile fields unless an extension is intentional. Invalid field-key syntax fails with E_FIELD. source must name a source record; otherwise cite with ref.
 - Predicates: use only `part-of implements depends derives related supports contradicts replaces blocks enables`. An `add` with another predicate succeeds, but `gram_get`, `gram_context` and `gram_relations` never return that link.
 - Status `x` accepts any string, and the brief lists a misspelled status as open. A task or risk without `x` never appears in the brief's open list.
 
