@@ -18,18 +18,22 @@ var SKILLS_DIR = path.join(PACKAGE_ROOT, "skills");
 var TOOL_PROTOCOL_VERSION = "2025-06-18";
 var CALL_TIMEOUT_MS = 3000;
 var RECALL_TIMEOUT_MS = 8000;
+var BRIEF_TIMEOUT_MS = 8000;
+var ORIENT_BUDGET_MS = 15000;
+var MIN_RECALL_WAIT_MS = 2000;
 var MIN_RECALL_CHARS = 15;
 var RECALL_QUERY_CHARS = 400;
 var MAX_OPEN = 15;
-var MAX_RECENT = 5;
 var MAX_HITS = 5;
+var OPEN_TYPES = ["blocker", "risk", "task", "decision", "requirement", "assumption", "goal"];
+var OPEN_FIRST_PASS = 5;
 var MAX_CHANGES = 8;
 var MAX_MEMORY_CHARS = 6000;
 var NUDGE_MUTATIONS = 3;
 var MAX_OWN_REVISIONS = 50;
 var STATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 var LOCK_WAIT_MS = 2000;
-var LOCK_STALE_MS = 1e4;
+var LOCK_STALE_MS = ORIENT_BUDGET_MS + 5000;
 var THEGRAM_WRITE = /thegram.*gram_(?:patch|create)$/;
 var MUTATING_TOOL = /^(?:edit|write|multiedit|notebookedit|apply_patch|patch|ast_edit)$/i;
 var GIT_COMMIT = /\bgit\b(?:\s+-C\s+\S+)?(?:\s+-c\s+\S+)*\s+commit\b/;
@@ -231,30 +235,63 @@ function resetMemoryState(state) {
   Object.assign(state, newMemoryState());
 }
 function renderBrief(name, vault, brief, refs) {
-  const lines = [`Project folder \`${name}\` in the Thegram vault${vault ? ` \`${vault}\`` : ""}.`];
   const docs = rowsOf(brief.docs);
-  if (docs.length > 0) {
-    lines.push("Documents (path · rev · hash · last recorded):");
+  const lines = [`Project folder \`${name}\` in the Thegram vault${vault ? ` \`${vault}\`` : ""}.`];
+  if (docs.length === 1) {
+    const [docPath, , rev, hash, recorded] = docs[0];
+    const newest = rowsOf(brief.recent).find((row) => row[0] === docPath && row[1] === rev);
+    lines[0] += ` · ${docPath} r${rev} · ${hash} · last write ${recorded} by ${String(newest?.[4] ?? "unknown")}`;
+  } else if (docs.length > 1) {
+    lines.push("Documents:");
     for (const [docPath, title, rev, hash, recorded] of docs) {
-      lines.push(`- ${docPath} · r${rev} · ${hash} · ${recorded} — ${clip(title, 80)}`);
+      lines.push("- " + docPath + " · r" + rev + " · " + hash + " · " + recorded + " — " + clip(title, 80));
     }
   }
-  const counts = isJson(brief.counts) ? Object.entries(brief.counts).map(([type, count]) => `${type} ${count}`).join(", ") : "";
+  const counts = isJson(brief.counts) ? Object.entries(brief.counts).map(([type, count]) => type + " " + count).join(", ") : "";
   if (counts)
-    lines.push(`Records: ${counts}.`);
+    lines.push("Records: " + counts + ".");
   const open = rowsOf(brief.open);
-  if (open.length > 0) {
-    lines.push(`Open records (${open.length}${open.length > MAX_OPEN ? `, first ${MAX_OPEN}` : ""}):`);
-    for (const [ref, type, title, status, priority] of open.slice(0, MAX_OPEN)) {
-      refs.push(String(ref));
-      lines.push(`- ${ref} · ${type} · ${status ?? "-"}${priority ? ` · ${priority}` : ""} · ${clip(title, 120)}`);
+  const total = open.length + (typeof brief.open_omitted === "number" ? brief.open_omitted : 0);
+  if (total > 0) {
+    const rank = (row) => {
+      const index = OPEN_TYPES.indexOf(String(row[1]));
+      return index < 0 ? OPEN_TYPES.length : index;
+    };
+    const ordered = [...open].sort((a, b) => rank(a) - rank(b));
+    const shown = new Set;
+    for (const perType of [OPEN_FIRST_PASS, MAX_OPEN]) {
+      const taken = new Map;
+      for (const row of shown)
+        taken.set(String(row[1]), (taken.get(String(row[1])) ?? 0) + 1);
+      for (const row of ordered) {
+        if (shown.size >= MAX_OPEN)
+          break;
+        const type = String(row[1]);
+        if (shown.has(row) || (taken.get(type) ?? 0) >= perType)
+          continue;
+        shown.add(row);
+        taken.set(type, (taken.get(type) ?? 0) + 1);
+      }
     }
-  }
-  const recent = rowsOf(brief.recent);
-  if (recent.length > 0) {
-    lines.push("Recent revisions:");
-    for (const [docPath, rev, recorded, effective, by, delta] of recent.slice(0, MAX_RECENT)) {
-      lines.push(`- ${docPath} r${rev} · ${recorded}${effective ? ` (effective ${effective})` : ""} · ${by} · ${delta}`);
+    lines.push(`Open records (${shown.size} of ${total}):`);
+    for (const row of ordered) {
+      if (!shown.has(row))
+        continue;
+      const [ref, type, title, status, priority] = row;
+      const fullRef = String(ref);
+      refs.push(fullRef);
+      const displayRef = docs.length === 1 ? fullRef.slice(fullRef.lastIndexOf("#") + 1) : fullRef;
+      lines.push(`- ${displayRef} · ${type} · ${status ?? "-"}${priority ? ` · ${priority}` : ""} · ${clip(title, 120)}`);
+    }
+    if (total > shown.size) {
+      const omitted = new Map;
+      for (const row of ordered)
+        if (!shown.has(row))
+          omitted.set(String(row[1]), (omitted.get(String(row[1])) ?? 0) + 1);
+      const parts = [...omitted].map(([type, count]) => `${type} ${count}`);
+      if (total > open.length)
+        parts.push(`${total - open.length} trimmed by the app`);
+      lines.push(`Not shown: ${parts.join(", ")} — list with gram_list {path, select: {type, status}}.`);
     }
   }
   return lines.join(`
@@ -297,8 +334,10 @@ async function orient(state, cwd, prompt) {
   const name = state.folder;
   if (!name)
     return;
+  const deadline = Date.now() + ORIENT_BUDGET_MS;
+  const left = (cap) => Math.max(0, Math.min(cap, deadline - Date.now()));
   try {
-    const projects = await callTool("gram_projects", {});
+    const projects = await callTool("gram_projects", {}, left(CALL_TIMEOUT_MS));
     state.vault = str(projects.vault);
     state.available = true;
     state.unavailableNoticed = false;
@@ -323,7 +362,7 @@ async function orient(state, cwd, prompt) {
     const sections = [];
     let policy;
     if (state.needBrief || !state.next) {
-      const brief = await callTool("gram_brief", { folder: name });
+      const brief = await callTool("gram_brief", { folder: name }, left(BRIEF_TIMEOUT_MS));
       state.next = str(brief.next);
       state.needBrief = false;
       state.pendingRecall = true;
@@ -331,7 +370,7 @@ async function orient(state, cwd, prompt) {
       policy = await loadPolicy();
       sections.push(renderBrief(name, state.vault, brief, state.briefRefs));
     } else {
-      const delta = await callTool("gram_changes", { folder: name, since: state.next });
+      const delta = await callTool("gram_changes", { folder: name, since: state.next }, left(BRIEF_TIMEOUT_MS));
       state.next = str(delta.next) ?? state.next;
       const rendered = renderChanges(listOf(delta.changes), state.ownRevisions);
       if (rendered)
@@ -339,9 +378,9 @@ async function orient(state, cwd, prompt) {
     }
     let recalled = false;
     const query = prompt?.trim() ?? "";
-    if (state.pendingRecall && query.length >= MIN_RECALL_CHARS) {
+    if (state.pendingRecall && query.length >= MIN_RECALL_CHARS && left(RECALL_TIMEOUT_MS) >= MIN_RECALL_WAIT_MS) {
       state.pendingRecall = false;
-      const recall = await callTool("gram_recall", { query: query.slice(0, RECALL_QUERY_CHARS), folder: name, top_k: MAX_HITS * 2 }, RECALL_TIMEOUT_MS).catch(() => {
+      const recall = await callTool("gram_recall", { query: query.slice(0, RECALL_QUERY_CHARS), folder: name, top_k: MAX_HITS * 2 }, left(RECALL_TIMEOUT_MS)).catch(() => {
         return;
       });
       const rendered = recall && renderHits(rowsOf(recall.hits), state.briefRefs);

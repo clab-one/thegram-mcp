@@ -5,7 +5,7 @@ description: Read and write a project's Thegram memory (~/gram/<project>/*.gram)
 
 # Thegram project memory
 
-Decisions, status and history are recorded here, not in `docs/` or other md files. The tools are the `thegram` MCP server's `gram_<name>` tools; in OMP, call one by writing its JSON arguments to `xd://mcp__thegram_gram_<name>`. Tool behaviour below was observed on Thegram 0.4.0.
+Decisions, status and history are recorded here, not in `docs/` or other md files. The tools are the `thegram` MCP server's `gram_<name>` tools; in OMP, call one by writing its JSON arguments to `xd://mcp__thegram_gram_<name>`. Tool behaviour below is for Thegram 0.5.2, where section lines carry ids, dates and values.
 
 ## Session
 
@@ -15,10 +15,11 @@ Decisions, status and history are recorded here, not in `docs/` or other md file
 
 ## Read
 
-- Orient: `gram_brief {folder}` returns each document's `rev` and `hash`, counts by type, open work, recent revisions and `next`. Later, `gram_changes {folder, since: <next>}` lists only what changed.
-- Find: `gram_recall {query, folder}` returns hits as `path#id`; read the ones you need with `gram_context {ids: [{path, entity}]}`. `gram_read {path}` gives the outline; `gram_read {path, section}` gives one heading with its records.
-- When and why: `gram_range {path, query}` returns only the revisions that changed matching records.
-- The past: `gram_read`, `gram_get` and `gram_list` take `revision` or `recorded_at`; `gram_state` takes them in `selector`, `gram_context` in each `ids[]` item. All of them ignore `effective_at` without an error and return the current state, and `gram_list` with `select` also ignores `revision`. To read by event date, find the revision first: `gram_range {path, start: 0}` lists every revision with its `effective_at` (pass `more` back as `start`).
+- Orient: `gram_brief {folder}` returns each document's `rev`/`hash`, counts, open work and `next`; `gram_changes {folder, since}` lists later changes.
+- Find: `gram_recall {query, folder}` returns `path#id` hits; read selected records with `gram_context {ids, fields: [...]}`. `gram_read {path}` gives the outline; `{path, section}` gives one section. Lines are ``**title** · type `id`[ · x][ · p][ · at][ · due date][ · value unit @ observed][ · replaces ids]``; type/x/p are raw, `d` follows next, and there is no `records` array.
+- Cheapest read: explore with recall summaries, then read the records you act on with `gram_context` and only the `fields` you need; use `gram_read {path, section}` when a whole section is needed. `keyword` requires every query word inside one record, so prefer `auto` or `hybrid`. Semantic hits have no relevance floor: judge them by their summaries.
+- When and why: `gram_range {path, query}` returns revisions that changed matching records.
+- Past reads: `effective_at` (or `revision`, `recorded_at`) works on `gram_read`, `gram_get` and `gram_list {path: <.gram>}` as arguments, on `gram_state` inside `selector` and on `gram_context` inside each `ids[]` item. `gram_list` with `select` ignores `revision` and `effective_at`. `gram_range {path, start: 0}` lists revisions with their `effective_at` (pass `more` as `start`).
 
 ## Write
 

@@ -14,18 +14,23 @@ const TOOL_PROTOCOL_VERSION = "2025-06-18";
 const CALL_TIMEOUT_MS = 3_000;
 // The app unloads its embedding model when idle, so the first recall after a pause loads it again.
 const RECALL_TIMEOUT_MS = 8_000;
+const BRIEF_TIMEOUT_MS = 8_000;
+// Claude Code and Codex kill a prompt hook after 20 s; the whole orientation stays under this.
+const ORIENT_BUDGET_MS = 15_000;
+const MIN_RECALL_WAIT_MS = 2_000;
 const MIN_RECALL_CHARS = 15;
 const RECALL_QUERY_CHARS = 400;
 const MAX_OPEN = 15;
-const MAX_RECENT = 5;
 const MAX_HITS = 5;
+const OPEN_TYPES = ["blocker", "risk", "task", "decision", "requirement", "assumption", "goal"] as const;
+const OPEN_FIRST_PASS = 5;
 const MAX_CHANGES = 8;
 const MAX_MEMORY_CHARS = 6_000;
 const NUDGE_MUTATIONS = 3;
 const MAX_OWN_REVISIONS = 50;
 const STATE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const LOCK_WAIT_MS = 2_000;
-const LOCK_STALE_MS = 10_000;
+const LOCK_STALE_MS = ORIENT_BUDGET_MS + 5_000;
 
 const THEGRAM_WRITE = /thegram.*gram_(?:patch|create)$/;
 const MUTATING_TOOL = /^(?:edit|write|multiedit|notebookedit|apply_patch|patch|ast_edit)$/i;
@@ -304,33 +309,57 @@ export interface Orientation {
 }
 
 function renderBrief(name: string, vault: string | undefined, brief: Json, refs: string[]): string {
-	const lines = [`Project folder \`${name}\` in the Thegram vault${vault ? ` \`${vault}\`` : ""}.`];
 	const docs = rowsOf(brief.docs);
-	if (docs.length > 0) {
-		lines.push("Documents (path · rev · hash · last recorded):");
+	const lines = [`Project folder \`${name}\` in the Thegram vault${vault ? ` \`${vault}\`` : ""}.`];
+	if (docs.length === 1) {
+		const [docPath, , rev, hash, recorded] = docs[0];
+		const newest = rowsOf(brief.recent).find(row => row[0] === docPath && row[1] === rev);
+		lines[0] += ` · ${docPath} r${rev} · ${hash} · last write ${recorded} by ${String(newest?.[4] ?? "unknown")}`;
+	} else if (docs.length > 1) {
+		lines.push("Documents:");
 		for (const [docPath, title, rev, hash, recorded] of docs) {
-			lines.push(`- ${docPath} · r${rev} · ${hash} · ${recorded} — ${clip(title, 80)}`);
+			lines.push("- " + docPath + " · r" + rev + " · " + hash + " · " + recorded + " — " + clip(title, 80));
 		}
 	}
-	const counts = isJson(brief.counts)
-		? Object.entries(brief.counts)
-				.map(([type, count]) => `${type} ${count}`)
-				.join(", ")
-		: "";
-	if (counts) lines.push(`Records: ${counts}.`);
+	const counts = isJson(brief.counts) ? Object.entries(brief.counts).map(([type, count]) => type + " " + count).join(", ") : "";
+	if (counts) lines.push("Records: " + counts + ".");
 	const open = rowsOf(brief.open);
-	if (open.length > 0) {
-		lines.push(`Open records (${open.length}${open.length > MAX_OPEN ? `, first ${MAX_OPEN}` : ""}):`);
-		for (const [ref, type, title, status, priority] of open.slice(0, MAX_OPEN)) {
-			refs.push(String(ref));
-			lines.push(`- ${ref} · ${type} · ${status ?? "-"}${priority ? ` · ${priority}` : ""} · ${clip(title, 120)}`);
+	const total = open.length + (typeof brief.open_omitted === "number" ? brief.open_omitted : 0);
+	if (total > 0) {
+		const rank = (row: Row): number => {
+			const index = OPEN_TYPES.indexOf(String(row[1]) as (typeof OPEN_TYPES)[number]);
+			return index < 0 ? OPEN_TYPES.length : index;
+		};
+		// Rows keep the app's priority order within a type; the stable sort only regroups the types.
+		const ordered = [...open].sort((a, b) => rank(a) - rank(b));
+		const shown = new Set<Row>();
+		// A first pass caps each type so one long list cannot hide every risk or open decision.
+		for (const perType of [OPEN_FIRST_PASS, MAX_OPEN]) {
+			const taken = new Map<string, number>();
+			for (const row of shown) taken.set(String(row[1]), (taken.get(String(row[1])) ?? 0) + 1);
+			for (const row of ordered) {
+				if (shown.size >= MAX_OPEN) break;
+				const type = String(row[1]);
+				if (shown.has(row) || (taken.get(type) ?? 0) >= perType) continue;
+				shown.add(row);
+				taken.set(type, (taken.get(type) ?? 0) + 1);
+			}
 		}
-	}
-	const recent = rowsOf(brief.recent);
-	if (recent.length > 0) {
-		lines.push("Recent revisions:");
-		for (const [docPath, rev, recorded, effective, by, delta] of recent.slice(0, MAX_RECENT)) {
-			lines.push(`- ${docPath} r${rev} · ${recorded}${effective ? ` (effective ${effective})` : ""} · ${by} · ${delta}`);
+		lines.push(`Open records (${shown.size} of ${total}):`);
+		for (const row of ordered) {
+			if (!shown.has(row)) continue;
+			const [ref, type, title, status, priority] = row;
+			const fullRef = String(ref);
+			refs.push(fullRef);
+			const displayRef = docs.length === 1 ? fullRef.slice(fullRef.lastIndexOf("#") + 1) : fullRef;
+			lines.push(`- ${displayRef} · ${type} · ${status ?? "-"}${priority ? ` · ${priority}` : ""} · ${clip(title, 120)}`);
+		}
+		if (total > shown.size) {
+			const omitted = new Map<string, number>();
+			for (const row of ordered) if (!shown.has(row)) omitted.set(String(row[1]), (omitted.get(String(row[1])) ?? 0) + 1);
+			const parts = [...omitted].map(([type, count]) => `${type} ${count}`);
+			if (total > open.length) parts.push(`${total - open.length} trimmed by the app`);
+			lines.push(`Not shown: ${parts.join(", ")} — list with gram_list {path, select: {type, status}}.`);
 		}
 	}
 	return lines.join("\n");
@@ -369,8 +398,10 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 	if (state.folder === undefined) state.folder = await resolveProject(cwd);
 	const name = state.folder;
 	if (!name) return;
+	const deadline = Date.now() + ORIENT_BUDGET_MS;
+	const left = (cap: number): number => Math.max(0, Math.min(cap, deadline - Date.now()));
 	try {
-		const projects = await callTool("gram_projects", {});
+		const projects = await callTool("gram_projects", {}, left(CALL_TIMEOUT_MS));
 		state.vault = str(projects.vault);
 		state.available = true;
 		state.unavailableNoticed = false;
@@ -393,7 +424,7 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 		const sections: string[] = [];
 		let policy: string | undefined;
 		if (state.needBrief || !state.next) {
-			const brief = await callTool("gram_brief", { folder: name });
+			const brief = await callTool("gram_brief", { folder: name }, left(BRIEF_TIMEOUT_MS));
 			state.next = str(brief.next);
 			state.needBrief = false;
 			state.pendingRecall = true;
@@ -401,21 +432,21 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 			policy = await loadPolicy();
 			sections.push(renderBrief(name, state.vault, brief, state.briefRefs));
 		} else {
-			const delta = await callTool("gram_changes", { folder: name, since: state.next });
+			const delta = await callTool("gram_changes", { folder: name, since: state.next }, left(BRIEF_TIMEOUT_MS));
 			state.next = str(delta.next) ?? state.next;
 			const rendered = renderChanges(listOf(delta.changes), state.ownRevisions);
 			if (rendered) sections.push(rendered);
 		}
 		let recalled = false;
 		const query = prompt?.trim() ?? "";
-		// Semantic recall has no relevance cutoff, so it runs once per brief instead of on every prompt.
-		if (state.pendingRecall && query.length >= MIN_RECALL_CHARS) {
+		// Semantic recall has no relevance floor, so it runs once per brief instead of on every prompt.
+		if (state.pendingRecall && query.length >= MIN_RECALL_CHARS && left(RECALL_TIMEOUT_MS) >= MIN_RECALL_WAIT_MS) {
 			state.pendingRecall = false;
 			// A failed recall drops only the recalled hits; the brief or the changes still go out.
 			const recall = await callTool(
 				"gram_recall",
 				{ query: query.slice(0, RECALL_QUERY_CHARS), folder: name, top_k: MAX_HITS * 2 },
-				RECALL_TIMEOUT_MS,
+				left(RECALL_TIMEOUT_MS),
 			).catch(() => undefined);
 			const rendered = recall && renderHits(rowsOf(recall.hits), state.briefRefs);
 			if (rendered) {

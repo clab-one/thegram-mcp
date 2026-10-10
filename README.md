@@ -17,7 +17,7 @@ Thegram을 코딩 에이전트의 영구 프로젝트 메모리로 쓰게 하는
 |---|---|
 | Claude Code | `.claude-plugin/plugin.json`, `hooks/hooks.json`, `.mcp.json`, `skills/` |
 | Codex | `.codex-plugin/plugin.json`, `.codex-plugin/mcp.json`(Codex는 MCP 인자의 `${CLAUDE_PLUGIN_ROOT}`를 풀지 않는다), `hooks/hooks.json`, `skills/`. 훅은 `hooks` 기능과 사용자 trust가 필요하다. |
-| OMP | marketplace 설치: `skills/`, `.mcp.json`, `package.json#omp.extensions`(`src/omp.ts`). `skills/`와 `.mcp.json`은 `claude-plugins` provider가 읽는다. 설정의 `disabledProviders`에 `claude-plugins`가 있으면 MCP 서버와 스킬은 로드되지 않고 주입만 동작한다. |
+| OMP | marketplace 설치는 `package.json#omp.extensions`(`src/omp.ts`)를 로드한다. `claude-plugins`가 비활성화되어도 아래처럼 MCP와 스킬을 직접 설정하면 주입·읽기·쓰기가 동작한다. `skillful: false`에서는 `skill://thegram-memory`를 읽는다. |
 | opencode | `package.json#exports`(`src/opencode.ts`). 기본 export 하나로 v2 `setup()`과 v1 `server()`를 제공하고, MCP와 스킬을 스스로 등록한다. |
 
 ## 요구 사항
@@ -47,6 +47,14 @@ opencode plugin add github:clab-one/thegram-memory
 ```
 
 opencode v1은 `opencode.json`의 `plugin` 배열에 `github:clab-one/thegram-memory`를 넣는다. 같은 이름의 MCP 서버를 이미 수동으로 등록했다면 지운다. 설치 뒤에는 새 세션을 연다.
+
+OMP에서 `claude-plugins`를 끄고 사용할 때 `~/.omp/agent/mcp.json`에 서버를 등록한다:
+
+```json
+{"mcpServers":{"thegram":{"type":"stdio","command":"/Applications/Thegram.app/Contents/MacOS/thegram-mcp","timeout":120000}}}
+```
+
+OMP 설정에 `"skills": {"customDirectories": ["~/.omp/plugins/node_modules/thegram-memory/skills"]}`를 추가한다. `skillful: false`이면 `skill://thegram-memory`로 스킬을 읽는다.
 
 ## 프로젝트 매핑
 
@@ -85,6 +93,6 @@ E2E는 에이전트마다 임시 git 저장소와 같은 이름의 볼트 폴더
 - Thegram 앱 공식 release는 아직 막혀 있다(`thegram-desktop` README). 앱이 없으면 이 플러그인은 안내만 한다.
 - `gram_profile {task: "memory"}`에는 add 연산 형식이 없다. 그래서 정책과 리마인더에 검증된 형식을 적었다.
 - Thegram은 정해진 필드 키 외에는 `E_FIELD`로 거부한다.
-- 시맨틱 recall에는 관련도 하한이 없다. 그래서 recall은 brief 뒤 첫 실질 프롬프트에만 한다.
+- 시맨틱 recall에는 관련도 하한이 없다. codex 메모리에서 관련 질문의 정답 유사도는 0.671까지 내려가고 무관한 질문의 최고 유사도는 0.721까지 올라가서 기준값 하나로 가를 수 없었다. 그래서 recall은 brief 뒤 첫 실질 프롬프트에만 한다.
 - 이름이 같은 서로 다른 저장소(`~/a/api`, `~/b/api`)는 같은 볼트 폴더를 쓴다. 섞이면 안 되면 `projects.json`으로 나눈다.
 - MCP 프록시는 세션 기반(legacy) Streamable HTTP만 중계한다. 2026-07-28 stateless 모드를 켠 클라이언트는 앱에서 거부될 수 있다.
