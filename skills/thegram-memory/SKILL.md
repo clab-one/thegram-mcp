@@ -23,9 +23,9 @@ Thegram holds canonical project memory and documents. The tools are the `thegram
 
 - Orient: `gram_brief {folder}` returns each document's `rev`/`hash`, counts, open work and `next`; `gram_changes {folder, since}` lists later changes.
 - Find: `gram_recall {query, folder}` returns `path#id` hits; read selected records with `gram_context {ids, fields: [...]}`. `gram_relations {from}` lists links both ways. A decision has no date field: `gram_read` lines and `implemented` in `gram_context`/`gram_get` give the date of the earliest event that `implements` it, and a decision no event implements has no date. `gram_read {path}` gives the outline; `{path, section}` gives one section. Lines are ``**title** · type `id`[ · x][ · p][ · at][ · due date][ · value unit @ observed][ · replaces ids]``; type/x/p are raw, `d` follows next, and there is no `records` array.
-- Cheapest read: explore with recall summaries, then read the records you act on with `gram_context` and only the `fields` you need; use `gram_read {path, section}` when a whole section is needed. `keyword` requires every query word inside one record, so prefer `auto` or `hybrid`. Semantic hits have no relevance floor: judge them by their summaries.
+- Cheapest read: use inclusive from/to date filters or a date/month/year query token for date questions; ids stay short slugs and dates in event titles are optional, never a workaround. Defaults: event at, metric observed, task due, otherwise at; date names another field. Recall scope means exact s-tag membership (not section/type); use type to filter record type. Semantic hits have no relevance floor; inspect summaries and prefer hybrid/keyword when loose. If hits do not answer, try once more with another mode, a reworded query or a date filter before concluding nothing is recorded.
 - When and why: `gram_range {path, query}` returns revisions that changed matching records.
-- Past reads: `effective_at` (or `revision`, `recorded_at`) works on `gram_read`, `gram_get` and `gram_list {path: <.gram>}` as arguments, on `gram_state` inside `selector` and on `gram_context` inside each `ids[]` item. `gram_list` with `select` ignores `revision` and `effective_at`. `gram_range {path, start: 0}` lists revisions with their `effective_at` (pass `more` as `start`).
+- Past reads: `effective_at` (or `revision`, `recorded_at`) works on `gram_read`, `gram_get` and `gram_list {path: <.gram>}` as arguments, on `gram_state` inside `selector` and on `gram_context` inside each `ids[]` item. `gram_list` with `select` ignores `revision` and `effective_at`; use date filters on `select` for current records. `gram_range {path, start: 0}` lists revisions with their `effective_at` (pass `more` as `start`).
 
 ## Write
 
@@ -35,7 +35,7 @@ Each `gram_patch` or `gram_create` is one revision:
 {"path": "<project>/memory.gram", "base_revision": 7, "expected_hash": "<16 hex>", "request_id": "<stable-slug>", "operations": []}
 ```
 
-`base_revision` and `expected_hash` come from `gram_brief`, or from the `doc` of the write you just made. Give `effective_at` only for a past fact, as a full ISO time with a zone (`2025-01-02T03:04:05Z`, `2025-01-02T12:04:05+09:00`).
+`base_revision` and `expected_hash` come from `gram_brief`, or from the `doc` of the write you just made. Give `effective_at` only for a past fact, as a full ISO time with a zone (`2025-01-02T03:04:05Z`, `2025-01-02T12:04:05+09:00`). The app retries transient writer-lock `E_BUSY` responses with bounded backoff; agents normally do not need to retry.
 
 | op | shape |
 |---|---|
@@ -52,8 +52,8 @@ Each `gram_patch` or `gram_create` is one revision:
 
 ## Records
 
-- Types: `project goal requirement assumption decision task blocker risk event artifact evidence metric component system service source history knowledge context person agent run asset`. Any other type fails with a misleading `E_DUPLICATE_FIELD`.
-- Fields: `t` (required, one line), `d`, `x`, `p` (`high`, `medium`, `low`), `owner`, `tag`, `source`, `ref`; `due` on a task, `at` on an event, `value`, `unit` and `observed` on a metric. `source` must name a `source` record; otherwise cite with `ref`.
+- Types: `project goal requirement assumption decision task blocker risk event artifact evidence metric component system service source history knowledge context person agent run asset`. Any other type is rejected.
+- Fields: t (required, one line), d, x, p (high, medium, low), owner, tag, source, ref, s (scope tag); due on a task, at on an event, value, unit and observed on a metric. Unknown field keys fail with E_FIELD on create and patch; do not invent keys. source must name a source record; otherwise cite with ref.
 - Predicates: use only `part-of implements depends derives related supports contradicts replaces blocks enables`. An `add` with another predicate succeeds, but `gram_get`, `gram_context` and `gram_relations` never return that link.
 - Status `x` accepts any string, and the brief lists a misspelled status as open. A task or risk without `x` never appears in the brief's open list.
 
