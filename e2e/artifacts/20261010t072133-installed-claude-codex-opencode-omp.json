@@ -1,0 +1,180 @@
+{
+	"stamp": "20261010t072133",
+	"mode": "installed",
+	"package": {
+		"root": "/Users/steve/thegram/thegram-memory-wt-read",
+		"head": "dc71b1086327e41f5a802e5a4641eb80d6b4cdda",
+		"dirty": false
+	},
+	"node": "v24.3.0",
+	"vault": "/Users/steve/gram",
+	"pass": false,
+	"results": [
+		{
+			"agent": "claude",
+			"version": "2.1.241 (Claude Code)",
+			"loaded": {
+				"root": "/Users/steve/thegram/thegram-memory-wt-read",
+				"hash": "5929d753f906c0cc"
+			},
+			"folder": "zz-tgm-e2e-claude-20261010t072133",
+			"marker": "dec-cache-ttl-4jiuni",
+			"read": {
+				"pass": true,
+				"code": 0,
+				"ms": 3567,
+				"answer": "dec-cache-ttl-4jiuni",
+				"stderr": ""
+			},
+			"write": {
+				"pass": true,
+				"code": 0,
+				"ms": 27455,
+				"commits": [
+					"de1776f56790f997476abb677d179292aac64237 Cap retries at 5 attempts",
+					"fa67cecf09e4eea850ab35653daa79807b8b4b6e init"
+				],
+				"revisions": [
+					{
+						"rev": 1,
+						"by": "claude-code",
+						"add": [
+							"dec-cap-retries-5 (decision)"
+						],
+						"set": [
+							"doc"
+						]
+					}
+				],
+				"answer": "Created `config/retry.json`, `docs/retry.md`, and `src/retry.ts`, and committed them.\n\n**Commit hash:** `de1776f`\n\nAlso recorded the decision in Thegram memory (`zz-tgm-e2e-claude-20261010t072133/memory.gram#dec-cap-retries-5`, rev 1).",
+				"stderr": ""
+			},
+			"pass": true
+		},
+		{
+			"agent": "codex",
+			"version": "codex-cli 0.159.3",
+			"loaded": {
+				"root": "/Users/steve/Library/Application Support/orca/codex-accounts/988689ca-9e88-4cba-b51a-c5c6c8247edd/home/plugins/cache/thegram-memory/thegram-memory/0.2.3",
+				"hash": "5929d753f906c0cc"
+			},
+			"folder": "zz-tgm-e2e-codex-20261010t072133",
+			"marker": "dec-cache-ttl-zqoqhc",
+			"read": {
+				"pass": true,
+				"code": 0,
+				"ms": 6333,
+				"answer": "dec-cache-ttl-zqoqhc",
+				"stderr": "ry/0.2.3/hooks/hooks.json\nhook: SessionStart\nhook: SessionStart\nhook: SessionStart Completed\nhook: SessionStart Completed\nhook: UserPromptSubmit\nhook: UserPromptSubmit\nhook: UserPromptSubmit\nhook: UserPromptSubmit Completed\nhook: UserPromptSubmit Completed\nhook: UserPromptSubmit Completed\ncodex\ndec-cache-ttl-zqoqhc\nhook: Stop\nhook: Stop\nhook: Stop Completed\nhook: Stop Completed\ntokens used\n17,675\n"
+			},
+			"write": {
+				"pass": true,
+				"code": 0,
+				"ms": 112574,
+				"commits": [
+					"3b2f15961150d918ca3560664ae4676a5c0744f4 Cap retries at 5 attempts",
+					"e0eb261a90dbf80a09878e88b89f8691006ed673 init"
+				],
+				"revisions": [
+					{
+						"rev": 1,
+						"by": "codex-mcp-client",
+						"add": [
+							"dec-retry-cap-5 (decision)",
+							"ev-retry-cap-5-3b2f159 (event)"
+						],
+						"set": [
+							"doc"
+						]
+					}
+				],
+				"answer": "`3b2f15961150d918ca3560664ae4676a5c0744f4`\n\nThegram r1: `zz-tgm-e2e-codex-20261010t072133/memory.gram#dec-retry-cap-5` and `#ev-retry-cap-5-3b2f159`.",
+				"stderr": " capped at 5 attempts with exponential backoff because unlimited retries hid outages.\ndiff --git a/src/retry.ts b/src/retry.ts\nnew file mode 100644\nindex 0000000000000000000000000000000000000000..cecee296074deb51accc7f88f26d10ba0154238a\n--- /dev/null\n+++ b/src/retry.ts\n@@ -0,0 +1 @@\n+export const MAX_ATTEMPTS = 5;\n\nhook: Stop\nhook: Stop\nhook: Stop Completed\nhook: Stop Completed\ntokens used\n44,687\n"
+			},
+			"pass": true
+		},
+		{
+			"agent": "opencode",
+			"version": "opencode v2.0.25",
+			"loaded": {
+				"root": "/Users/steve/thegram/thegram-memory-wt-read",
+				"hash": "5929d753f906c0cc"
+			},
+			"folder": "zz-tgm-e2e-opencode-20261010t072133",
+			"marker": "dec-cache-ttl-pyg9oz",
+			"read": {
+				"pass": false,
+				"code": 0,
+				"ms": 6216,
+				"answer": "NONE",
+				"stderr": "\u001b[0m\n> build · big-pickle\n"
+			},
+			"write": {
+				"pass": true,
+				"code": 0,
+				"ms": 33370,
+				"commits": [
+					"96fd3b600acdd8fd44e8e2ab5d2a83314d91d59d Cap retries at 5 attempts",
+					"5352e3a07773c0a2e659314d82aaeaacec128fd5 init"
+				],
+				"revisions": [
+					{
+						"rev": 1,
+						"by": "opencode",
+						"add": [
+							"ev-retry-cap-5-attempts (event)"
+						],
+						"set": [
+							"doc"
+						]
+					}
+				],
+				"answer": "Done. Created all three files and committed them:\n\n- `config/retry.json` → `{\"maxAttempts\": 5}`\n- `docs/retry.md` → retry policy explanation (5-attempt cap, exponential backoff, hidden outages)\n- `src/retry.ts` → `export const MAX_ATTEMPTS = 5;`\n\n**Commit hash: `96fd3b600acdd8fd44e8e2ab5d2a83314d91d59d`** (\"Cap retries at 5 attempts\", 3 files changed, 8 insertions)\n\nMemory written: `zz-tgm-e2e-opencode-20261010t072133/memory.gram#ev-retry-cap-5-attempts` (revision 1).",
+				"stderr": ",\"record\":{\"type\":\"event\",\"id\":\"ev-retry-cap-5-attempts\",\"fields\":{\"t\":[\"Capped retries at 5 attempts\"],\"d\":[\"Committed config/retry.json, docs/retry.md and src/retry.ts capping retries at 5 attempts with exponential backoff because unlimited retries hid outages.\"],\"at\":[\"2026-10-10T07:25:00Z\"],\"ref\":[\"96fd3b600acdd8fd44e8e2ab5d2a83314d91d59d\"]}},\"place\":{\"section\":\"Log\"}}]} \n> build · big-pickle\n"
+			},
+			"pass": false
+		},
+		{
+			"agent": "omp",
+			"version": "omp/18.8.7",
+			"loaded": {
+				"root": "/Users/steve/thegram/thegram-memory-wt-read",
+				"hash": "5929d753f906c0cc"
+			},
+			"folder": "zz-tgm-e2e-omp-20261010t072133",
+			"marker": "dec-cache-ttl-60ksg0",
+			"read": {
+				"pass": true,
+				"code": 0,
+				"ms": 1994,
+				"answer": "dec-cache-ttl-60ksg0",
+				"stderr": "Working...\n"
+			},
+			"write": {
+				"pass": true,
+				"code": 0,
+				"ms": 25825,
+				"commits": [
+					"7cd355500ef899c64ec4ab04e2941839226a09f8 Cap retries at 5 attempts",
+					"e7ed7355c11b39163655e9d81f50370697f37570 init"
+				],
+				"revisions": [
+					{
+						"rev": 1,
+						"by": "omp-coding-agent",
+						"add": [
+							"dec-retry-cap-5 (decision)",
+							"ev-retry-cap-5-commit (event)"
+						],
+						"set": [
+							"doc"
+						]
+					}
+				],
+				"answer": "커밋했습니다. 커밋 해시는 `7cd355500ef899c64ec4ab04e2941839226a09f8`입니다.\n\n- 파일 3개를 만들었습니다.\n  - `config/retry.json`: `{\"maxAttempts\": 5}`\n  - `docs/retry.md`: 재시도를 지수 backoff와 함께 5회로 제한한다는 내용과 그 이유(무제한 재시도가 장애를 가렸음)를 적었습니다.\n  - `src/retry.ts`: `export const MAX_ATTEMPTS = 5;`\n- 이 3개 파일만 `git add` 했습니다. 커밋 메시지는 \"Cap retries at 5 attempts\"입니다. 작성자는 `steve-8000 <stv.z8k@gmail.com>`로 확인했습니다.\n- 별도 테스트는 실행하지 않았습니다.\n- Thegram 메모리에 두 기록을 추가했습니다. 문서 revision은 1입니다.\n  - `zz-tgm-e2e-omp-20261010t072133/memory.gram#dec-retry-cap-5`: 재시도 5회 제한 결정\n  - `zz-tgm-e2e-omp-20261010t072133/memory.gram#ev-retry-cap-5-commit`: 이 커밋 기록\n\n근거: git log -1 출력, gram_patch receipt · 2026-10-10 16:24 KST",
+				"stderr": "Working...\n"
+			},
+			"pass": true
+		}
+	]
+}
