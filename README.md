@@ -2,9 +2,11 @@
 
 Gives coding agents a shared project memory in [Thegram](https://thegram.one). Works with Claude Code, Codex, opencode and OMP.
 
-To install, hand this README to your agent:
+To install, hand this to your agent:
 
-> Install the thegram-memory plugin by following https://github.com/clab-one/thegram-mcp
+> Install Thegram by following https://thegram.one/install/agents.md
+
+New to Thegram? https://thegram.one/install/#mac walks through installing the Mac app, turning on agent access and connecting each agent.
 
 ## Requirements
 
