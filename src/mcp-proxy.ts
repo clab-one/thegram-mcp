@@ -4,10 +4,6 @@ import { endpointFile, errorCode, isJson, type McpResponse, parseMcpMessages, po
 
 const REQUEST_TIMEOUT_MS = 120_000;
 
-/**
- * Bridges a stdio MCP client to the Thegram app's Streamable HTTP endpoint on its unix socket.
- * Messages are forwarded in order, so `initialize` settles before any call that depends on it.
- */
 export async function runMcpProxy(): Promise<void> {
 	let sessionId: string | undefined;
 	let protocol: string | undefined;
@@ -25,8 +21,7 @@ export async function runMcpProxy(): Promise<void> {
 		if (sessionId) headers["Mcp-Session-Id"] = sessionId;
 		return postMcp(body, headers, REQUEST_TIMEOUT_MS);
 	};
-	// The app keeps no sessions across restarts and serves unknown ones as an anonymous "agent",
-	// so the client's initialize is replayed to keep its identity on later writes.
+	// The app forgets sessions on restart, so initialize is replayed to keep the client's identity.
 	const reinitialize = async (body: string): Promise<void> => {
 		sessionId = undefined;
 		sessionId = (await send(body)).sessionId;

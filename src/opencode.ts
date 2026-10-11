@@ -59,7 +59,6 @@ interface V1Input {
 
 type Json = Record<string, unknown>;
 
-/** Per opencode session: memory state plus the blocks repeated into every model request of that session. */
 interface Session {
 	state: MemoryState;
 	memory: string[];
@@ -86,7 +85,6 @@ function createSessions(directory: () => string) {
 			const orientation = await orient(session.state, directory(), text);
 			if (!orientation) return;
 			const rendered = renderOrientation(orientation);
-			// A brief replaces the memory block; deltas and recall only belong to this turn.
 			if (orientation.policy) session.memory = [rendered];
 			else session.turn = rendered;
 		},
@@ -121,7 +119,7 @@ async function setup(ctx: V2Context): Promise<void> {
 	const sessions = createSessions(() => ctx.location.directory);
 	const skill = await readSkill();
 	await ctx.mcp.transform(editor => {
-		// codemode would hide gram_patch behind a code tool, and the write reminder watches tool names.
+		// codemode would hide gram_patch behind a code tool.
 		if (!editor.get(SERVER)) editor.set(SERVER, { type: "local", command: MCP_COMMAND, codemode: false });
 	});
 	await ctx.skill.transform(editor => {
@@ -129,7 +127,6 @@ async function setup(ctx: V2Context): Promise<void> {
 	});
 	await ctx.session.hook("prompt", async event => {
 		const info = await ctx.session.get({ sessionID: event.sessionID }).catch(() => undefined);
-		// Child sessions are subagents; they return candidate records instead of writing.
 		if (isJson(info) && str(info.parentID)) return;
 		await sessions.prompt(event.sessionID, event.prompt.text ?? "");
 	});
@@ -143,7 +140,6 @@ async function setup(ctx: V2Context): Promise<void> {
 
 async function server(input: V1Input) {
 	const sessions = createSessions(() => input.directory);
-	// Child sessions are subagents; they return candidate records instead of writing.
 	const children = new Set<string>();
 	return {
 		config: async (config: Json): Promise<void> => {
@@ -158,7 +154,6 @@ async function server(input: V1Input) {
 			output: { parts: { type?: string; text?: string; synthetic?: boolean }[] },
 		): Promise<void> => {
 			if (children.has(hook.sessionID)) return;
-			// A finished background task re-enters the parent with only synthetic text; that is not a new turn.
 			if (output.parts.length > 0 && output.parts.every(part => part.synthetic)) return;
 			const text = output.parts
 				.filter(part => part.type === "text" && !part.synthetic)

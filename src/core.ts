@@ -12,10 +12,8 @@ export const SKILLS_DIR = path.join(PACKAGE_ROOT, "skills");
 
 const TOOL_PROTOCOL_VERSION = "2025-06-18";
 const CALL_TIMEOUT_MS = 3_000;
-// The app unloads its embedding model when idle, so the first recall after a pause loads it again.
 const RECALL_TIMEOUT_MS = 8_000;
 const BRIEF_TIMEOUT_MS = 8_000;
-// Claude Code and Codex kill a prompt hook after 20 s; the whole orientation stays under this.
 const ORIENT_BUDGET_MS = 15_000;
 const MIN_RECALL_WAIT_MS = 2_000;
 const MIN_RECALL_CHARS = 15;
@@ -139,7 +137,6 @@ export async function postMcp(body: string, headers: Record<string, string>, tim
 		},
 	);
 	let timedOut = false;
-	// An absolute deadline: setTimeout on the request only fires while the socket is idle.
 	const deadline = setTimeout(() => {
 		timedOut = true;
 		req.destroy();
@@ -243,9 +240,7 @@ export async function resolveProject(cwd: string): Promise<string | null> {
 	if (mapped) return mapped;
 	const common = await gitCommonDir(dir);
 	if (!common) return null;
-	// Worktrees share the main checkout's common dir, so every worktree maps to one project.
 	const root = path.basename(common) === ".git" ? path.dirname(common) : common.replace(/\.git$/, "");
-	// The app hides dot folders from gram_projects, so `.dotfiles` must live in `dotfiles`.
 	return mappedFolder(map, root) ?? (path.basename(root).replace(/^\.+/, "") || null);
 }
 
@@ -293,7 +288,6 @@ export function newMemoryState(): MemoryState {
 	};
 }
 
-/** Resets in place, including optional keys that a plain Object.assign would leave behind. */
 export function resetMemoryState(state: MemoryState): void {
 	delete state.folder;
 	delete state.vault;
@@ -330,10 +324,8 @@ function renderBrief(name: string, vault: string | undefined, brief: Json, refs:
 			const index = OPEN_TYPES.indexOf(String(row[1]) as (typeof OPEN_TYPES)[number]);
 			return index < 0 ? OPEN_TYPES.length : index;
 		};
-		// Rows keep the app's priority order within a type; the stable sort only regroups the types.
 		const ordered = [...open].sort((a, b) => rank(a) - rank(b));
 		const shown = new Set<Row>();
-		// A first pass caps each type so one long list cannot hide every risk or open decision.
 		for (const perType of [OPEN_FIRST_PASS, MAX_OPEN]) {
 			const taken = new Map<string, number>();
 			for (const row of shown) taken.set(String(row[1]), (taken.get(String(row[1])) ?? 0) + 1);
@@ -390,10 +382,6 @@ function renderHits(hits: Row[], seen: string[]): string | undefined {
 	return lines.length > 0 ? `Recalled for the opening prompt:\n${lines.join("\n")}` : undefined;
 }
 
-/**
- * Brings the session up to date with Thegram: a brief when the session is fresh or compacted,
- * otherwise the changes other writers made since the last look, plus a recall for the first prompt.
- */
 export async function orient(state: MemoryState, cwd: string, prompt?: string): Promise<Orientation | undefined> {
 	if (state.folder === undefined) state.folder = await resolveProject(cwd);
 	const name = state.folder;
@@ -439,10 +427,8 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 		}
 		let recalled = false;
 		const query = prompt?.trim() ?? "";
-		// Semantic recall has no relevance floor, so it runs once per brief instead of on every prompt.
 		if (state.pendingRecall && query.length >= MIN_RECALL_CHARS && left(RECALL_TIMEOUT_MS) >= MIN_RECALL_WAIT_MS) {
 			state.pendingRecall = false;
-			// A failed recall drops only the recalled hits; the brief or the changes still go out.
 			const recall = await callTool(
 				"gram_recall",
 				{ query: query.slice(0, RECALL_QUERY_CHARS), folder: name, top_k: MAX_HITS * 2 },
@@ -470,7 +456,6 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 	}
 }
 
-/** Renders the orientation within `maxChars`; the policy is kept whole and the memory block gives way. */
 export function renderOrientation(orientation: Orientation, maxChars = Number.POSITIVE_INFINITY): string {
 	const parts: string[] = [];
 	if (orientation.policy) parts.push(`<thegram-memory-policy>\n${orientation.policy}\n</thegram-memory-policy>`);
@@ -532,7 +517,6 @@ function findDoc(value: unknown, depth = 0): { path: string; rev: number } | und
 export function observeTool(state: MemoryState, call: ToolObservation): string | undefined {
 	if (call.isError) return;
 	if (THEGRAM_WRITE.test(call.name)) {
-		// Only a receipt with a revision counts; a failed patch answers with an error instead of `doc`.
 		const doc = findDoc(call.output);
 		if (!doc) return;
 		state.turn.wrote = true;
@@ -540,7 +524,6 @@ export function observeTool(state: MemoryState, call: ToolObservation): string |
 		return;
 	}
 	if (MUTATING_TOOL.test(call.name)) {
-		// One apply_patch call can touch several files.
 		const files = stringsOf(call.input).reduce((sum, text) => sum + (text.match(PATCH_FILE_HEADER)?.length ?? 0), 0);
 		state.turn.mutations += Math.max(1, files);
 	} else if (stringsOf(call.input).some(text => GIT_COMMIT.test(text))) state.turn.committed = true;
@@ -592,7 +575,6 @@ async function ageOf(file: string): Promise<number> {
 	);
 }
 
-/** A lock is stale when it is old or its owner (a killed hook process) is gone. */
 async function isStale(lock: string): Promise<boolean> {
 	if ((await ageOf(lock)) > LOCK_STALE_MS) return true;
 	const pid = Number((await readFile(lock, "utf8").catch(() => "")).split("-")[0]);
@@ -605,7 +587,6 @@ async function isStale(lock: string): Promise<boolean> {
 	}
 }
 
-/** Waiters take turns clearing a stale lock, so none can remove a lock another waiter has just taken. */
 async function breakStaleLock(lock: string): Promise<boolean> {
 	const breaker = `${lock}.break`;
 	try {
@@ -627,7 +608,6 @@ async function releaseLock(lock: string, token: string): Promise<void> {
 	if ((await readFile(lock, "utf8").catch(() => undefined)) === token) await rm(lock, { force: true });
 }
 
-/** Runs `fn` on the session's persisted state under a lock; parallel tool hooks would otherwise lose counts. */
 export async function withSessionState<T>(sessionId: string, fn: (state: MemoryState) => Promise<T>): Promise<T> {
 	const file = stateFile(sessionId);
 	await mkdir(path.dirname(file), { recursive: true });

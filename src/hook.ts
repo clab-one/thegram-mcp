@@ -12,13 +12,9 @@ import {
 	withSessionState,
 } from "./core.ts";
 
-// Claude Code stores longer additionalContext in a file and passes only a preview.
 const MAX_CONTEXT_CHARS = 9_500;
 
-/**
- * Handles one command hook from Claude Code or Codex. Both send the same event names and accept
- * `hookSpecificOutput.additionalContext`; Codex rejects any other field, so nothing else is emitted.
- */
+// Codex rejects any hook output field other than hookSpecificOutput.additionalContext.
 export async function runHook(raw: string): Promise<string> {
 	const input: unknown = JSON.parse(raw);
 	if (!isJson(input)) return "";
@@ -46,7 +42,6 @@ export async function runHook(raw: string): Promise<string> {
 			return orientation && renderOrientation(orientation, MAX_CONTEXT_CHARS);
 		}
 		if (event === "PostToolUse") {
-			// Subagents return candidate records to the main agent instead of writing.
 			if (input.agent_id || state.folder === undefined) return;
 			return observeTool(state, {
 				name: str(input.tool_name) ?? "",

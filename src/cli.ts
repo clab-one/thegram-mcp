@@ -74,7 +74,6 @@ async function main(): Promise<number> {
 			try {
 				process.stdout.write(await runHook(await readStdin()));
 			} catch (error) {
-				// A memory hook must never stop the agent; the failure is reported and the turn goes on.
 				process.stderr.write(`thegram-memory hook: ${error instanceof Error ? error.message : String(error)}\n`);
 			}
 			return 0;

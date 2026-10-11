@@ -76,7 +76,6 @@ export default function thegramMemory(pi: ExtensionAPI): void {
 		if (state.turn.wrote) reminder = undefined;
 	});
 
-	// Kept on every request of the turn until Thegram is written; a session_stop continuation would replace the run's final answer.
 	pi.on("context", (event, ctx) => {
 		if (!reminder || !isMainSession(ctx)) return;
 		const message: AgentMessage = {
