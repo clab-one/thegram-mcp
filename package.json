@@ -1,6 +1,6 @@
 {
 	"name": "thegram-memory",
-	"version": "0.2.8",
+	"version": "1.0.0",
 	"description": "Thegram as the durable project memory for Claude Code, Codex, opencode and OMP",
 	"private": true,
 	"type": "module",
