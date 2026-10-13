@@ -99,7 +99,7 @@ A new memory is one `gram_create`. Records in it may link to each other in any o
 
 ## Projection views
 
-Write source facts for deterministic template selection; the app/Viewer chooses the template. Do not create a screen or author `ViewSpec`. Journal: use `event` + `at` for occurrence time, not dated prose headings; set `effective_at` only for a sourced past fact. Project: give tasks `x` and link each task to its goal. Operations: give risks `x`; tag incident events `incident`, `outage` or `failure` and link them to the risk; link recovery events to evidence with `supports`; metrics need `value`, `unit` and `observed`. Unsupported states stay `unknown`. Follow `spec/projection.md` (“Evidence-based state”, “Dated section entries”, “View resolution and ViewSpec/1”, `status_counts` and `progress`).
+Where template views are available, the Viewer selects deterministically; AI records facts, never screens or `ViewSpec`. Journal: prefer `event` records with `at`; dated headings still contribute separate entries. Project: set task `x` only when sourced, leave it unset otherwise, and link every task to its goal. Operations eligibility needs a `risk`, a dated `event`, and a `system`, `service` or `component`; set risk `x` only when sourced. An incident needs an `incident`, `outage` or `failure` tag and risk link; recovery needs a `recovery`, `restored` or `restoration` tag, risk link, and `supports`/`implements` link to evidence. Metrics record `value`, `unit` and `observed`; they are not an Operations component. Unsupported states are `unknown`.
 ## Dashboard and diagrams
 
 The app draws a dashboard for every document from its records and history, and Mermaid flowcharts in the body.
