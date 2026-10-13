@@ -56,7 +56,7 @@ Each `set`/`unset` carries `old`, what you read (a string, an array for several,
 - `add` values are arrays; `set` takes `value` or `values`. Never remove a record; change its status.
 - `place` is `{"section": "<heading>"}`, `{"after": "<id>"}` or `"end"` (without it the record is not in the body) and cannot share a patch with `edit-text`. Inside `edit-text`, `[[id]]` alone on a line places a record and `[label](@id)` mentions one.
 - Operations run in order; later ones can link to or place after records added earlier.
-- A listed template action names itself: `"action": "task.set-status", "action_target": "task-<slug>"`, with exactly its operations, each with `old`.
+- A listed template action names itself: `"action": "task.set-status", "action_target": "task-<slug>"`, with exactly its operations, each with `old`. An action takes only its own fields (`task.add` has no `d`); otherwise write without `action`.
 
 A new memory is one `gram_create`. Records in it may link to each other in any order; only records placed as `[[id]]` in `text` are in the body. Without `content` a template starts from its own headings.
 
@@ -103,7 +103,7 @@ The app draws each document's dashboard from its records and history, and Mermai
 |---|---|
 | `E_PRECONDITION` | a field you read changed, the id exists with other content, or a `place` target is gone (`details.conditions`) → reread, decide, resend with a new `request_id` |
 | `E_TEMPLATE` | the write breaks the template; `details.diagnostics` names record, field, expected → fix them |
-| `E_ACTION` | operations do not match the named action → use exactly its operations, each with `old` |
+| `E_ACTION` | operations do not match the named action → use exactly its operations with `old`, or resend without `action` |
 | `STALE_REVISION`, `E_CAS_REQUIRED` | with `base_revision`, another revision landed; `remove` or a body replacement without it → `gram_brief`, recheck, resend with a new `request_id` |
 | `E_ARGUMENT` | field value not an array, `set` without `old` at the head, `place` with `edit-text`, or unknown section |
 | `E_FIELD`, `E_LINK`, `E_TIME`, `E_MISSING_TITLE` | bad field key, unknown predicate, `effective_at` without time or zone, no `t` |
