@@ -97,6 +97,9 @@ A new memory is one `gram_create`. Records in it may link to each other in any o
 - Replace a decision: `set x superseded` on the old one and `link replaces` from the new one.
 - Events have `at` (ISO date or time) and a `ref` to the commit, PR or release.
 
+## Projection views
+
+Write source facts for deterministic template selection; the app/Viewer chooses the template. Do not create a screen or author `ViewSpec`. Journal: use `event` + `at` for occurrence time, not dated prose headings; set `effective_at` only for a sourced past fact. Project: give tasks `x` and link each task to its goal. Operations: give risks `x`; tag incident events `incident`, `outage` or `failure` and link them to the risk; link recovery events to evidence with `supports`; metrics need `value`, `unit` and `observed`. Unsupported states stay `unknown`. Follow `spec/projection.md` (“Evidence-based state”, “Dated section entries”, “View resolution and ViewSpec/1”, `status_counts` and `progress`).
 ## Dashboard and diagrams
 
 The app draws a dashboard for every document from its records and history, and Mermaid flowcharts in the body.
