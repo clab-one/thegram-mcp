@@ -16,8 +16,10 @@ Tools are the `thegram` MCP server's `gram_<name>` tools. In OMP, call one by wr
 ## Documents
 
 - `<project>/memory.gram` has Overview, Architecture, Plan, Decisions and Log; other names and folders are free. Reuse documents; write them as `.gram`, `.md` only for README or when the user asks.
-- A new document starts from a template: `schedule@1` for schedules and journals, `project@1` for tasks and projects (and `memory.gram`), `knowledge@1` for research, knowledge and operations notes. Write by `gram_profile {topic: "templates"}`: required fields, `x` values, action ids.
-- A document without a template stays so. `~project@1` in `gram_brief`/`gram_list` is only a suggestion; `set doc template` only when the user asks.
+- A new document starts from the one template that fits its purpose: `schedule@1` for schedules and journals, `project@1` for tasks and projects (and `memory.gram`), `knowledge@1` for research, knowledge and operations notes. Pass it as `gram_create {template}` and write by `gram_profile {topic: "templates"}`: required fields, `x` values, action ids.
+- Each type has one dashboard: `project@1` Project Tracker, `schedule@1` Journal, `knowledge@1` Knowledge. Only a document that declares its template can be edited on the dashboard.
+- A document without a template stays so. The app shows the dashboard of the type Core recommends, read-only; `~project@1` in `gram_brief`/`gram_list` is that recommendation. Use `set doc template` only when the user asks.
+- A document that declares an unknown template has no dashboard; the app shows the document and the diagnostic.
 - Schedules: one event per occurrence, never a recurrence rule; a completion time goes in `done`, never inferred from history.
 - Documents hold any prose, tables and code; the durable-outcome rule is for memory records. See `gram_profile {task: "create"}` or `{task: "rich"}`.
 
@@ -90,11 +92,11 @@ A new memory is one `gram_create`. Records in it may link to each other in any o
 
 ## Dashboard and diagrams
 
-The app draws each document's dashboard from its records and history, and Mermaid flowcharts in the body.
+Each document has one dashboard, chosen by Core from its template (see Documents) and drawn from its records and history. Mermaid flowcharts in the body are drawn too.
 
 - A metric chart is one record's history: one `metric` per quantity with a stable id; each measurement is one patch setting `value` and `observed`, never a new record.
 - `value` is a plain number (`-?digits[.digits]`); anything else shows as text. Keep `unit` constant (`percent` shows as `%`); a new unit starts a new series. `observed` is a full ISO time with a zone.
-- Goal progress is the `completed` share of same-document tasks linked to it. The overview counts blocked tasks, open blockers and risks, and open decisions or requirements; `d` on `doc` is the summary, and `set doc view dashboard` opens the dashboard.
+- Goal progress is the `completed` share of same-document tasks linked to it. The overview counts blocked tasks, open blockers and risks, and open decisions or requirements; `d` on `doc` is the summary, and `set doc view dashboard` opens the document on its dashboard.
 - Mermaid: only `flowchart` and `graph` blocks are drawn, the system diagram under Architecture. Label only `-->` edges; a labeled `==>` or `-.->` line is dropped.
 
 ## Errors
