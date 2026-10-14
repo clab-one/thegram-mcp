@@ -97,6 +97,9 @@ A new memory is one `gram_create`. Records in it may link to each other in any o
 - Replace a decision: `set x superseded` on the old one and `link replaces` from the new one.
 - Events have `at` (ISO date or time) and a `ref` to the commit, PR or release.
 
+## Projection views
+
+Where template views are available, the Viewer selects deterministically; AI records facts, never screens or `ViewSpec`. Journal: prefer `event` records with `at`; dated headings still contribute separate entries. Project: set task `x` only when sourced, leave it unset otherwise, and link every task to its goal. Operations eligibility needs a `risk`, a dated `event`, and a `system`, `service` or `component`; set risk `x` only when sourced. An incident needs an `incident`, `outage` or `failure` tag and risk link; recovery needs a `recovery`, `restored` or `restoration` tag, risk link, and `supports`/`implements` link to evidence. Metrics record `value`, `unit` and `observed`; they are not an Operations component. Unsupported states are `unknown`.
 ## Dashboard and diagrams
 
 The app draws a dashboard for every document from its records and history, and Mermaid flowcharts in the body.
