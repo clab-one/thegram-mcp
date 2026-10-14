@@ -355,7 +355,7 @@ async function orient(state, cwd, prompt) {
         policy: await loadPolicy(),
         recalled: false,
         sections: [
-          `No Thegram folder \`${name}\` exists yet${vault}. When this work produces a durable decision, event, risk or task, create \`${name}/memory.gram\` with gram_create (headings # Overview, # Architecture, # Plan, # Decisions, # Log) and record it there.`
+          `No Thegram folder \`${name}\` exists yet${vault}. When this work produces a durable decision, event, risk or task, create \`${name}/memory.gram\` with gram_create (template project@1, headings # Overview, # Architecture, # Plan, # Decisions, # Log) and record it there.`
         ]
       };
     }
