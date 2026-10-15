@@ -1,6 +1,6 @@
 {
 	"name": "thegram-memory",
-	"version": "2.0.0",
+	"version": "3.0.0",
 	"description": "Thegram Cloud project memory over API keys: project briefs, durable outcome reminders and one MCP connection without a desktop app.",
 	"author": {
 		"name": "clab-one"

@@ -430,7 +430,7 @@ async function orient(state, cwd, prompt) {
           policy: await loadPolicy(),
           recalled: false,
           sections: [
-            state.writable ? `No Cloud memory document \`${name}\` exists yet. When this work produces a durable outcome, create that exact path with gram_create and # Overview, # Architecture, # Plan, # Decisions, # Log. Do not create a folder or switch to another mount.` : `Cloud memory document \`${name}\` does not exist and this API key is read-only. Do not create it or switch to another destination.`
+            state.writable ? `No Cloud memory document \`${name}\` exists yet. When this work produces a durable outcome, create that exact path with gram_create (base_revision null, template project@1, headings # Overview, # Architecture, # Plan, # Decisions, # Log). Do not create a folder or switch to another mount.` : `Cloud memory document \`${name}\` does not exist and this API key is read-only. Do not create it or switch to another destination.`
           ]
         };
       }

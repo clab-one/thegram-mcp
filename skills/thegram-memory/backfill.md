@@ -16,8 +16,8 @@ Pick 4 to 8 eras. For each, list the goals, requirements, assumptions, decisions
 
 ## 3. Write oldest first
 
-- r0 is one `gram_create` with `effective_at` set to the first commit's author date. `content.text` has the five headings with each record placed as `[[id]]` on its own line; `content.records` holds the project, the first day's goals, requirements, assumptions and evidence, and the first event.
-- Then one `gram_patch` per era or milestone group, with `effective_at` set to the latest event in it. It holds the era's `history` record (opening the era in Log), its decisions, components, events and plan records, `set x` on earlier items it resolves plus `link related` to the resolving event, and any `set d` fixes.
+- r0 is one `gram_create` with `template: "project@1"` and `effective_at` set to the first commit's author date. `content.text` has the five headings with each record placed as `[[id]]` on its own line; `content.records` holds the project, the first day's goals, requirements, assumptions and evidence, and the first event.
+- Then one `gram_patch` per era or milestone group, with `effective_at` set to the latest event in it. It holds the era's `history` record (opening the era in Log), its decisions, components, events and plan records, `set x` (with `old`) on earlier items it resolves plus `link related` to the resolving event, and any `set d` fixes.
 - Metrics: add each series once, in the era it is first measured. In every later era, `set value` and `set observed` (the era's end) on the same record so the dashboard draws a chart. Never add one metric record per era.
 - Place records in time order with `place: {"after": "<id>"}`, chained inside the patch.
 - Add an item in the era whose source states it, never earlier. Mark inference with `[INFERENCE]` in `d`.

@@ -55,7 +55,7 @@ try {
   assert.equal(memory.available, true);
   assert(missingMemory.sections.some(section => section.includes(document) && section.includes('gram_create')));
   await callTool('gram_create', {
-    path: document, title: 'API key E2E', base_revision: null,
+    path: document, title: 'API key E2E', base_revision: null, template: 'project@1',
     content: {
       text: '# Overview\n\n[[prj-api-key]]\n\n# Decisions\n\n[[dec-api-key]]\n\n# Plan\n\n[[task-record-connection]]\n\n# Log\n',
       records: [
@@ -70,6 +70,9 @@ try {
   assert.equal(memory.documentPath, document);
   assert.equal(memory.exists, true);
   assert(orientation.sections.join('\n').includes('Record the API connection outcome'));
+  const headWrite = await callTool('gram_patch', { path: document, request_id: `head-${randomUUID()}`, operations: [{ op: 'set', entity: 'task-record-connection', key: 'x', value: 'active', old: 'open' }] });
+  assert.equal(headWrite.sync?.state, 'synced');
+  await assert.rejects(callTool('gram_patch', { path: document, request_id: `stale-${randomUUID()}`, operations: [{ op: 'set', entity: 'task-record-connection', key: 'x', value: 'completed', old: 'open' }] }), error => error.code === 'E_PRECONDITION');
   for (let i = 0; i < 2; i++) observeTool(memory, { name: 'edit', input: {} });
   const reminder = observeTool(memory, { name: 'edit', input: {} });
   assert(reminder.includes(document) && reminder.includes('gram_brief {path:'));

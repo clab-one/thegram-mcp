@@ -54,7 +54,7 @@ node dist/thegram-memory.mjs doctor
 
 For a managed secret store, supply `THEGRAM_API_KEY` and `THEGRAM_MCP_MOUNT` through the host's environment instead of saving the key. The MCP endpoint is `https://vault.thegram.one/mcp`. `THEGRAM_MCP_URL` selects an explicitly configured HTTPS endpoint; HTTP is accepted only on a loopback IP for local E2E. A saved key cannot be redirected to another endpoint by changing the URL alone.
 
-Restart the agent session after installation. Remove any old manually registered `thegram` MCP server so only this plugin supplies that binding. All supported hosts use the same API-key connection; ChatGPT and Claude's official cloud integrations keep OAuth.
+Restart the agent session after installation. Remove any old manually registered `thegram` MCP server so only this plugin supplies that binding. All supported coding hosts use the same API-key connection; ChatGPT's published plugin and Claude's OAuth connector keep OAuth.
 
 `disconnect` removes this machine's saved credential. To disable a key everywhere, revoke it in Thegram Settings → Agents. The server refuses expired or revoked keys; the plugin never falls back to the desktop app or another storage destination.
 
@@ -82,4 +82,4 @@ python3 e2e/hidden_tty.py --state /path/to/local-fixture-state.json --evidence /
 
 The E2Es use the real loopback Vault/key-authority fixture, issue and revoke scratch keys, exercise the packaged CLI, stdio MCP and project hooks, and retain redacted JSON reports. The terminal regression types immediately when the prompt appears and verifies that the key is never echoed. Private temporary configurations are removed; fixtures and writable vaults must be disposable.
 
-Commit `dist/` with the source; installation does not build. Keep `package.json`, `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` versions aligned. Version 2 switches from desktop sockets to scoped Cloud API keys; it has no local-app fallback.
+Commit `dist/` with the source; installation does not build. Keep `package.json`, `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` versions aligned. Version 3 switches from desktop sockets to scoped Cloud API keys; it has no local-app fallback. It preserves template-aware creation and head-mode field preconditions; native-only `action`/`action_target` metadata is replaced by explicit Cloud operations.
