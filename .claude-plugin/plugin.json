@@ -1,7 +1,7 @@
 {
 	"name": "thegram-memory",
-	"version": "2.0.1",
-	"description": "Thegram as the durable project memory: injects the project brief, reminds the agent to record outcomes, and connects the Thegram MCP tools.",
+	"version": "3.0.0",
+	"description": "Thegram Cloud project memory over API keys: project briefs, durable outcome reminders and one MCP connection without a desktop app.",
 	"author": {
 		"name": "clab-one"
 	},

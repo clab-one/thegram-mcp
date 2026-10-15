@@ -42,7 +42,7 @@ export async function runHook(raw: string): Promise<string> {
 			return orientation && renderOrientation(orientation, MAX_CONTEXT_CHARS);
 		}
 		if (event === "PostToolUse") {
-			if (input.agent_id || state.folder === undefined) return;
+			if (input.agent_id || state.documentPath === undefined) return;
 			return observeTool(state, {
 				name: str(input.tool_name) ?? "",
 				input: input.tool_input,

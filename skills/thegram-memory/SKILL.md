@@ -9,14 +9,14 @@ Tools are the `thegram` MCP server's `gram_<name>` tools. In OMP, call one by wr
 
 ## Session
 
-1. Start from the injected brief, or call `gram_brief {folder}`. If the plugin reported an error, call `gram_projects` first.
+1. Start from the injected brief, or call `gram_brief {path}` for the configured Cloud project document. If the plugin reported an error, inspect `gram_projects` and the API-key configuration; do not fall back to the desktop app or another mount.
 2. Only the main agent writes; subagents return candidate records. Write one patch per durable outcome when it happens: a decision, a shipped change or incident, a risk, task or blocker, a verified metric, a status change.
 3. Before the final answer, every task you opened is `completed`, `blocked` or deliberately `active`, and every open question is an open decision (`open`, or `proposed` in a template).
 
 ## Documents
 
-- `<project>/memory.gram` has Overview, Architecture, Plan, Decisions and Log; other names and folders are free. Reuse documents; write them as `.gram`, `.md` only for README or when the user asks.
-- A new document starts from the one template that fits its purpose: `schedule@1` for schedules and journals, `project@1` for tasks and projects (and `memory.gram`), `knowledge@1` for research, knowledge and operations notes. Pass it as `gram_create {template}` and write by `gram_profile {topic: "templates"}`: required fields, `x` values, action ids.
+- The configured `@mounts/<vault-id>/<project>.gram` has Overview, Architecture, Plan, Decisions and Log. Reuse it; write documents as `.gram`, `.md` only for README or when the user asks.
+- A new document starts from the one template that fits its purpose: `schedule@1` for schedules and journals, `project@1` for tasks and project memory, `knowledge@1` for research, knowledge and operations notes. Pass it as `gram_create {template}` and follow `gram_profile {topic: "templates"}` for required fields and `x` values.
 - Each type has one dashboard: `project@1` Project Tracker, `schedule@1` Journal, `knowledge@1` Knowledge. Only a document that declares its template can be edited on the dashboard.
 - A document without a template stays so. The app shows the dashboard of the type Core recommends, read-only; `~project@1` in `gram_brief`/`gram_list` is that recommendation. Use `set doc template` only when the user asks.
 - A document that declares an unknown template has no dashboard; the app shows the document and the diagnostic.
@@ -25,12 +25,12 @@ Tools are the `thegram` MCP server's `gram_<name>` tools. In OMP, call one by wr
 
 ## Mounts
 
-`gram_projects` lists mounts (Google Drive, other vaults) with key, id, kind, name, count and access. Use the exact key as the path prefix, e.g. `@mounts/<id>/proj/memory.gram`; the name is display only. Access never exceeds the agent approval: read-only mounts reject writes with `E_READ_ONLY`, and vault mounts take writes only to top-level `.gram` documents (`E_PATH`). A write reached the remote only when it returns `sync.state` `synced`.
+`gram_projects` lists accessible mounts with key, id, kind, name, count and access. Use the exact key as the path prefix; the name is display only. Automatic repository bindings select one top-level Cloud document. API-key scopes, current vault membership and organization policy bound access; a read-only key cannot write. A write reached its destination only with `sync.state: synced`. Local-only files are not available.
 
 ## Read
 
-- Orient: `gram_brief {folder}` gives each document's `rev`/`hash`, counts, open work and `next`; `gram_changes {folder, since}` lists later changes.
-- Find: `gram_recall {query, folder}` returns `path#id` hits; read them with `gram_context {ids, fields: [...]}`. `gram_relations {from}` lists links both ways.
+- Orient: `gram_brief {path}` gives the configured document's `rev`/`hash`, counts, open work and `next`; `gram_changes {path, since}` lists later changes.
+- Find: `gram_recall {query, documents: [path]}` restricts hits to this project's document; read `path#id` hits with `gram_context {ids, fields: [...]}`. `gram_relations {from}` lists links both ways.
 - `gram_read {path}` gives the outline; `{path, section}` one section, a line per record (title, type, id, x, p, dates, value) with `d` under it. There is no `records` array.
 - Decisions have no date field; their date is the earliest event that `implements` them (`implemented` in `gram_context`/`gram_get`).
 - Dates: inclusive from/to or a date/month/year query; default field event at, metric observed, task due, otherwise at (`date` picks another).
@@ -40,10 +40,10 @@ Tools are the `thegram` MCP server's `gram_<name>` tools. In OMP, call one by wr
 
 ## Write
 
-Each `gram_patch` or `gram_create` is one revision. Write to the head: leave out `base_revision`/`expected_hash`.
+Each `gram_patch` or `gram_create` is one revision. For head-mode patches, leave out `base_revision`/`expected_hash`; creation requires `base_revision: null`.
 
 ```json
-{"path": "<project>/memory.gram", "request_id": "<stable-slug>", "operations": []}
+{"path": "@mounts/<vault-id>/<project>.gram", "request_id": "<stable-slug>", "operations": []}
 ```
 
 Each `set`/`unset` carries `old`, what you read (a string, an array for several, `null` if empty); `E_PRECONDITION` comes only when one of those fields changed, never for edits elsewhere. `remove` and whole-body `text`/`drop-text`/`rich` need `base_revision` and `expected_hash` from `gram_brief` or your last write's `doc`. Pass `effective_at` only for past facts, a full ISO time with a zone. The app retries `E_BUSY`.
@@ -58,12 +58,12 @@ Each `set`/`unset` carries `old`, what you read (a string, an array for several,
 - `add` values are arrays; `set` takes `value` or `values`. Never remove a record; change its status.
 - `place` is `{"section": "<heading>"}`, `{"after": "<id>"}` or `"end"` (without it the record is not in the body) and cannot share a patch with `edit-text`. Inside `edit-text`, `[[id]]` alone on a line places a record and `[label](@id)` mentions one.
 - Operations run in order; later ones can link to or place after records added earlier.
-- A listed template action names itself: `"action": "task.set-status", "action_target": "task-<slug>"`, with exactly its operations, each with `old`. An action takes only its own fields; otherwise write without `action`.
+- Follow a template action's required fields and operations, but send ordinary Cloud patch operations without native-only `action`/`action_target` arguments.
 
 A new memory is one `gram_create`. Records in it may link to each other in any order; only records placed as `[[id]]` in `text` are in the body. Without `content` a template starts from its own headings.
 
 ```json
-{"path": "<project>/memory.gram", "title": "…", "base_revision": null, "template": "project@1",
+{"path": "@mounts/<vault-id>/<project>.gram", "title": "…", "base_revision": null, "template": "project@1",
  "content": {"text": "# Overview\n\n[[prj-<slug>]]\n\n# Architecture\n\n# Plan\n\n# Decisions\n\n# Log\n",
              "fields": {"d": ["<one-line summary>"]},
              "records": [{"type": "project", "id": "prj-<slug>", "fields": {"t": ["…"], "d": ["…"], "x": ["active"]}}]}}
@@ -105,7 +105,6 @@ Each document has one dashboard, chosen by Core from its template (see Documents
 |---|---|
 | `E_PRECONDITION` | a field you read changed, the id exists with other content, or a `place` target is gone (`details.conditions`) → reread, decide, resend with a new `request_id` |
 | `E_TEMPLATE` | the write breaks the template; `details.diagnostics` names record, field, expected → fix them |
-| `E_ACTION` | operations do not match the action → fix each diagnostics `field` per `expected`, else drop `action` |
 | `STALE_REVISION`, `E_CAS_REQUIRED` | with `base_revision`, another revision landed; `remove` or a body replacement without it → `gram_brief`, recheck, resend with a new `request_id` |
 | `E_ARGUMENT` | field value not an array, `set` without `old` at the head, `place` with `edit-text`, or unknown section |
 | `E_FIELD`, `E_LINK`, `E_TIME`, `E_MISSING_TITLE` | bad field key, unknown predicate, `effective_at` without time or zone, no `t` |
@@ -113,7 +112,7 @@ Each document has one dashboard, chosen by Core from its template (see Documents
 | `E_AMBIGUOUS_TEXT` | `edit-text` `old` not found exactly once → copy from `gram_read`, widen it |
 | `E_DUPLICATE_ID`, `E_DUPLICATE_FIELD` | id exists (with `base_revision`) → `set` that record; unknown `type` |
 | `E_REQUEST_REUSE` | `request_id` already used for a different request → new id |
-| `E_READ_ONLY`, `E_PATH` | read-only mount; bad path or nested vault-mount write |
+| `AGENT_SCOPE_DENIED`, `E_READ_ONLY`, `E_PATH` | denied key/membership/policy scope or invalid path → inspect the explicit grant and configured document; never switch destinations |
 
 One `request_id` per intended change. After an error, fix the request and use a new id. After a lost answer, resend the identical request with the same id; if it landed, Thegram replays the receipt (`"replayed": true`).
 

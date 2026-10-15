@@ -1,7 +1,6 @@
 import { execFile } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
-import { request } from "node:http";
+import { chmod, mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -85,18 +84,71 @@ async function readJsonFile(file: string): Promise<unknown> {
 	}
 }
 
-export function endpointFile(): string {
-	return (
-		process.env.THEGRAM_MCP_ENDPOINT ??
-		path.join(os.homedir(), "Library", "Application Support", "Thegram", "mcp.json")
-	);
+export interface ConnectionSettings {
+	url: string;
+	apiKey: string;
+	mount?: string;
 }
 
-export async function socketPath(): Promise<string> {
-	const endpoint = await readJsonFile(endpointFile());
-	const socket = isJson(endpoint) ? str(endpoint.socket) : undefined;
-	if (!socket) throw new ThegramError("E_APP_NOT_RUNNING", "Thegram is not running. Open the Thegram app, then retry.");
-	return socket;
+export function connectionFile(): string {
+	return path.join(configDir(), "connection.json");
+}
+
+export function validateEndpoint(value: string): string {
+	let url: URL;
+	try {
+		url = new URL(value);
+	} catch {
+		throw new ThegramError("E_CONFIG", "Thegram MCP URL is invalid");
+	}
+	const loopback = ["127.0.0.1", "[::1]"].includes(url.hostname);
+	if ((url.protocol !== "https:" && !(url.protocol === "http:" && loopback)) ||
+		url.username || url.password || url.search || url.hash || url.pathname !== "/mcp") {
+		throw new ThegramError("E_CONFIG", "Use an HTTPS /mcp endpoint; HTTP is allowed only on loopback for local verification");
+	}
+	return url.href;
+}
+
+export async function connectionSettings(): Promise<ConnectionSettings> {
+	const file = connectionFile();
+	const stored = await readJsonFile(file);
+	const saved = isJson(stored) ? stored : {};
+	const envKey = process.env.THEGRAM_API_KEY;
+	if (!envKey && typeof saved.apiKey === "string" && process.platform !== "win32") {
+		const info = await stat(file);
+		if ((info.mode & 0o077) !== 0) throw new ThegramError("E_CONFIG", `Restrict ${file} to mode 0600 before connecting`);
+	}
+	const apiKey = envKey ?? str(saved.apiKey);
+	if (!apiKey) throw new ThegramError("E_AUTH", "Connect Thegram with an API key: node dist/thegram-memory.mjs connect");
+	if (!apiKey.startsWith("tgk_") || /\s/.test(apiKey)) throw new ThegramError("E_AUTH", "Use an API key issued in Thegram Settings → Agents");
+	const savedURL = str(saved.url) ?? "https://vault.thegram.one/mcp";
+	const url = validateEndpoint(process.env.THEGRAM_MCP_URL ?? savedURL);
+	if (!envKey && process.env.THEGRAM_MCP_URL && url !== validateEndpoint(savedURL)) {
+		throw new ThegramError("E_CONFIG", "Reconnect explicitly before using a stored API key with a different endpoint");
+	}
+	const mount = process.env.THEGRAM_MCP_MOUNT ?? str(saved.mount);
+	if (mount !== undefined && !/^@mounts\/[A-Za-z0-9_-]+$/.test(mount)) {
+		throw new ThegramError("E_CONFIG", "Select the exact Cloud vault mount key from gram_projects");
+	}
+	return { url, apiKey, mount };
+}
+
+export async function saveConnection(settings: ConnectionSettings): Promise<void> {
+	const dir = configDir();
+	await mkdir(dir, { recursive: true, mode: 0o700 });
+	if (process.platform !== "win32") await chmod(dir, 0o700);
+	const temp = `${connectionFile()}.${randomUUID()}.tmp`;
+	try {
+		await writeFile(temp, JSON.stringify(settings) + "\n", { mode: 0o600, flag: "wx" });
+		await rename(temp, connectionFile());
+	} finally {
+		await rm(temp, { force: true });
+	}
+}
+
+export async function connectionId(): Promise<string> {
+	const settings = await connectionSettings();
+	return createHash("sha256").update(JSON.stringify(settings)).digest("hex");
 }
 
 export interface McpResponse {
@@ -107,50 +159,35 @@ export interface McpResponse {
 }
 
 export async function postMcp(body: string, headers: Record<string, string>, timeoutMs: number): Promise<McpResponse> {
-	const socket = await socketPath();
-	const { promise, resolve, reject } = Promise.withResolvers<McpResponse>();
-	const req = request(
-		{
-			socketPath: socket,
-			path: "/mcp",
+	const settings = await connectionSettings();
+	try {
+		const response = await fetch(settings.url, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 				Accept: "application/json, text/event-stream",
-				"Content-Length": Buffer.byteLength(body),
 				...headers,
+				Authorization: `Bearer ${settings.apiKey}`,
 			},
-		},
-		res => {
-			const chunks: Buffer[] = [];
-			res.on("data", (chunk: Buffer) => chunks.push(chunk));
-			res.on("error", reject);
-			res.on("end", () => {
-				const session = res.headers["mcp-session-id"];
-				resolve({
-					status: res.statusCode ?? 0,
-					sessionId: typeof session === "string" ? session : undefined,
-					contentType: String(res.headers["content-type"] ?? ""),
-					body: Buffer.concat(chunks).toString("utf8"),
-				});
-			});
-		},
-	);
-	let timedOut = false;
-	const deadline = setTimeout(() => {
-		timedOut = true;
-		req.destroy();
-	}, timeoutMs);
-	promise.finally(() => clearTimeout(deadline)).catch(() => {});
-	req.on("error", error =>
-		reject(
-			timedOut
-				? new ThegramError("E_TIMEOUT", `Thegram did not answer within ${timeoutMs} ms`)
-				: new ThegramError("E_APP_NOT_RUNNING", `Thegram socket unreachable: ${error.message}`),
-		),
-	);
-	req.end(body);
-	return promise;
+			body,
+			redirect: "error",
+			signal: AbortSignal.timeout(Math.max(1, timeoutMs)),
+		});
+		if (response.status === 401) throw new ThegramError("E_AUTH", "Thegram API key is invalid, expired or revoked; reconnect with a new key");
+		if (response.status === 403) throw new ThegramError("E_FORBIDDEN", "The API key does not permit this Thegram operation");
+		return {
+			status: response.status,
+			sessionId: response.headers.get("mcp-session-id") ?? undefined,
+			contentType: response.headers.get("content-type") ?? "",
+			body: await response.text(),
+		};
+	} catch (error) {
+		if (error instanceof ThegramError) throw error;
+		if (error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name)) {
+			throw new ThegramError("E_TIMEOUT", `Thegram did not answer within ${timeoutMs} ms`);
+		}
+		throw new ThegramError("E_CONNECT", "Thegram Cloud MCP is unreachable; check the endpoint and network");
+	}
 }
 
 export function parseMcpMessages(response: McpResponse): unknown[] {
@@ -236,12 +273,23 @@ export async function resolveProject(cwd: string): Promise<string | null> {
 	const map = await loadProjectMap();
 	const dir = path.resolve(cwd);
 	const real = await realpath(dir).catch(() => dir);
-	const mapped = mappedFolder(map, dir) ?? mappedFolder(map, real);
-	if (mapped) return mapped;
 	const common = await gitCommonDir(dir);
-	if (!common) return null;
-	const root = path.basename(common) === ".git" ? path.dirname(common) : common.replace(/\.git$/, "");
-	return mappedFolder(map, root) ?? (path.basename(root).replace(/^\.+/, "") || null);
+	const root = common ? (path.basename(common) === ".git" ? path.dirname(common) : common.replace(/\.git$/, "")) : undefined;
+	const mapped = mappedFolder(map, dir) ?? mappedFolder(map, real) ?? (root && mappedFolder(map, root));
+	if (mapped) {
+		if (!/^@mounts\/[A-Za-z0-9_-]+\/[A-Za-z0-9][A-Za-z0-9_-]{0,95}\.gram$/.test(mapped)) {
+			throw new ThegramError("E_CONFIG", "Project mappings must name an exact Cloud document: @mounts/<vault-id>/<project>.gram");
+		}
+		return mapped;
+	}
+	if (!root) return null;
+	const { mount } = await connectionSettings();
+	if (!mount) throw new ThegramError("E_CONFIG", "Select a Cloud vault with the connect command or THEGRAM_MCP_MOUNT");
+	const name = path.basename(root);
+	const safe = /^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/.test(name)
+		? name
+		: `${name.replace(/[^A-Za-z0-9_-]/g, "-").replace(/^[-_]+/, "").slice(0, 80) || "project"}-${createHash("sha256").update(name).digest("hex").slice(0, 12)}`;
+	return `${mount}/${safe}.gram`;
 }
 
 export async function loadPolicy(): Promise<string> {
@@ -258,8 +306,10 @@ export interface TurnState {
 }
 
 export interface MemoryState {
-	folder?: string | null;
+	documentPath?: string | null;
+	connection?: string;
 	vault?: string;
+	writable?: boolean;
 	exists: boolean;
 	available: boolean;
 	next?: string;
@@ -289,8 +339,10 @@ export function newMemoryState(): MemoryState {
 }
 
 export function resetMemoryState(state: MemoryState): void {
-	delete state.folder;
+	delete state.documentPath;
+	delete state.connection;
 	delete state.vault;
+	delete state.writable;
 	delete state.next;
 	Object.assign(state, newMemoryState());
 }
@@ -304,7 +356,7 @@ export interface Orientation {
 
 function renderBrief(name: string, vault: string | undefined, brief: Json, refs: string[]): string {
 	const docs = rowsOf(brief.docs);
-	const lines = [`Project folder \`${name}\` in the Thegram vault${vault ? ` \`${vault}\`` : ""}.`];
+	const lines = [`Project memory \`${name}\` in Thegram Cloud${vault ? ` (\`${vault}\`)` : ""}.`];
 	if (docs.length === 1) {
 		const [docPath, , rev, hash, recorded] = docs[0];
 		const newest = rowsOf(brief.recent).find(row => row[0] === docPath && row[1] === rev);
@@ -383,44 +435,61 @@ function renderHits(hits: Row[], seen: string[]): string | undefined {
 }
 
 export async function orient(state: MemoryState, cwd: string, prompt?: string): Promise<Orientation | undefined> {
-	if (state.folder === undefined) state.folder = await resolveProject(cwd);
-	const name = state.folder;
-	if (!name) return;
+	let name = state.documentPath ?? path.basename(cwd);
 	const deadline = Date.now() + ORIENT_BUDGET_MS;
 	const left = (cap: number): number => Math.max(0, Math.min(cap, deadline - Date.now()));
 	try {
+		const connection = await connectionId();
+		const documentPath = await resolveProject(cwd);
+		if (state.connection !== connection || state.documentPath !== documentPath) {
+			resetMemoryState(state);
+			state.connection = connection;
+			state.documentPath = documentPath;
+		}
+		if (!documentPath) return;
+		name = documentPath;
 		const projects = await callTool("gram_projects", {}, left(CALL_TIMEOUT_MS));
-		state.vault = str(projects.vault);
+		const mountKey = name.slice(0, name.lastIndexOf("/"));
+		const mount = listOf(projects.mounts).find(item => item.key === mountKey && item.kind === "vault");
+		if (!mount) throw new ThegramError("E_FORBIDDEN", "The selected Cloud vault is not accessible to this API key");
+		state.vault = str(mount.name);
+		state.writable = mount.access === "write";
 		state.available = true;
 		state.unavailableNoticed = false;
-		const exists = rowsOf(projects.projects).some(row => row[0] === name);
-		if (exists && !state.exists) state.needBrief = true;
-		state.exists = exists;
-		const vault = state.vault ? ` in \`${state.vault}\`` : "";
-		if (!exists) {
-			if (!state.needBrief) return;
-			state.needBrief = false;
-			return {
-				project: name,
-				policy: await loadPolicy(),
-				recalled: false,
-				sections: [
-					`No Thegram folder \`${name}\` exists yet${vault}. When this work produces a durable decision, event, risk or task, create \`${name}/memory.gram\` with gram_create (template project@1, headings # Overview, # Architecture, # Plan, # Decisions, # Log) and record it there.`,
-				],
-			};
-		}
+
 		const sections: string[] = [];
 		let policy: string | undefined;
-		if (state.needBrief || !state.next) {
-			const brief = await callTool("gram_brief", { folder: name }, left(BRIEF_TIMEOUT_MS));
+		if (state.needBrief || !state.next || !state.exists) {
+			let brief: Json;
+			try {
+				brief = await callTool("gram_brief", { path: name }, left(BRIEF_TIMEOUT_MS));
+			} catch (error) {
+				if (errorCode(error) !== "E_NOT_FOUND") throw error;
+				const firstNotice = state.needBrief || state.exists;
+				state.exists = false;
+				state.needBrief = false;
+				if (!firstNotice) return;
+				return {
+					project: name,
+					policy: await loadPolicy(),
+					recalled: false,
+					sections: [
+						state.writable
+							? `No Cloud memory document \`${name}\` exists yet. When this work produces a durable outcome, create that exact path with gram_create (base_revision null, template project@1, headings # Overview, # Architecture, # Plan, # Decisions, # Log). Do not create a folder or switch to another mount.`
+							: `Cloud memory document \`${name}\` does not exist and this API key is read-only. Do not create it or switch to another destination.`,
+					],
+				};
+			}
+			state.exists = true;
 			state.next = str(brief.next);
 			state.needBrief = false;
 			state.pendingRecall = true;
 			state.briefRefs = [];
 			policy = await loadPolicy();
 			sections.push(renderBrief(name, state.vault, brief, state.briefRefs));
+			if (!state.writable) sections.push("This API key is read-only. Do not attempt writes.");
 		} else {
-			const delta = await callTool("gram_changes", { folder: name, since: state.next }, left(BRIEF_TIMEOUT_MS));
+			const delta = await callTool("gram_changes", { path: name, since: state.next }, left(BRIEF_TIMEOUT_MS));
 			state.next = str(delta.next) ?? state.next;
 			const rendered = renderChanges(listOf(delta.changes), state.ownRevisions);
 			if (rendered) sections.push(rendered);
@@ -431,7 +500,7 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 			state.pendingRecall = false;
 			const recall = await callTool(
 				"gram_recall",
-				{ query: query.slice(0, RECALL_QUERY_CHARS), folder: name, top_k: MAX_HITS * 2 },
+				{ query: query.slice(0, RECALL_QUERY_CHARS), documents: [name], top_k: MAX_HITS * 2 },
 				left(RECALL_TIMEOUT_MS),
 			).catch(() => undefined);
 			const rendered = recall && renderHits(rowsOf(recall.hits), state.briefRefs);
@@ -443,14 +512,14 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 		if (!policy && sections.length === 0) return;
 		return { project: name, policy, sections, recalled };
 	} catch (error) {
-		state.available = errorCode(error) !== "E_APP_NOT_RUNNING";
+		state.available = false;
 		if (state.unavailableNoticed) return;
 		state.unavailableNoticed = true;
 		return {
 			project: name,
 			recalled: false,
 			sections: [
-				`Thegram memory could not be loaded (${errorCode(error)}). Treat project memory as unknown and do not claim Thegram writes until gram_projects answers.`,
+				`Thegram Cloud memory could not be loaded (${errorCode(error)}). Treat project memory as unknown. Check the API key and selected vault; do not switch storage or claim successful writes.`,
 			],
 		};
 	}
@@ -528,12 +597,12 @@ export function observeTool(state: MemoryState, call: ToolObservation): string |
 		state.turn.mutations += Math.max(1, files);
 	} else if (stringsOf(call.input).some(text => GIT_COMMIT.test(text))) state.turn.committed = true;
 	const turn = state.turn;
-	if (!state.folder || !state.available || turn.wrote || turn.nudged) return;
+	if (!state.documentPath || !state.available || !state.writable || turn.wrote || turn.nudged) return;
 	if (!turn.committed && turn.mutations < NUDGE_MUTATIONS) return;
 	turn.nudged = true;
 	const where = state.exists
-		? `\`${state.folder}\` (gram_brief {folder: "${state.folder}"} gives the current rev/hash)`
-		: `a new \`${state.folder}/memory.gram\` (gram_create with # Overview, # Architecture, # Plan, # Decisions, # Log)`;
+		? `\`${state.documentPath}\` (gram_brief {path: "${state.documentPath}"} gives the current rev/hash)`
+		: `a new \`${state.documentPath}\` (gram_create with # Overview, # Architecture, # Plan, # Decisions, # Log)`;
 	const changed = `${turn.mutations} file edit${turn.mutations === 1 ? "" : "s"}${turn.committed ? ", a commit" : ""}`;
 	return (
 		`This turn changed the repository (${changed}) and nothing has been written to Thegram yet. ` +

@@ -70,7 +70,7 @@ Pick 4 to 8 eras. For each, list the goals, requirements, assumptions, decisions
                todo.append(nxt)
        return {"unreachable": sorted(set(ids) - seen), "dangling": sorted(set(adj) - set(ids))}
 
-   print(await unreachable("<project>/memory.gram", "prj-<slug>"))
+   print(await unreachable("@mounts/<vault-id>/<project>.gram", "prj-<slug>"))
    ```
 
 3. `gram_range {path, start: 0}` (pass `more` back as `start`): effective times rise with revision numbers. `gram_state {path, entity, selector: {revision: N}}` returns an item only from the revision that added it.

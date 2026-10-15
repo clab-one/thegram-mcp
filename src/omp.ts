@@ -25,9 +25,7 @@ export default function thegramMemory(pi: ExtensionAPI): void {
 	let reminder: string | undefined;
 
 	const reset = (): void => {
-		const folder = state.folder;
 		state = newMemoryState();
-		state.folder = folder;
 		reminder = undefined;
 	};
 
@@ -39,10 +37,10 @@ export default function thegramMemory(pi: ExtensionAPI): void {
 	});
 
 	pi.on("session.compacting", () => {
-		if (!state.folder || !state.exists) return;
+		if (!state.documentPath || !state.exists) return;
 		return {
 			context: [
-				`Thegram memory for this project lives in folder \`${state.folder}\`${state.vault ? ` of the vault \`${state.vault}\`` : ""}. Durable outcomes from the compacted span that were not recorded yet still belong there.`,
+				`Thegram memory for this project lives at \`${state.documentPath}\`${state.vault ? ` in \`${state.vault}\`` : ""}. Durable outcomes from the compacted span that were not recorded yet still belong there.`,
 			],
 		};
 	});
@@ -65,7 +63,7 @@ export default function thegramMemory(pi: ExtensionAPI): void {
 	});
 
 	pi.on("tool_result", (event, ctx) => {
-		if (!isMainSession(ctx) || state.folder === undefined) return;
+		if (!isMainSession(ctx) || state.documentPath === undefined) return;
 		let name = event.toolName;
 		if (name === "write") {
 			const target = String(event.input.path ?? "");
@@ -92,19 +90,13 @@ export default function thegramMemory(pi: ExtensionAPI): void {
 	pi.registerCommand("thegram", {
 		description: "Show Thegram memory status for this project",
 		handler: async (_args, ctx) => {
-			const project = await resolveProject(ctx.cwd);
-			if (!project) {
-				ctx.ui.notify("thegram: no project for this directory (not a git repository and no mapping)", "warning");
-				return;
-			}
 			try {
-				const projects = await callTool("gram_projects", {});
-				const exists = Array.isArray(projects.projects) && projects.projects.some(row => Array.isArray(row) && row[0] === project);
-				if (!exists) {
-					ctx.ui.notify(`thegram: folder ${project} does not exist yet in ${str(projects.vault)}`, "info");
+				const project = await resolveProject(ctx.cwd);
+				if (!project) {
+					ctx.ui.notify("thegram: no project for this directory (not a git repository and no mapping)", "warning");
 					return;
 				}
-				const brief = await callTool("gram_brief", { folder: project });
+				const brief = await callTool("gram_brief", { path: project });
 				const docs = Array.isArray(brief.docs)
 					? brief.docs.map(row => (Array.isArray(row) ? `${row[0]} r${row[2]}` : "")).join(", ")
 					: "";

@@ -1,6 +1,5 @@
-import { readFile } from "node:fs/promises";
 import { createInterface } from "node:readline";
-import { endpointFile, errorCode, isJson, type McpResponse, parseMcpMessages, postMcp } from "./core.ts";
+import { connectionId, errorCode, isJson, type McpResponse, parseMcpMessages, postMcp } from "./core.ts";
 
 const REQUEST_TIMEOUT_MS = 120_000;
 
@@ -10,7 +9,6 @@ export async function runMcpProxy(): Promise<void> {
 	let initBody: string | undefined;
 	let initEndpoint: string | undefined;
 	let lost = false;
-	const endpoint = () => readFile(endpointFile(), "utf8").catch(() => "");
 	const write = (message: unknown): void => {
 		process.stdout.write(`${JSON.stringify(message)}\n`);
 	};
@@ -21,12 +19,12 @@ export async function runMcpProxy(): Promise<void> {
 		if (sessionId) headers["Mcp-Session-Id"] = sessionId;
 		return postMcp(body, headers, REQUEST_TIMEOUT_MS);
 	};
-	// The app forgets sessions on restart, so initialize is replayed to keep the client's identity.
+	// Reinitialize when the server or credential changes so sessions cannot cross connections.
 	const reinitialize = async (body: string): Promise<void> => {
 		sessionId = undefined;
 		sessionId = (await send(body)).sessionId;
 		await send(JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }));
-		initEndpoint = await endpoint();
+		initEndpoint = await connectionId();
 		lost = false;
 	};
 
@@ -38,10 +36,10 @@ export async function runMcpProxy(): Promise<void> {
 			if (isInitialize) {
 				initBody = body;
 				sessionId = undefined;
-			} else if (initBody && (lost || (await endpoint()) !== initEndpoint)) await reinitialize(initBody);
+			} else if (initBody && (lost || (await connectionId()) !== initEndpoint)) await reinitialize(initBody);
 			const response = await send(body);
 			if (response.sessionId) sessionId = response.sessionId;
-			if (isInitialize) initEndpoint = await endpoint();
+			if (isInitialize) initEndpoint = await connectionId();
 			const replies = parseMcpMessages(response);
 			for (const reply of replies) {
 				if (isInitialize && isJson(reply) && isJson(reply.result) && typeof reply.result.protocolVersion === "string") {
@@ -53,7 +51,7 @@ export async function runMcpProxy(): Promise<void> {
 				write({ jsonrpc: "2.0", id, error: { code: -32000, message: `Thegram answered HTTP ${response.status}` } });
 			}
 		} catch (error) {
-			if (errorCode(error) === "E_APP_NOT_RUNNING") lost = true;
+			if (errorCode(error) === "E_CONNECT") lost = true;
 			if (id === undefined) return;
 			const text = error instanceof Error ? error.message : String(error);
 			write({ jsonrpc: "2.0", id, error: { code: -32000, message: text, data: { code: errorCode(error) } } });
