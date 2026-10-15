@@ -1,7 +1,7 @@
 {
 	"name": "thegram-memory",
-	"version": "1.0.0",
-	"description": "Thegram as the durable project memory for Claude Code, Codex, opencode and OMP",
+	"version": "2.0.0",
+	"description": "Thegram Cloud project memory for coding agents through scoped API keys",
 	"private": true,
 	"type": "module",
 	"license": "UNLICENSED",

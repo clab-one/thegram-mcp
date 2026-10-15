@@ -1,28 +1,22 @@
 # thegram-memory
 
-Gives coding agents a shared project memory in [Thegram](https://thegram.one). Works with Claude Code, Codex, opencode and OMP.
-
-To install, hand this to your agent:
-
-> Install Thegram by following https://thegram.one/install/agents.md
-
-New to Thegram? https://thegram.one/install/#mac walks through installing the Mac app, turning on agent access and connecting each agent.
+Gives Claude Code, Codex, OpenCode and OMP shared project memory through [Thegram](https://thegram.one). Connect directly to the same Cloud MCP used by the ChatGPT and Claude OAuth integrations. No desktop app or DMG is required.
 
 ## Requirements
 
-- macOS with the Thegram app running and agent access set to **write**
-- Node 22 or later on `PATH`
+- Node.js 22 or later
+- A Thegram account and an API key issued in **Settings → Agents** with access to the intended Cloud vault
 
 ## Install
 
-Claude Code
+Claude Code:
 
 ```sh
 claude plugin marketplace add clab-one/thegram-mcp
 claude plugin install thegram-memory@thegram-memory
 ```
 
-Codex (choose "Trust all and continue" for the hooks on the first run)
+Codex:
 
 ```sh
 codex features enable hooks
@@ -30,52 +24,62 @@ codex plugin marketplace add clab-one/thegram-mcp
 codex plugin add thegram-memory@thegram-memory
 ```
 
-OMP
+OMP:
 
 ```sh
 omp plugin marketplace add clab-one/thegram-mcp
 omp plugin install thegram-memory@thegram-memory
 ```
 
-opencode v2
+OpenCode v2:
 
 ```sh
 opencode plugin add github:clab-one/thegram-mcp
 ```
 
-opencode v1: add `"github:clab-one/thegram-mcp"` to the `plugin` array in `opencode.json`.
+For OpenCode v1, add `github:clab-one/thegram-mcp` to the `plugin` array in `opencode.json`.
 
-Remove any MCP server you registered by hand under the name `thegram`, then start a new session.
+## Connect
 
-## Check
+Open [Thegram](https://vault.thegram.one/), issue a key in **Settings → Agents**, and select only the vaults and permissions the coding agent needs. The secret is shown once. Do not paste it into chat, a repository, a shell command argument or an agent instruction file.
 
 From the installed plugin directory:
 
 ```sh
+node dist/thegram-memory.mjs connect
 node dist/thegram-memory.mjs doctor
 ```
 
-It prints the app connection, the vault, and the project folder for the current directory. Exit code 1 means the app is not reachable.
+`connect` hides terminal input, verifies the key and asks you to choose a Cloud vault when more than one is accessible. For noninteractive input, pass the key on stdin and select the exact mount with `--mount @mounts/<vault-id>`. It is saved in `~/.config/thegram-memory/connection.json` with directory mode `0700` and file mode `0600` on POSIX. `XDG_CONFIG_HOME` changes the configuration root. Keep that file private.
 
-## How it works
+For a managed secret store, supply `THEGRAM_API_KEY` and `THEGRAM_MCP_MOUNT` through the host's environment instead of saving the key. The MCP endpoint is `https://vault.thegram.one/mcp`. `THEGRAM_MCP_URL` selects an explicitly configured HTTPS endpoint; HTTP is accepted only on a loopback IP for local E2E. A saved key cannot be redirected to another endpoint by changing the URL alone.
 
-- Each git repository uses the vault folder with the same name. Worktrees share it.
-- At session start the agent gets the project brief; later prompts get changes made by others.
-- If a turn edits files or commits without writing to Thegram, the agent gets one reminder.
-- Google Drive: after you sign in to Google Drive in the Thegram app, agents can read and write it under `@mounts/<id>/…`.
+Restart the agent session after installation. Remove any old manually registered `thegram` MCP server so only this plugin supplies that binding. All supported hosts use the same API-key connection; ChatGPT and Claude's official cloud integrations keep OAuth.
 
-Map a directory to a different folder in `~/.config/thegram-memory/projects.json` (longest prefix wins):
+`disconnect` removes this machine's saved credential. To disable a key everywhere, revoke it in Thegram Settings → Agents. The server refuses expired or revoked keys; the plugin never falls back to the desktop app or another storage destination.
+
+## Project memory
+
+Each Git repository maps to `@mounts/<selected-vault-id>/<repository>.gram`; worktrees share the same document. Names that cannot be Cloud filenames receive a deterministic hash suffix. Existing local-only memory is not uploaded or silently migrated.
+
+At session start the plugin injects the exact document's brief, recalls only within that document and then reads incremental changes. It reminds the agent to record durable outcomes after source changes. A read-only key never authorizes a write reminder.
+
+Map a directory to a different top-level Cloud document in `~/.config/thegram-memory/projects.json` (longest prefix wins):
 
 ```json
-{ "~/.omp": "omp" }
+{ "~/work/my-project": "@mounts/<vault-id>/shared-project.gram" }
 ```
 
-Add your own rules for every agent in `~/.config/thegram-memory/policy.md`.
+Old desktop-folder mappings must be replaced with explicit Cloud document paths. Add personal instructions in `~/.config/thegram-memory/policy.md`. Google Drive access is granted separately in Thegram; these automatic repository bindings select Cloud vault documents, while the MCP tools can access other mounts permitted by the key.
 
 ## Development
 
 ```sh
 bun run bundle
+THEGRAM_E2E_STATE=/path/to/local-fixture-state.json THEGRAM_E2E_REPORT=/path/to/report.json node --experimental-strip-types e2e/cloud.mjs
+python3 e2e/hidden_tty.py --state /path/to/local-fixture-state.json --evidence /path/to/tty-report.json
 ```
 
-Commit `dist/` with the source; installs do not build. For a release, bump `version` in `package.json`, `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`.
+The E2Es use the real loopback Vault/key-authority fixture, issue and revoke scratch keys, exercise the packaged CLI, stdio MCP and project hooks, and retain redacted JSON reports. The terminal regression types immediately when the prompt appears and verifies that the key is never echoed. Private temporary configurations are removed; fixtures and writable vaults must be disposable.
+
+Commit `dist/` with the source; installation does not build. Keep `package.json`, `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` versions aligned. Version 2 switches from desktop sockets to scoped Cloud API keys; it has no local-app fallback.

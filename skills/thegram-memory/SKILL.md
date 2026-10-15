@@ -9,29 +9,29 @@ Tools are the `thegram` MCP server's `gram_<name>` tools. In OMP, call one by wr
 
 ## Session
 
-1. Start from the injected brief, or call `gram_brief {folder}`. If the plugin reported an error, call `gram_projects` first.
+1. Start from the injected brief, or call `gram_brief {path}` for the configured Cloud project document. If the plugin reported an error, inspect `gram_projects` and the API-key configuration; do not fall back to the desktop app or another mount.
 2. Only the main agent writes; subagents return candidate records. Write one patch per durable outcome when it happens: a decision, a shipped change or incident, a risk, task or blocker, a verified metric, a status change.
 3. Before the final answer, every task you opened is `completed`, `blocked` or deliberately `active`, and every open question is a decision with `x open`.
 
 ## Documents
 
-- `<project>/memory.gram` has Overview, Architecture, Plan, Decisions and Log. Other names and folders are free; reuse existing documents.
+- `@mounts/<vault-id>/<project>.gram` has Overview, Architecture, Plan, Decisions and Log. Use the exact configured project path; Cloud vaults accept only top-level documents.
 - Write project documents as `.gram`. Use `.md` only for README or when the user asks; no Markdown copies.
 - Documents can hold any prose, tables and code; the durable-outcome rule only applies to memory records. See `gram_profile {task: "create"}` or `{task: "rich"}`.
 
 ## Mounts
 
-`gram_projects` lists mounts (Google Drive, other vaults) with key, id, kind, name, document count and access. Use the exact key as the path prefix, e.g. `@mounts/<id>/proj/memory.gram`; the key alone is the folder for the whole mount. The name is display only. Everything else works as for local documents.
+`gram_projects` lists mounts with key, id, kind, name, document count and access. Use the exact key as the path prefix, e.g. `@mounts/<id>/project.gram`. The name is display only.
 
-- Access never exceeds the agent approval for the Thegram folder. Read-only mounts reject writes with `E_READ_ONLY`.
+- Access is bounded by the API key's explicit grants, current vault membership and organization policy. A read-only key cannot write.
 - Vault mounts accept writes only to top-level `.gram` documents; nested writes fail with `E_PATH`.
-- Reads use the local synced copy. A write reached the remote only when it returns `sync.state` `synced` (otherwise check `sync.error`).
+- Cloud reads do not require a running desktop app. A successful remote write reports `sync.state: synced`.
 - Semantic recall includes mounted documents.
 
 ## Read
 
-- Orient: `gram_brief {folder}` gives each document's `rev`/`hash`, counts, open work and `next`; `gram_changes {folder, since}` lists later changes.
-- Find: `gram_recall {query, folder}` returns `path#id` hits; read them with `gram_context {ids, fields: [...]}`. `gram_relations {from}` lists links both ways.
+- Orient: `gram_brief {path}` gives this document's `rev`/`hash`, counts, open work and `next`; `gram_changes {path, since}` lists later changes.
+- Find: `gram_recall {query, documents: [path]}` restricts hits to this project's document; read `path#id` hits with `gram_context {ids, fields: [...]}`. `gram_relations {from}` lists links both ways.
 - `gram_read {path}` gives the outline; `{path, section}` gives one section. Lines look like ``**title** · type `id`[ · x][ · p][ · at][ · due date][ · value unit @ observed][ · replaces ids]``, with `d` on the next line. There is no `records` array.
 - Decisions have no date field. Their date is the earliest event that `implements` them (shown in `gram_read`, and as `implemented` in `gram_context`/`gram_get`).
 - Dates: use inclusive from/to filters or a date/month/year query. Default date field: event at, metric observed, task due, otherwise at; `date` picks another. Keep ids as short slugs; dates in titles are optional and never a search workaround.
@@ -44,7 +44,7 @@ Tools are the `thegram` MCP server's `gram_<name>` tools. In OMP, call one by wr
 Each `gram_patch` or `gram_create` is one revision:
 
 ```json
-{"path": "<project>/memory.gram", "base_revision": 7, "expected_hash": "<16 hex>", "request_id": "<stable-slug>", "operations": []}
+{"path": "@mounts/<vault-id>/<project>.gram", "base_revision": 7, "expected_hash": "<16 hex>", "request_id": "<stable-slug>", "operations": []}
 ```
 
 Take `base_revision`/`expected_hash` from `gram_brief` or from the `doc` of your last write. Pass `effective_at` only for past facts, as a full ISO time with a zone (`2025-01-02T03:04:05Z`). The app retries `E_BUSY` itself.
@@ -65,7 +65,7 @@ Take `base_revision`/`expected_hash` from `gram_brief` or from the `doc` of your
 A new memory is one `gram_create`. Records in it may link to each other in any order; only records placed as `[[id]]` in `text` are in the body.
 
 ```json
-{"path": "<project>/memory.gram", "title": "…", "base_revision": null,
+{"path": "@mounts/<vault-id>/<project>.gram", "title": "…", "base_revision": null,
  "content": {"text": "# Overview\n\n[[prj-<slug>]]\n\n# Architecture\n\n# Plan\n\n# Decisions\n\n# Log\n",
              "fields": {"d": ["<one-line summary>"]},
              "records": [{"type": "project", "id": "prj-<slug>", "fields": {"t": ["…"], "d": ["…"], "x": ["active"]}}]}}

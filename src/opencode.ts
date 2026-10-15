@@ -98,7 +98,7 @@ function createSessions(directory: () => string) {
 		},
 		tool(id: string, name: string, input: unknown, output: unknown, isError: boolean): void {
 			const session = sessions.get(id);
-			if (!session || session.state.folder === undefined) return;
+			if (!session || session.state.documentPath === undefined) return;
 			const nudge = observeTool(session.state, { name, input, output, isError });
 			if (nudge) session.reminder = nudge;
 		},
