@@ -41,7 +41,7 @@ Pick 4 to 8 eras. For each, list the goals, requirements, assumptions, decisions
    import json
 
    async def gram(name, **args):
-       text = (await tool.write({"path": f"xd://mcp__thegram_gram_{name}", "content": json.dumps(args)}))["text"]
+       text = (await tool.write({"path": f"xd://mcp__thegram_memory_thegram_gram_{name}", "content": json.dumps(args)}))["text"]
        if text.startswith("Error:"):
            raise RuntimeError(text)
        return json.loads(text)

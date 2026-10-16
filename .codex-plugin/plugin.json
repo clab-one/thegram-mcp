@@ -1,6 +1,6 @@
 {
 	"name": "thegram-memory",
-	"version": "3.0.1",
+	"version": "3.0.2",
 	"description": "Thegram Cloud project memory over API keys: project briefs, durable outcome reminders and one MCP connection without a desktop app.",
 	"keywords": ["memory", "thegram", "mcp"],
 	"mcpServers": "./.codex-plugin/mcp.json"

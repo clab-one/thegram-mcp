@@ -5,7 +5,7 @@ description: Read and write Thegram project memory and documents through the the
 
 # Thegram project memory
 
-Tools are the `thegram` MCP server's `gram_<name>` tools. In OMP, call one by writing its JSON arguments to `xd://mcp__thegram_gram_<name>`.
+Tools are the `thegram` MCP server's `gram_<name>` tools. In OMP, call one by writing its JSON arguments to `xd://mcp__thegram_memory_thegram_gram_<name>`.
 
 ## Session
 
