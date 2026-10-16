@@ -101,7 +101,7 @@ Other optional fields: `p` (`urgent` `high` `medium` `low`), `owner`, `tag`, `du
 
 ## 7. What the dashboard counts
 
-The Project Tracker summarizes records; it never reads commits, events or prose as progress. Record the facts truthfully and let the numbers follow. Never add, split, relabel or complete records to move a number; if a number misleads, say so in the answer instead.
+The Project Tracker summarizes records; it never reads commits, events or prose as progress. Record the facts truthfully and let the numbers follow. Never add, split, relabel or complete records to move a number; if a number misleads, say so in the answer instead. A record of the wrong kind (a commit or release written as a task) is a mistake, not history: say so, and with the person's consent make sure the fact exists as an `event`, then `remove` the wrong record (`{"op":"remove","entity":"<id>"}`, needs `base_revision`). Fixing a mistake may move a number; moving a number is never the reason.
 
 | On screen | Counts | Record it this way |
 |---|---|---|
@@ -140,7 +140,7 @@ After 3+ file edits, a commit, or a push/release/deploy command, the plugin remi
 | `E_REQUEST_REUSE` | `request_id` already used for a different request → new id |
 | `AGENT_SCOPE_DENIED`, `E_READ_ONLY`, `E_PATH` | the key, membership or policy denies it, or the path is invalid → report it; never switch to another mount or the desktop app |
 
-One `request_id` per intended change. After a lost answer, resend the identical request with the same id; a landed write replays its receipt (`"replayed": true`). Only the main agent writes; subagents return candidate records. Never remove records; change their status.
+One `request_id` per intended change. After a lost answer, resend the identical request with the same id; a landed write replays its receipt (`"replayed": true`). Only the main agent writes; subagents return candidate records. Never remove records that were true; change their status. Remove only a record that was wrong when written, as above.
 
 ## 11. Backfill
 
