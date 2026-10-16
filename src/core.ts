@@ -271,6 +271,23 @@ function gitCommonDir(dir: string): Promise<string | undefined> {
 	return promise;
 }
 
+function gitOutput(dir: string, args: string[]): Promise<string | undefined> {
+	const { promise, resolve } = Promise.withResolvers<string | undefined>();
+	execFile("git", ["-C", dir, ...args], { timeout: CALL_TIMEOUT_MS }, (error, stdout) =>
+		resolve(error ? undefined : stdout.trim() || undefined),
+	);
+	return promise;
+}
+
+/** Repository name to tag records with when this repository writes into a document it shares with others. */
+export async function repositoryScope(cwd: string, documentPath: string): Promise<string | undefined> {
+	const root = await gitOutput(path.resolve(cwd), ["rev-parse", "--show-toplevel"]);
+	if (!root) return;
+	const remote = await gitOutput(root, ["remote", "get-url", "origin"]);
+	const name = remote ? path.basename(remote.replace(/\/+$/, ""), ".git").replace(/^.*:/, "") : path.basename(root);
+	return path.basename(documentPath, ".gram") === name ? undefined : name;
+}
+
 export async function resolveProject(cwd: string): Promise<string | null> {
 	const map = await loadProjectMap();
 	const dir = path.resolve(cwd);
@@ -318,6 +335,7 @@ export interface MemoryState {
 	available: boolean;
 	next?: string;
 	projectId?: string;
+	scope?: string;
 	needBrief: boolean;
 	pendingRecall: boolean;
 	briefRefs: string[];
@@ -350,6 +368,7 @@ export function resetMemoryState(state: MemoryState): void {
 	delete state.writable;
 	delete state.next;
 	delete state.projectId;
+	delete state.scope;
 	Object.assign(state, newMemoryState());
 }
 
@@ -360,7 +379,14 @@ export interface Orientation {
 	recalled: boolean;
 }
 
-function renderBrief(name: string, vault: string | undefined, brief: Json, refs: string[], projectId: string | undefined): string {
+function renderBrief(
+	name: string,
+	vault: string | undefined,
+	brief: Json,
+	refs: string[],
+	projectId: string | undefined,
+	scope: string | undefined,
+): string {
 	const docs = rowsOf(brief.docs);
 	const lines = [`Project memory \`${name}\` in Thegram Cloud${vault ? ` (\`${vault}\`)` : ""}.`];
 	if (docs.length === 1) {
@@ -380,6 +406,7 @@ function renderBrief(name: string, vault: string | undefined, brief: Json, refs:
 			? `Root project record: \`${projectId}\`. Link every new record into it: decisions, components and goals part-of it; events implements the decision they carry out (else part-of); tasks, risks and blockers related to what they concern.`
 			: "This document has no project record. With your first write, add one (type project, x active) placed in Overview and link new records to it.",
 	);
+	if (scope) lines.push(`Other repositories share this document: give every record you add "s": ["${scope}"].`);
 	const open = rowsOf(brief.open);
 	const total = open.length + (typeof brief.open_omitted === "number" ? brief.open_omitted : 0);
 	if (total > 0) {
@@ -501,8 +528,9 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 			state.briefRefs = [];
 			const root = rowsOf((await roots)?.records).find(row => row[1] === "project");
 			state.projectId = root ? String(root[0]) : undefined;
+			state.scope = await repositoryScope(cwd, name);
 			policy = await loadPolicy();
-			sections.push(renderBrief(name, state.vault, brief, state.briefRefs, state.projectId));
+			sections.push(renderBrief(name, state.vault, brief, state.briefRefs, state.projectId, state.scope));
 			if (!state.writable) sections.push("This API key is read-only. Do not attempt writes.");
 		} else {
 			const delta = await callTool("gram_changes", { path: name, since: state.next }, left(BRIEF_TIMEOUT_MS));
@@ -656,6 +684,7 @@ function recordingReminder(state: MemoryState, lead: string): string {
 		"- a status change of an existing record, such as a risk this change resolves: set x with old\n" +
 		"Docs: .gram by default; .md only for README or explicit user requests. " +
 		"If nothing qualifies, say in the final answer why no Thegram record was written.\n" +
+		(state.scope ? `Other repositories share this document: give every record you add "s": ["${state.scope}"].\n` : "") +
 		`Add shape: {"op":"add","record":{"type":"event","id":"ev-<slug>","fields":{"t":["…"],"d":["…"],"at":["<ISO time>"],"ref":["<commit>"]},"links":[["implements","dec-<slug>"]]},"place":{"section":"Log"}}; every field value is an array.`
 	);
 }

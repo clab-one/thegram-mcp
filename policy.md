@@ -15,4 +15,4 @@ Thegram Cloud is this project's memory. Use the `thegram` MCP tools (`gram_*`) t
 - No document yet: on the first durable fact create the exact injected Cloud document path (template project@1) with Overview, Architecture, Plan, Decisions and Log, a root `project` record placed in Overview and that fact in its section, only when the key permits writes.
 - Write in the document's language; a new document uses the user's language.
 - The final answer names written records (`path#id`, revision) or says why none were written.
-- To build memory from project history, use the `thegram-memory` skill (OMP: `skill://thegram-memory`).
+- Before the first write in a session, read the `thegram-memory` skill (OMP: `skill://thegram-memory`): what to record, a complete one-turn patch, status values per template, body syntax, and building memory from history.

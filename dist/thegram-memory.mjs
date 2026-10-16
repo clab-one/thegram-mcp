@@ -240,6 +240,19 @@ function gitCommonDir(dir) {
   execFile("git", ["-C", dir, "rev-parse", "--path-format=absolute", "--git-common-dir"], { timeout: CALL_TIMEOUT_MS }, (error, stdout) => resolve2(error ? undefined : stdout.trim() || undefined));
   return promise;
 }
+function gitOutput(dir, args) {
+  const { promise, resolve: resolve2 } = Promise.withResolvers();
+  execFile("git", ["-C", dir, ...args], { timeout: CALL_TIMEOUT_MS }, (error, stdout) => resolve2(error ? undefined : stdout.trim() || undefined));
+  return promise;
+}
+async function repositoryScope(cwd, documentPath) {
+  const root = await gitOutput(path.resolve(cwd), ["rev-parse", "--show-toplevel"]);
+  if (!root)
+    return;
+  const remote = await gitOutput(root, ["remote", "get-url", "origin"]);
+  const name = remote ? path.basename(remote.replace(/\/+$/, ""), ".git").replace(/^.*:/, "") : path.basename(root);
+  return path.basename(documentPath, ".gram") === name ? undefined : name;
+}
 async function resolveProject(cwd) {
   const map = await loadProjectMap();
   const dir = path.resolve(cwd);
@@ -293,9 +306,10 @@ function resetMemoryState(state) {
   delete state.writable;
   delete state.next;
   delete state.projectId;
+  delete state.scope;
   Object.assign(state, newMemoryState());
 }
-function renderBrief(name, vault, brief, refs, projectId) {
+function renderBrief(name, vault, brief, refs, projectId, scope) {
   const docs = rowsOf(brief.docs);
   const lines = [`Project memory \`${name}\` in Thegram Cloud${vault ? ` (\`${vault}\`)` : ""}.`];
   if (docs.length === 1) {
@@ -312,6 +326,8 @@ function renderBrief(name, vault, brief, refs, projectId) {
   if (counts)
     lines.push("Records: " + counts + ".");
   lines.push(projectId ? `Root project record: \`${projectId}\`. Link every new record into it: decisions, components and goals part-of it; events implements the decision they carry out (else part-of); tasks, risks and blockers related to what they concern.` : "This document has no project record. With your first write, add one (type project, x active) placed in Overview and link new records to it.");
+  if (scope)
+    lines.push(`Other repositories share this document: give every record you add "s": ["${scope}"].`);
   const open = rowsOf(brief.open);
   const total = open.length + (typeof brief.open_omitted === "number" ? brief.open_omitted : 0);
   if (total > 0) {
@@ -447,8 +463,9 @@ async function orient(state, cwd, prompt) {
       state.briefRefs = [];
       const root = rowsOf((await roots)?.records).find((row) => row[1] === "project");
       state.projectId = root ? String(root[0]) : undefined;
+      state.scope = await repositoryScope(cwd, name);
       policy = await loadPolicy();
-      sections.push(renderBrief(name, state.vault, brief, state.briefRefs, state.projectId));
+      sections.push(renderBrief(name, state.vault, brief, state.briefRefs, state.projectId, state.scope));
       if (!state.writable)
         sections.push("This API key is read-only. Do not attempt writes.");
     } else {
@@ -610,7 +627,8 @@ function recordingReminder(state, lead) {
 ` + `- a caveat, limitation or follow-up you are about to report: risk or task in Plan, x open, related to what it concerns
 ` + `- a status change of an existing record, such as a risk this change resolves: set x with old
 ` + "Docs: .gram by default; .md only for README or explicit user requests. " + `If nothing qualifies, say in the final answer why no Thegram record was written.
-` + `Add shape: {"op":"add","record":{"type":"event","id":"ev-<slug>","fields":{"t":["…"],"d":["…"],"at":["<ISO time>"],"ref":["<commit>"]},"links":[["implements","dec-<slug>"]]},"place":{"section":"Log"}}; every field value is an array.`;
+` + (state.scope ? `Other repositories share this document: give every record you add "s": ["${state.scope}"].
+` : "") + `Add shape: {"op":"add","record":{"type":"event","id":"ev-<slug>","fields":{"t":["…"],"d":["…"],"at":["<ISO time>"],"ref":["<commit>"]},"links":[["implements","dec-<slug>"]]},"place":{"section":"Log"}}; every field value is an array.`;
 }
 function stateDir() {
   const base = process.env.PLUGIN_DATA || process.env.CLAUDE_PLUGIN_DATA || path.join(os.tmpdir(), "thegram-memory");

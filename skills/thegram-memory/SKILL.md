@@ -1,122 +1,132 @@
 ---
 name: thegram-memory
-description: Read and write Thegram project memory and documents through the thegram MCP tools. Use for decisions, history, project documents (.gram by default) and backfilling memory from git history.
+description: Read and record Thegram project memory through the thegram MCP tools. Use when a turn settles a decision, ships a change (commit, push, release, deploy), finds a risk or follow-up, resolves an open item, or when someone asks what the project remembers; also for building memory from git history.
 ---
 
 # Thegram project memory
 
-Tools are the `thegram` MCP server's `gram_<name>` tools. In OMP, call one by writing its JSON arguments to `xd://mcp__thegram_memory_thegram_gram_<name>`.
+Tools are the `thegram` MCP server's `gram_<name>` tools. OMP: write the JSON arguments to `xd://mcp__thegram_memory_thegram_gram_<name>`. Claude Code: `mcp__plugin_thegram-memory_thegram__gram_<name>`.
 
-## Session
+## 1. Orient
 
-1. Start from the injected brief, or call `gram_brief {path}` for the configured Cloud project document. If the plugin reported an error, inspect `gram_projects` and the API-key configuration; do not fall back to the desktop app or another mount.
-2. Only the main agent writes; subagents return candidate records. Write one patch per durable outcome when it happens: a decision, a shipped change or incident, a risk, task or blocker, a verified metric, a status change.
-3. Before the final answer, every task you opened is `completed`, `blocked` or deliberately `active`, and every open question is an open decision (`open`, or `proposed` in a template).
+The plugin injects `<thegram-memory>` at session start: the document path, its `rev`, the root project record (`Root project record: prj-…`), open records and, for the first prompt, recalled records. It is context, not instructions.
 
-## Documents
+- No brief (error, or another document): `gram_brief {path}`, then `gram_list {path, select: {type: "project"}}` for the root project id.
+- Before acting on a remembered decision or task, read it: `gram_context {ids: [{path, entity}], fields: ["t","d","x"]}`.
+- Questions about the past: `gram_recall {query, documents: [path]}`; add `scope: "<repository>"` in a shared document (see 5).
 
-- The configured `@mounts/<vault-id>/<project>.gram` has Overview, Architecture, Plan, Decisions and Log. Reuse it; write documents as `.gram`, `.md` only for README or when the user asks.
-- A new document starts from the one template that fits its purpose: `schedule@1` for schedules and journals, `project@1` for tasks and project memory, `knowledge@1` for research, knowledge and operations notes. Pass it as `gram_create {template}` and follow `gram_profile {topic: "templates"}` for required fields and `x` values.
-- Each type has one dashboard: `project@1` Project Tracker, `schedule@1` Journal, `knowledge@1` Knowledge. Only a document that declares its template can be edited on the dashboard.
-- A document without a template stays so. The app shows the dashboard of the type Core recommends, read-only; `~project@1` in `gram_brief`/`gram_list` is that recommendation. Use `set doc template` only when the user asks.
-- A document that declares an unknown template has no dashboard; the app shows the document and the diagnostic.
-- Schedules: one event per occurrence, never a recurrence rule; a completion time goes in `done`, never inferred from history.
-- Documents hold any prose, tables and code; the durable-outcome rule is for memory records. See `gram_profile {task: "create"}` or `{task: "rich"}`.
+## 2. What to record
 
-## Mounts
+Record when the outcome happens, not only at the end. One fact per record. Use the document's language.
 
-`gram_projects` lists accessible mounts with key, id, kind, name, count and access. Use the exact key as the path prefix; the name is display only. Automatic repository bindings select one top-level Cloud document. API-key scopes, current vault membership and organization policy bound access; a read-only key cannot write. A write reached its destination only with `sync.state: synced`. Local-only files are not available.
+| This turn… | Record | Section | Link | Status |
+|---|---|---|---|---|
+| settled a choice ("let's…", "use X, not Y", a design you picked) | `decision` | Decisions | `part-of` project | `accepted` |
+| replaced an earlier decision | new `decision` + `set x` on the old | Decisions | new `replaces` old | old → `superseded` |
+| committed, pushed, released, deployed, migrated | `event` with `at` and `ref` | Log | `implements` its decision, else `part-of` project | none |
+| published a release or build | `artifact` with `ref` | Log | `derives` its event | none |
+| left a caveat, limitation or follow-up you will mention | `risk` or `task` | Plan | `related` to what it concerns | `open` |
+| hit an outage or regression | `event` + `risk` or `task` | Log / Plan | `related` | `open` |
+| finished or unblocked something already recorded | `set x` with `old` | — | `link related` to the resolving event | `completed` / `resolved` |
+| measured a number that has a metric | `set value` and `set observed` on that metric | — | — | — |
+| verified a claim with a test or run | `evidence` | Log | `supports` the decision or risk | none |
 
-## Read
+Do not record: chatter, plans you did not act on, raw logs, secrets, reverted experiments, typo-level edits. If nothing qualifies, say so in the final answer.
 
-- Orient: `gram_brief {path}` gives the configured document's `rev`/`hash`, counts, open work and `next`; `gram_changes {path, since}` lists later changes.
-- Find: `gram_recall {query, documents: [path]}` restricts hits to this project's document; read `path#id` hits with `gram_context {ids, fields: [...]}`. `gram_relations {from}` lists links both ways.
-- `gram_read {path}` gives the outline; `{path, section}` one section, a line per record (title, type, id, x, p, dates, value) with `d` under it. There is no `records` array.
-- Decisions have no date field; their date is the earliest event that `implements` them (`implemented` in `gram_context`/`gram_get`).
-- Dates: inclusive from/to or a date/month/year query; default field event at, metric observed, task due, otherwise at (`date` picks another).
-- `scope` in recall is exact s-tag membership; `type` is record type. Prefer hybrid or keyword when semantic hits look loose; if hits miss, retry once with another mode, wording or date filter.
-- History: `gram_range {path, query}` lists revisions that changed matching records, `{path, start: 0}` all of them with `effective_at` (pass `more` as `start`).
-- Past state: `effective_at`, `revision` or `recorded_at` on `gram_read`, `gram_get` and `gram_list {path}`, in `gram_state`'s `selector`, and per `gram_context` `ids[]` item; `gram_list` with `select` ignores them.
+`event` fields: `at` is the commit's author time (`git log -1 --format=%aI <hash>`), never the current time for an older commit. `ref` is one URI: build it from `git remote get-url origin` as `https://github.com/<owner>/<repo>/commit/<first 10 hash chars>`, or a release/PR URL; without a remote use the hash.
 
-## Write
+## 3. One turn, one patch
 
-Each `gram_patch` or `gram_create` is one revision. For head-mode patches, leave out `base_revision`/`expected_hash`; creation requires `base_revision: null`.
+Write the whole outcome of a turn as one `gram_patch` against the head. Operations run in order, so later ones can link to records added earlier.
 
 ```json
-{"path": "@mounts/<vault-id>/<project>.gram", "request_id": "<stable-slug>", "operations": []}
+{"path": "@mounts/<vault-id>/<project>.gram", "request_id": "slugify-unicode",
+ "operations": [
+  {"op": "add", "record": {"type": "decision", "id": "dec-unicode-slugs",
+    "fields": {"t": ["Keep Unicode letters in slugs"], "d": ["slugify keeps letters and digits of every script and joins the rest with one hyphen."], "x": ["accepted"]},
+    "links": [["part-of", "prj-strings"], ["replaces", "dec-ascii-slugs"]]}, "place": {"section": "Decisions"}},
+  {"op": "set", "entity": "dec-ascii-slugs", "key": "x", "value": "superseded", "old": "accepted"},
+  {"op": "add", "record": {"type": "event", "id": "ev-unicode-slugs",
+    "fields": {"t": ["Unicode slugs shipped"], "d": ["slugify now maps '카페 Latte' to '카페-latte'."], "at": ["2026-10-16T11:49:19+09:00"], "ref": ["https://github.com/acme/strings/commit/6b96f595bd"]},
+    "links": [["implements", "dec-unicode-slugs"]]}, "place": {"section": "Log"}},
+  {"op": "set", "entity": "risk-ascii-only", "key": "x", "value": "resolved", "old": "open"},
+  {"op": "link", "entity": "risk-ascii-only", "predicate": "related", "target": "ev-unicode-slugs"},
+  {"op": "add", "record": {"type": "task", "id": "task-slug-length",
+    "fields": {"t": ["Cap slug length"], "d": ["Very long titles still produce unbounded slugs."], "x": ["open"]},
+    "links": [["related", "dec-unicode-slugs"]]}, "place": {"section": "Plan"}}
+ ]}
 ```
 
-Each `set`/`unset` carries `old`, what you read (a string, an array for several, `null` if empty); `E_PRECONDITION` comes only when one of those fields changed, never for edits elsewhere. `remove` and whole-body `text`/`drop-text`/`rich` need `base_revision` and `expected_hash` from `gram_brief` or your last write's `doc`. Pass `effective_at` only for past facts, a full ISO time with a zone. The app retries `E_BUSY`.
+- Every field value in `add` is an array; `set` takes `value` (or `values`) and `old`, exactly what you read (`null` when empty).
+- `t` is a short title, never a time or id. `d` is one sentence stating the outcome.
+- Ids are short slugs with a type prefix (`dec-`, `ev-`, `task-`, `risk-`, `art-`, `evd-`, `m-`), no dates.
+- `place` is `{"section": "<heading>"}`, `{"after": "<id>"}` or `"end"`. A record without `place` is not in the body.
+- A write landed only when the answer shows `sync.state: synced`. The final answer names the records (`path#id`, revision).
 
-| op | shape |
-|---|---|
-| add | `{"op":"add","record":{"type":"decision","id":"dec-<slug>","fields":{"t":["…"],"d":["…"],"x":["accepted"]},"links":[["part-of","prj-<slug>"]]},"place":{"section":"Decisions"}}` |
-| set | `{"op":"set","entity":"task-<slug>","key":"x","value":"completed","old":"active"}`; several values: `"values":["ui","api"]` |
-| link, unlink | `{"op":"link","entity":"dec-new","predicate":"replaces","target":"dec-old"}` |
-| edit-text | `{"op":"edit-text","entity":"doc","kind":"rich","old":"<exact text, once>","new":"…"}` |
+## 4. Status values
 
-- `add` values are arrays; `set` takes `value` or `values`. Never remove a record; change its status.
-- `place` is `{"section": "<heading>"}`, `{"after": "<id>"}` or `"end"` (without it the record is not in the body) and cannot share a patch with `edit-text`. `[[id]]` must be alone on a line with no whitespace or invisible characters; do not place a record already in the body. Inside `edit-text`, `[[id]]` alone on a line places a record and `[label](@id)` mentions one.
-- Use a short descriptive `t` title; never put an ISO time or ID in it. Put times only in `at`, `observed` or `due`.
-- Operations run in order; later ones can link to or place after records added earlier.
-- Follow a template action's required fields and operations, but send ordinary Cloud patch operations without native-only `action`/`action_target` arguments.
+A document that declares a template accepts only that template's values; check `gram_profile {topic: "templates"}` when unsure.
 
-A new memory is one `gram_create`. Records in it may link to each other in any order; only records placed as `[[id]]` in `text` are in the body. Without `content` a template starts from its own headings.
+| type | `project@1` | no template |
+|---|---|---|
+| task | `backlog` `open` `active` `review` `blocked` `waiting` `completed` `cancelled` `archived` | `open` `active` `blocked` `completed` `superseded` |
+| decision | `proposed` `accepted` `rejected` `superseded` | `open` `accepted` `superseded` |
+| risk | `open` `mitigated` `resolved` `accepted` `closed` | `open` `completed` `superseded` |
+| goal | `open` `active` `completed` `cancelled` `archived` | `active` `completed` |
+| project | `planning` `active` `at-risk` `on-hold` `completed` `cancelled` `archived` | `active` `completed` |
+| blocker | no fixed list; use `open`, then `completed` | `open` `blocked` `completed` |
 
-```json
-{"path": "@mounts/<vault-id>/<project>.gram", "title": "…", "base_revision": null, "template": "project@1",
- "content": {"text": "# Overview\n\n[[prj-<slug>]]\n\n# Architecture\n\n# Plan\n\n# Decisions\n\n# Log\n",
-             "fields": {"d": ["<one-line summary>"]},
-             "records": [{"type": "project", "id": "prj-<slug>", "fields": {"t": ["…"], "d": ["…"], "x": ["active"]}}]}}
-```
+Other optional fields: `p` (`high` `medium` `low`), `owner`, `tag`, `due` (task, ISO date), `start` (project@1 task). Unknown keys warn `W_EXTENSION_FIELD`.
 
-## Records
+## 5. Documents
 
-- Types: `project goal requirement assumption decision task blocker risk event artifact evidence metric component system service source history knowledge context person agent run asset`. Others are rejected.
-- Fields: t (required, one line), d, x, p, owner, tag, source, ref, s (scope tag); due on tasks, at on events, value/unit/observed on metrics; plus the template's. Other valid keys warn `W_EXTENSION_FIELD`, invalid ones fail `E_FIELD`. `source` must name a `source` record; otherwise cite with `ref`.
-- Predicates: `part-of implements depends derives related supports contradicts replaces blocks enables`. Others are stored but never read back as links.
-- Without a template `x` is free text (the table below); a misspelled status shows as open, a task or risk without `x` never does. A template takes only its listed values: in `project@1` an open decision is `proposed`, a dropped task `cancelled`, a closed risk `resolved`.
+- The configured project document has `# Overview` (project, metrics), `# Architecture` (components, one Mermaid `flowchart`), `# Plan` (goals, tasks, risks), `# Decisions` and `# Log` (history, events, artifacts, evidence). Reuse it; write `.gram`, `.md` only for README or when asked.
+- No document yet: one `gram_create` with `base_revision: null`, `template: "project@1"`, the five headings, a root `project` record placed in Overview and the first outcome in its section (the injected notice has the exact shape).
+- Several repositories can share one document (a directory mapping in `~/.config/thegram-memory/projects.json`). Then put the repository name in `s` on every record you add (`"s": ["thegram-vault"]`) so `gram_recall {scope}` and readers can filter it.
+- A new non-project document picks one template: `schedule@1` for schedules and journals, `project@1` for projects and tasks, `knowledge@1` for research and operations notes. Schedules: one event per occurrence, completion time in `done`.
+- Each template has one dashboard (Project Tracker, Journal, Knowledge). A document without a template shows Core's recommended dashboard read-only (`~project@1` in listings); declare a template only when asked.
+- Link only within the document. For a record in another document, cite its URL in `ref` (cross-document targets stay unresolved).
 
-| type | `x` |
-|---|---|
-| task, risk, blocker | `open`, `active` (in progress), `blocked`, `completed`; dropped: `superseded` |
-| decision | `accepted`; open question `open`; replaced `superseded` |
-| goal, project | `active`, then `completed` |
-| requirement, assumption | `accepted`, then `superseded` |
-| component, system, event, evidence, artifact | none |
+## 6. Body and dashboard
 
-- One fact per record: one-line `t`, one-sentence `d` stating the outcome.
-- Sections: Overview (project, metrics), Architecture (components), Plan (goals, requirements, assumptions, tasks, risks, blockers), Decisions, Log (history, events, artifacts, evidence).
-- Every record needs an explicit link path to the project: component, decision, goal, requirement, assumption, history and metric `part-of` project; event `implements` the decisions it carried out (else `part-of`); artifact `derives` its event; evidence `supports` a decision or risk; task `part-of` its goal; other tasks, risks and blockers `related` to what they concern.
-- Replace a decision: `set x superseded` on the old one and `link replaces` from the new one.
-- Events have `at` (ISO date or time) and a `ref` to the commit, PR or release.
+- `[[id]]` alone on a line places a record; never place a record twice. `[label](@id)` mentions a record in a sentence; mention instead of copying its numbers.
+- `[[*]]{type=risk status=open view=list}` shows matching records live without placing them; `view` is `list` or `table`.
+- Callouts: `> [!note]` (or `tip`, `important`, `warning`, `caution`) followed by `> ` lines. Tables need a `|---|` row and equal cells.
+- Prose changes use `{"op":"edit-text","entity":"doc","kind":"rich","old":"<exact text, once>","new":"…"}`; it cannot share a patch with `place`, so add records first, then edit text in the next patch.
+- Mermaid: only `flowchart`/`graph`; label only `-->` edges.
+- Metrics: one `metric` record per quantity (`value` a plain number, constant `unit`, `observed` a past ISO time with zone). Each new measurement is `set value` + `set observed` on that record, never a new record.
+- Goal progress counts the `completed` share of tasks `part-of` the goal. `d` on `doc` is the document summary; `set doc view dashboard` opens it on the dashboard.
 
-## Dashboard and diagrams
+## 7. Read
 
-Each document has one dashboard, chosen by Core from its template (see Documents) and drawn from its records and history. Mermaid flowcharts in the body are drawn too.
+- `gram_read {path}` outline; `{path, section}` one section as lines (title, type, id, x, dates, `d`).
+- `gram_list {path, select: {type, status}}` filters; `gram_get {path, entity}` one record.
+- `gram_relations {from: {path, entity}}` lists edges both ways.
+- `gram_changes {path, since}` later changes; `gram_range {path, query}` revisions that touched matching records; past state via `revision`, `effective_at` or `recorded_at` on `gram_read`/`gram_get`/`gram_list {path}` and `gram_state {path, entity, selector}`.
+- Decisions have no date field; their date is the earliest event that `implements` them.
+- Recall: `mode` `hybrid` or `keyword` when semantic hits look loose; date filters `from`/`to` (inclusive; `YYYY-MM` covers the month). Retry once with other wording before concluding nothing is recorded.
 
-- A metric chart is one record's history: one `metric` per quantity with a stable id; each measurement is one patch setting `value` and `observed`, never a new record.
-- `value` is a plain number (`-?digits[.digits]`); anything else shows as text. Keep `unit` constant (`percent` shows as `%`); a new unit starts a new series. `observed` is a full ISO time with a zone.
-- Goal progress is the `completed` share of same-document tasks linked to it. The overview counts blocked tasks, open blockers and risks, and open decisions or requirements; `d` on `doc` is the summary, and `set doc view dashboard` opens the document on its dashboard.
-- Mermaid: only `flowchart` and `graph` blocks are drawn, the system diagram under Architecture. Label only `-->` edges; a labeled `==>` or `-.->` line is dropped.
+## 8. Reminders and the stop check
 
-## Errors
+After 3+ file edits, a commit, or a push/release/deploy command, the plugin reminds you once; if you then try to finish without writing, it asks for one continuation. Answer it by writing the records from section 2, or by stating in the final answer why nothing qualified. Do not write filler to silence it.
+
+## 9. Errors
 
 | code | cause → fix |
 |---|---|
 | `E_PRECONDITION` | a field you read changed, the id exists with other content, or a `place` target is gone (`details.conditions`) → reread, decide, resend with a new `request_id` |
 | `E_TEMPLATE` | the write breaks the template; `details.diagnostics` names record, field, expected → fix them |
-| `STALE_REVISION`, `E_CAS_REQUIRED` | with `base_revision`, another revision landed; `remove` or a body replacement without it → `gram_brief`, recheck, resend with a new `request_id` |
-| `E_ARGUMENT` | field value not an array, `set` without `old` at the head, `place` with `edit-text`, or unknown section |
+| `STALE_REVISION`, `E_CAS_REQUIRED` | with `base_revision`, another revision landed; `remove` or a body replacement without it → `gram_brief`, recheck, resend |
+| `E_ARGUMENT` | value not an array, `set` without `old`, `place` with a body edit, unknown section or argument shape |
 | `E_FIELD`, `E_LINK`, `E_TIME`, `E_MISSING_TITLE` | bad field key, unknown predicate, `effective_at` without time or zone, no `t` |
 | `E_MISSING_TARGET`, `E_MISSING_SOURCE` | link target not added yet; `source` names a non-`source` record → add it first, or cite with `ref` |
 | `E_AMBIGUOUS_TEXT` | `edit-text` `old` not found exactly once → copy from `gram_read`, widen it |
-| `E_DUPLICATE_ID`, `E_DUPLICATE_FIELD` | id exists (with `base_revision`) → `set` that record; unknown `type` |
+| `E_DUPLICATE_ID` | id exists → `set` that record or pick another id |
 | `E_REQUEST_REUSE` | `request_id` already used for a different request → new id |
-| `AGENT_SCOPE_DENIED`, `E_READ_ONLY`, `E_PATH` | denied key/membership/policy scope or invalid path → inspect the explicit grant and configured document; never switch destinations |
+| `AGENT_SCOPE_DENIED`, `E_READ_ONLY`, `E_PATH` | the key, membership or policy denies it, or the path is invalid → report it; never switch to another mount or the desktop app |
 
-One `request_id` per intended change. After an error, fix the request and use a new id. After a lost answer, resend the identical request with the same id; if it landed, Thegram replays the receipt (`"replayed": true`).
+One `request_id` per intended change. After a lost answer, resend the identical request with the same id; a landed write replays its receipt (`"replayed": true`). Only the main agent writes; subagents return candidate records. Never remove records; change their status.
 
-## Backfill
+## 10. Backfill
 
 To build memory from project history, follow [backfill.md](backfill.md).

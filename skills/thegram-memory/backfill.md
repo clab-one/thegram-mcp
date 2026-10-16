@@ -9,6 +9,8 @@ Revisions are append-only. A record added later never shows up in an older revis
 - Themes: count words in commit subjects per period; sampling misses streams of small commits.
 - Open work: before calling anything open, scaffold or planned, search later history for its follow-ups.
 - Totals: era commit counts add up to the total commit count.
+- Several repositories in one document: read each one's remote default branch after `git fetch` (local checkouts can be stale), and take the repository name for `ref` and `s` from `git remote get-url origin`, not from the directory name.
+- Large histories: a subagent may gather candidate records as JSON (ids, `t`, `d`, `at`, `ref`, links, era); only the main agent writes them.
 
 ## 2. Plan the eras
 
@@ -16,12 +18,15 @@ Pick 4 to 8 eras. For each, list the goals, requirements, assumptions, decisions
 
 ## 3. Write oldest first
 
-- r0 is one `gram_create` with `template: "project@1"` and `effective_at` set to the first commit's author date. `content.text` has the five headings with each record placed as `[[id]]` on its own line; `content.records` holds the project, the first day's goals, requirements, assumptions and evidence, and the first event.
-- Then one `gram_patch` per era or milestone group, with `effective_at` set to the latest event in it. It holds the era's `history` record (opening the era in Log), its decisions, components, events and plan records, `set x` (with `old`) on earlier items it resolves plus `link related` to the resolving event, and any `set d` fixes.
-- Metrics: add each series once, in the era it is first measured. In every later era, `set value` and `set observed` (the era's end) on the same record so the dashboard draws a chart. Never add one metric record per era.
-- Place records in time order with `place: {"after": "<id>"}`, chained inside the patch.
-- Add an item in the era whose source states it, never earlier. Mark inference with `[INFERENCE]` in `d`.
-- 30 to 60 operations per patch works. Carry `doc.rev` and `doc.hash` from each answer into the next patch. In OMP you can send them from Python eval with the `gram()` helper in step 5.
+- r0 is one `gram_create` with `template: "project@1"` and `effective_at` set to the latest event it holds (the first commit's author date if it holds none). `content.text` has the five headings with each record placed as `[[id]]` on its own line, the first era's `history` record before its events in Log; `content.records` holds the project, the first day's components, goals, requirements, assumptions and evidence, and the first event.
+- Then one `gram_patch` per era or milestone group, with `effective_at` set to the latest event in it. Effective times must rise with every revision. It holds the era's `history` record (opening the era in Log), its decisions, components, events and plan records, `set x` (with `old`) on earlier items it resolves plus `link related` to the resolving event, and any `set d` fixes.
+- A decision replaced in a later era: in that era's patch, `set x superseded` on the old one and `link replaces` from the new one.
+- Components: one per repository or package, added in the era of its first commit; add `depends` links in the era where both ends exist. In a shared document give every record `s: [<repository>]`.
+- Metrics: add each series once, in the era it is first measured. In every later era, `set value` and `set observed` (the era's end) on the same record so the dashboard draws a chart. Never add one metric record per era. `observed` is never in the future: for the current era use the time of the latest counted commit.
+- Place records in time order with `place: {"after": "<id>"}`, chained inside the patch, or append them to the section in time order.
+- Add an item in the era whose source states it, never earlier. Mark inference with `[INFERENCE]` in `d`. Corrections after the backfill go in a normal head patch without `effective_at`.
+- Open items another Thegram document already tracks: copy them as your own `risk`/`task` with that document's URL in `ref`; links across documents stay unresolved.
+- 30 to 60 operations per patch works. In OMP you can send them from Python eval with the `gram()` helper in step 5.
 
 ## 4. Facts and wording
 
@@ -30,7 +35,7 @@ Pick 4 to 8 eras. For each, list the goals, requirements, assumptions, decisions
 - `ref` is one URI: a commit URL with a 10-character hash, a blob URL at a pinned commit, or a release tag URL.
 - Evidence `supports` its decision or risk. A metric's scope goes in `d`; keep its numbers out of prose. A release artifact `derives` its event.
 - Public documents: no personal names unless asked.
-- Last pass: rewrite Overview and Architecture prose in the present tense with `edit-text`, draw the current components as a Mermaid flowchart under Architecture, add an era table that mentions records (`[label](@id)`) instead of copying numbers, and `set d` on retired components.
+- Last pass, in its own patch (body edits cannot share a patch with `place`): rewrite Overview and Architecture prose in the present tense with `edit-text`, draw the current components as a Mermaid flowchart under Architecture, add an era table that mentions records (`[label](@id)`) instead of copying numbers, `set d` on retired components, and `set doc view dashboard` when the user wants the dashboard first.
 
 ## 5. Verify
 
@@ -75,4 +80,4 @@ Pick 4 to 8 eras. For each, list the goals, requirements, assumptions, decisions
 
 3. `gram_range {path, start: 0}` (pass `more` back as `start`): effective times rise with revision numbers. `gram_state {path, entity, selector: {revision: N}}` returns an item only from the revision that added it.
 4. `gram_recall` answers a real question with the right decision and risk.
-5. Every metric draws a chart: `gram_changes {path, since_revision: 0}` lists each metric id under `set` with `value` or `observed` in later revisions.
+5. Every metric has a history: `gram_changes {path, since_revision: 0}` lists each metric id under `set` with `value` or `observed` in later revisions, and `gram_state {path, entity, selector: {revision: N}}` returns each era's value.
