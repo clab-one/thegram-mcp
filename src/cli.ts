@@ -12,6 +12,7 @@ import {
 	loadProjectMap,
 	PACKAGE_ROOT,
 	resolveProject,
+	rowsOf,
 	saveConnection,
 	stateDir,
 	str,
@@ -29,6 +30,7 @@ const USAGE = `thegram-memory <command>
   mcp              stdio bridge to the Cloud MCP using the API key
   hook             Claude Code / Codex command hook (event JSON on stdin)
   doctor [dir]     check Cloud access and this repository's memory document
+  bind [dir]       tag the memory document's project record with this repository so it can be moved into a folder
   version          print the package version`;
 
 async function readStdin(): Promise<string> {
@@ -129,17 +131,19 @@ async function doctor(dir: string): Promise<number> {
 		if (settings.mount && !mounts.some(item => item.key === settings.mount && item.kind === "vault")) {
 			throw new ThegramError("E_FORBIDDEN", "The selected Cloud vault is not accessible to this API key");
 		}
-		const project = await resolveProject(dir);
-		if (!project) lines.push(`project: none for ${dir} (not a git repository and no mapping)`);
+		const binding = await resolveProject(dir);
+		if (!binding) lines.push(`project: none for ${dir} (not a git repository and no mapping)`);
 		else {
+			const via = binding.via === "repository" ? `bound by ${binding.tag}` : binding.via === "mapping" ? "projects.json mapping" : "root path only (run bind before moving it into a folder)";
 			try {
-				const brief = await callTool("gram_brief", { path: project });
+				const brief = await callTool("gram_brief", { path: binding.path });
 				const docs = Array.isArray(brief.docs) ? brief.docs.length : 0;
-				lines.push(`project: ${project} · ${docs} memory document`);
+				lines.push(`project: ${binding.path} · ${docs} memory document · ${via}`);
 			} catch (error) {
 				if (errorCode(error) !== "E_NOT_FOUND") throw error;
-				lines.push(`project: ${project} · not created yet`);
+				lines.push(`project: ${binding.path} · not created yet · ${via}`);
 			}
+			if (binding.others?.length) lines.push(`warning: ${binding.tag} is also on ${binding.others.join(", ")}`);
 		}
 	} catch (error) {
 		failed = true;
@@ -154,6 +158,43 @@ async function doctor(dir: string): Promise<number> {
 	lines.push(`hook state: ${stateDir()}`);
 	process.stdout.write(`${lines.join("\n")}\n`);
 	return failed ? 1 : 0;
+}
+
+async function bind(args: string[]): Promise<number> {
+	const projectFlag = args.indexOf("--project");
+	const chosen = projectFlag >= 0 ? args[projectFlag + 1] : undefined;
+	const dirArg = projectFlag >= 0 ? args.filter((_, index) => index !== projectFlag && index !== projectFlag + 1)[0] : args[0];
+	const dir = path.resolve(dirArg ?? process.cwd());
+	const binding = await resolveProject(dir);
+	if (!binding) throw new ThegramError("E_CONFIG", `${dir} is not a Git repository and has no mapping`);
+	if (!binding.tag) throw new ThegramError("E_CONFIG", "This repository has no origin remote; map it in projects.json instead");
+	if (binding.via === "repository") {
+		process.stdout.write(`${binding.path}#${binding.projectId} already carries ${binding.tag}\n`);
+		return 0;
+	}
+	const listed = await callTool("gram_list", { path: binding.path, select: { type: "project" } });
+	const ids = rowsOf(listed.records).map(row => String(row[0]).slice(String(row[0]).lastIndexOf("#") + 1));
+	if (ids.length === 0) throw new ThegramError("E_NOT_FOUND", `${binding.path} has no project record yet; it is tagged when it is created`);
+	const project = chosen ?? (ids.length === 1 ? ids[0] : undefined);
+	if (!project || !ids.includes(project)) {
+		throw new ThegramError("E_ARGUMENT", `Choose the root project record with --project: ${ids.join(", ")}`);
+	}
+	const context = await callTool("gram_context", { ids: [{ path: binding.path, entity: project }], fields: ["tag"] });
+	const item = Array.isArray(context.items) ? context.items.find(isJson) : undefined;
+	const fields = item && isJson(item.fields) ? item.fields : {};
+	const tags = Array.isArray(fields.tag) ? fields.tag.map(String) : [];
+	if (tags.includes(binding.tag)) {
+		process.stdout.write(`${binding.path}#${project} already carries ${binding.tag}\n`);
+		return 0;
+	}
+	const written = await callTool("gram_patch", {
+		path: binding.path,
+		request_id: `bind-${project}-${binding.tag}`.replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 120),
+		operations: [{ op: "set", entity: project, key: "tag", values: [...tags, binding.tag], old: tags.length ? tags : null }],
+	});
+	const doc = isJson(written.doc) ? written.doc : {};
+	process.stdout.write(`${binding.path}#${project} now carries ${binding.tag} (r${String(doc.rev)}); the document can be moved into a folder.\n`);
+	return 0;
 }
 
 async function main(): Promise<number> {
@@ -177,6 +218,8 @@ async function main(): Promise<number> {
 			return 0;
 		case "doctor":
 			return doctor(path.resolve(args[0] ?? process.cwd()));
+		case "bind":
+			return bind(args);
 		case "version":
 			process.stdout.write(`${await packageVersion()}\n`);
 			return 0;

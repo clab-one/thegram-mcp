@@ -60,11 +60,11 @@ Restart the agent session after installation. Remove any old manually registered
 
 ## Project memory
 
-Each Git repository maps to `@mounts/<selected-vault-id>/<repository>.gram`; worktrees share the same document. Names that cannot be Cloud filenames receive a deterministic hash suffix. Existing local-only memory is not uploaded or silently migrated.
+Each Git repository binds to one document: the document whose root project record carries the tag `repo:<host/owner/name>` of its `origin` remote, in any folder of any vault the key can read (the selected vault first), else `@mounts/<selected-vault-id>/<repository>.gram`; worktrees share the same document. Documents created by the plugin carry the tag. For an older document, run `node dist/thegram-memory.mjs bind` in the repository once (`--project <id>` when it has several project records); after that it can be moved into a folder without the plugin creating a duplicate at the root. `doctor` shows how the repository is bound. Names that cannot be Cloud filenames receive a deterministic hash suffix. Existing local-only memory is not uploaded or silently migrated.
 
 At session start the plugin injects the exact document's brief, recalls only within that document and then reads incremental changes. After source changes, a commit, or a push, release or deploy command it reminds the agent to record durable outcomes; if the agent is about to finish without writing, the Stop hook (Claude Code, Codex) or `session_stop` (OMP) asks for one continuation, and the agent either records or states why nothing qualified. A read-only key never authorizes a write reminder.
 
-Map a directory to a different top-level Cloud document in `~/.config/thegram-memory/projects.json` (longest prefix wins):
+Map a directory to a different Cloud document, folders allowed, in `~/.config/thegram-memory/projects.json` (longest prefix wins; a mapping wins over the tag):
 
 ```json
 { "~/work/my-project": "@mounts/<vault-id>/shared-project.gram" }
