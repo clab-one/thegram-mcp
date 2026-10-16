@@ -313,6 +313,7 @@ export interface MemoryState {
 	exists: boolean;
 	available: boolean;
 	next?: string;
+	projectId?: string;
 	needBrief: boolean;
 	pendingRecall: boolean;
 	briefRefs: string[];
@@ -344,6 +345,7 @@ export function resetMemoryState(state: MemoryState): void {
 	delete state.vault;
 	delete state.writable;
 	delete state.next;
+	delete state.projectId;
 	Object.assign(state, newMemoryState());
 }
 
@@ -354,7 +356,7 @@ export interface Orientation {
 	recalled: boolean;
 }
 
-function renderBrief(name: string, vault: string | undefined, brief: Json, refs: string[]): string {
+function renderBrief(name: string, vault: string | undefined, brief: Json, refs: string[], projectId: string | undefined): string {
 	const docs = rowsOf(brief.docs);
 	const lines = [`Project memory \`${name}\` in Thegram Cloud${vault ? ` (\`${vault}\`)` : ""}.`];
 	if (docs.length === 1) {
@@ -369,6 +371,11 @@ function renderBrief(name: string, vault: string | undefined, brief: Json, refs:
 	}
 	const counts = isJson(brief.counts) ? Object.entries(brief.counts).map(([type, count]) => type + " " + count).join(", ") : "";
 	if (counts) lines.push("Records: " + counts + ".");
+	lines.push(
+		projectId
+			? `Root project record: \`${projectId}\`. Link every new record into it: decisions, components and goals part-of it; events implements the decision they carry out (else part-of); tasks, risks and blockers related to what they concern.`
+			: "This document has no project record. With your first write, add one (type project, x active) placed in Overview and link new records to it.",
+	);
 	const open = rowsOf(brief.open);
 	const total = open.length + (typeof brief.open_omitted === "number" ? brief.open_omitted : 0);
 	if (total > 0) {
@@ -461,6 +468,9 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 		let policy: string | undefined;
 		if (state.needBrief || !state.next || !state.exists) {
 			let brief: Json;
+			const roots = callTool("gram_list", { path: name, select: { type: "project" } }, left(CALL_TIMEOUT_MS)).catch(
+				() => undefined,
+			);
 			try {
 				brief = await callTool("gram_brief", { path: name }, left(BRIEF_TIMEOUT_MS));
 			} catch (error) {
@@ -475,7 +485,7 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 					recalled: false,
 					sections: [
 						state.writable
-							? `No Cloud memory document \`${name}\` exists yet. When this work produces a durable outcome, create that exact path with gram_create (base_revision null, template project@1, headings # Overview, # Architecture, # Plan, # Decisions, # Log). Do not create a folder or switch to another mount.`
+							? `No Cloud memory document \`${name}\` exists yet. When this work produces a durable outcome, create that exact path in one gram_create with a root project record and that outcome placed in its section, in the user's language: {"path":"${name}","title":"…","base_revision":null,"template":"project@1","content":{"text":"# Overview\\n\\n[[prj-<slug>]]\\n\\n# Architecture\\n\\n# Plan\\n\\n# Decisions\\n\\n# Log\\n","fields":{"d":["<one-line summary>"]},"records":[{"type":"project","id":"prj-<slug>","fields":{"t":["…"],"d":["…"],"x":["active"]}}]}}. Each further record is placed as [[id]] alone on a line in its section and linked to prj-<slug>. Do not create a folder or switch to another mount.`
 							: `Cloud memory document \`${name}\` does not exist and this API key is read-only. Do not create it or switch to another destination.`,
 					],
 				};
@@ -485,8 +495,10 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string): 
 			state.needBrief = false;
 			state.pendingRecall = true;
 			state.briefRefs = [];
+			const root = rowsOf((await roots)?.records).find(row => row[1] === "project");
+			state.projectId = root ? String(root[0]) : undefined;
 			policy = await loadPolicy();
-			sections.push(renderBrief(name, state.vault, brief, state.briefRefs));
+			sections.push(renderBrief(name, state.vault, brief, state.briefRefs, state.projectId));
 			if (!state.writable) sections.push("This API key is read-only. Do not attempt writes.");
 		} else {
 			const delta = await callTool("gram_changes", { path: name, since: state.next }, left(BRIEF_TIMEOUT_MS));
@@ -602,14 +614,19 @@ export function observeTool(state: MemoryState, call: ToolObservation): string |
 	turn.nudged = true;
 	const where = state.exists
 		? `\`${state.documentPath}\` (gram_brief {path: "${state.documentPath}"} gives the current rev/hash)`
-		: `a new \`${state.documentPath}\` (gram_create with # Overview, # Architecture, # Plan, # Decisions, # Log)`;
+		: `a new \`${state.documentPath}\` (one gram_create with a root project record in Overview and these records in their sections)`;
+	const project = state.projectId ?? "prj-<slug>";
 	const changed = `${turn.mutations} file edit${turn.mutations === 1 ? "" : "s"}${turn.committed ? ", a commit" : ""}`;
 	return (
 		`This turn changed the repository (${changed}) and nothing has been written to Thegram yet. ` +
-		`Before your final answer, record its durable memory outcomes in ${where}: decisions (x accepted, or set x superseded plus a replaces link), events with at and a commit/PR ref, new risks or tasks (x open), status changes with set x. ` +
+		`Before your final answer, record its durable outcomes in ${where}, in the document's language:\n` +
+		`- a choice the user or you settled ("let's…", "use X, not Y"): decision in Decisions, x accepted, part-of ${project}; a replaced one gets set x superseded plus a replaces link\n` +
+		`- the shipped change: event in Log with at (the commit's author time) and ref (commit/PR/release), implements its decision, else part-of ${project}\n` +
+		"- a caveat, limitation or follow-up you are about to report: risk or task in Plan, x open, related to what it concerns\n" +
+		"- a status change of an existing record, such as a risk this change resolves: set x with old\n" +
 		"Docs: .gram by default; .md only for README or explicit user requests. " +
 		"If nothing qualifies, say in the final answer why no Thegram record was written.\n" +
-		'Add shape: {"op":"add","record":{"type":"decision","id":"dec-<slug>","fields":{"t":["…"],"d":["…"],"x":["accepted"]},"links":[["implements","<id>"]]},"place":{"section":"Decisions"}}; every field value is an array.'
+		`Add shape: {"op":"add","record":{"type":"event","id":"ev-<slug>","fields":{"t":["…"],"d":["…"],"at":["<ISO time>"],"ref":["<commit>"]},"links":[["implements","dec-<slug>"]]},"place":{"section":"Log"}}; every field value is an array.`
 	);
 }
 
