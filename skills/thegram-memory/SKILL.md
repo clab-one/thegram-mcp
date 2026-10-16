@@ -25,9 +25,10 @@ Record when the outcome happens, not only at the end. One fact per record. Use t
 | replaced an earlier decision | new `decision` + `set x` on the old | Decisions | new `replaces` old | old → `superseded` |
 | committed, pushed, released, deployed, migrated | `event` with `at` and `ref` | Log | `implements` its decision, else `part-of` project | none |
 | published a release or build | `artifact` with `ref` | Log | `derives` its event | none |
-| left a caveat, limitation or follow-up you will mention | `risk` or `task` | Plan | `related` to what it concerns | `open` |
+| started planned work worth tracking (a goal's step, a requested feature, a fix with follow-up) | `task` | Plan | `part-of` its goal, else `part-of` project | `active` |
+| left a caveat, limitation or follow-up you will mention | `risk` or `task` | Plan | `related` to what it concerns (a task: `part-of` its goal) | `open` |
 | hit an outage or regression | `event` + `risk` or `task` | Log / Plan | `related` | `open` |
-| finished or unblocked something already recorded | `set x` with `old` | — | `link related` to the resolving event | `completed` / `resolved` |
+| finished or unblocked something already recorded | `set x` with `old` (task: also `set done` to the finish time) | — | `link related` to the resolving event | `completed` / `resolved` |
 | measured a number that has a metric | `set value` and `set observed` on that metric | — | — | — |
 | verified a claim with a test or run | `evidence` | Log | `supports` the decision or risk | none |
 
@@ -53,7 +54,7 @@ Write the whole outcome of a turn as one `gram_patch` against the head. Operatio
   {"op": "link", "entity": "risk-ascii-only", "predicate": "related", "target": "ev-unicode-slugs"},
   {"op": "add", "record": {"type": "task", "id": "task-slug-length",
     "fields": {"t": ["Cap slug length"], "d": ["Very long titles still produce unbounded slugs."], "x": ["open"]},
-    "links": [["related", "dec-unicode-slugs"]]}, "place": {"section": "Plan"}}
+    "links": [["part-of", "prj-strings"], ["related", "dec-unicode-slugs"]]}, "place": {"section": "Plan"}}
  ]}
 ```
 
@@ -76,7 +77,7 @@ A document that declares a template accepts only that template's values; check `
 | project | `planning` `active` `at-risk` `on-hold` `completed` `cancelled` `archived` | `active` `completed` |
 | blocker | no fixed list; use `open`, then `completed` | `open` `blocked` `completed` |
 
-Other optional fields: `p` (`high` `medium` `low`), `owner`, `tag`, `due` (task, ISO date), `start` (project@1 task). Unknown keys warn `W_EXTENSION_FIELD`.
+Other optional fields: `p` (`urgent` `high` `medium` `low`), `owner`, `tag`, `due` (task, ISO date), `start` and `done` (project@1 task: when work began and finished). Unknown keys warn `W_EXTENSION_FIELD`.
 
 ## 5. Documents
 
@@ -90,15 +91,28 @@ Other optional fields: `p` (`high` `medium` `low`), `owner`, `tag`, `due` (task,
 
 ## 6. Body and dashboard
 
-- `[[id]]` alone on a line places a record; never place a record twice. `[label](@id)` mentions a record in a sentence; mention instead of copying its numbers.
-- `[[*]]{type=risk status=open view=list}` shows matching records live without placing them; `view` is `list` or `table`.
+- `[[id]]` alone on a line places a record; never place a record twice. `[label](@id)` mentions a record inside a sentence: the label is the words a reader needs there (`[the two remotes](@ctx-histories) share no ancestor`). Never append a bare mention after a finished sentence or table cell; it reads as a cut-off phrase. Mention instead of copying numbers.
+- `[[*]]{type=risk status=open view=list}` shows matching records live as cards in the document view (not on the dashboard) without placing them; `view` is `list` or `table`.
 - Callouts: `> [!note]` (or `tip`, `important`, `warning`, `caution`) followed by `> ` lines. Tables need a `|---|` row and equal cells.
-- Prose changes use `{"op":"edit-text","entity":"doc","kind":"rich","old":"<exact text, once>","new":"…"}`; it cannot share a patch with `place`, so add records first, then edit text in the next patch.
+- Prose changes use `{"op":"edit-text","entity":"doc","kind":"rich","old":"<exact text, once>","new":"…"}`; it cannot share a patch with `place`, so add records first, then edit text in the next patch. `gram_read` returns Markdown with mentions flattened to their labels; copy `old` from it but keep the `[label](@id)` syntax in `new`.
 - Mermaid: only `flowchart`/`graph`; label only `-->` edges.
 - Metrics: one `metric` record per quantity (`value` a plain number, constant `unit`, `observed` a past ISO time with zone). Each new measurement is `set value` + `set observed` on that record, never a new record.
-- Goal progress counts the `completed` share of tasks `part-of` the goal. `d` on `doc` is the document summary; `set doc view dashboard` opens it on the dashboard.
+- `d` on `doc` is the document summary; `set doc view dashboard` opens it on the dashboard.
 
-## 7. Read
+## 7. What the dashboard counts
+
+The Project Tracker summarizes records; it never reads commits, events or prose as progress. Record the facts truthfully and let the numbers follow. Never add, split, relabel or complete records to move a number; if a number misleads, say so in the answer instead.
+
+| On screen | Counts | Record it this way |
+|---|---|---|
+| 진척 (progress), 열린 할 일, task board | every `task` record in the document: `completed` ÷ all tasks; `cancelled`/`superseded` stay in the total | A task is planned work: add it when the work is decided or starts, close it with `x completed` and `done`. A shipped commit, release or deploy is an `event`, never a task. A document whose history is all events and whose tasks are open follow-ups correctly shows 0 %. |
+| Goal ring and card | tasks that link `part-of` the goal | Link each step of a goal with `part-of`, not `related`. The ring is that task share; the goal's own `x` is shown as its status, so set it too when the goal is reached. |
+| 위험 (risks) | risk records by status | Close a risk with the template's closing status (`resolved`, `mitigated`, `accepted`, `closed`) and link the resolving event. |
+| Metric chart | one series per `metric` id, one point per revision that changed `value`/`observed`, x-axis `observed` | A single write is a single point. A history needs `set value` + `set observed` on the same id in later revisions. Bars compare only metrics with the same `unit`. |
+| Revision history | revisions by recording time | An import made today stays today; `effective_at` labels a revision, it does not move it. |
+| Side panel families | decisions with requirements, risks with blockers, by status | Keep `x` accurate; an `open`/`proposed` decision is a question still waiting for an answer. |
+
+## 8. Read
 
 - `gram_read {path}` outline; `{path, section}` one section as lines (title, type, id, x, dates, `d`).
 - `gram_list {path, select: {type, status}}` filters; `gram_get {path, entity}` one record.
@@ -107,11 +121,11 @@ Other optional fields: `p` (`high` `medium` `low`), `owner`, `tag`, `due` (task,
 - Decisions have no date field; their date is the earliest event that `implements` them.
 - Recall: `mode` `hybrid` or `keyword` when semantic hits look loose; date filters `from`/`to` (inclusive; `YYYY-MM` covers the month). Retry once with other wording before concluding nothing is recorded.
 
-## 8. Reminders and the stop check
+## 9. Reminders and the stop check
 
 After 3+ file edits, a commit, or a push/release/deploy command, the plugin reminds you once; if you then try to finish without writing, it asks for one continuation. Answer it by writing the records from section 2, or by stating in the final answer why nothing qualified. Do not write filler to silence it.
 
-## 9. Errors
+## 10. Errors
 
 | code | cause → fix |
 |---|---|
@@ -128,6 +142,6 @@ After 3+ file edits, a commit, or a push/release/deploy command, the plugin remi
 
 One `request_id` per intended change. After a lost answer, resend the identical request with the same id; a landed write replays its receipt (`"replayed": true`). Only the main agent writes; subagents return candidate records. Never remove records; change their status.
 
-## 10. Backfill
+## 11. Backfill
 
 To build memory from project history, follow [backfill.md](backfill.md).

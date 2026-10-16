@@ -16,10 +16,12 @@ Revisions are append-only. A record added later never shows up in an older revis
 
 Pick 4 to 8 eras. For each, list the goals, requirements, assumptions, decisions, components, events, risks, tasks, blockers and evidence that start, close or carry over; adding them after their era is written forces a rebuild. Also pick a few metrics you can measure at every era end, such as total commits, packages or release tags.
 
+Commits, merges and releases are `event`s. A `task` is tracked work with its own source: an issue, a PR, a milestone checklist, a TODO or roadmap item. Add it in the era it was planned, `part-of` its goal, and close it in the era it finished (`set x completed`, `set done`). Never turn commit subjects into tasks to fill the progress ring: a history without tracked work shows only its open follow-ups, and that is the truthful picture (see "What the dashboard counts" in SKILL.md).
+
 ## 3. Write oldest first
 
 - r0 is one `gram_create` with `template: "project@1"` and `effective_at` set to the latest event it holds (the first commit's author date if it holds none). `content.text` has the five headings with each record placed as `[[id]]` on its own line, the first era's `history` record before its events in Log; `content.records` holds the project, the first day's components, goals, requirements, assumptions and evidence, and the first event.
-- Then one `gram_patch` per era or milestone group, with `effective_at` set to the latest event in it. Effective times must rise with every revision. It holds the era's `history` record (opening the era in Log), its decisions, components, events and plan records, `set x` (with `old`) on earlier items it resolves plus `link related` to the resolving event, and any `set d` fixes.
+- Then one `gram_patch` per era or milestone group, with `effective_at` set to the latest event in it. Effective times must rise with every revision. It holds the era's `history` record (opening the era in Log), its decisions, components, events and plan records, `set x` (with `old`) on earlier items it resolves plus `link related` to the resolving event, `set x completed` on goals reached in the era, and any `set d` fixes.
 - A decision replaced in a later era: in that era's patch, `set x superseded` on the old one and `link replaces` from the new one.
 - Components: one per repository or package, added in the era of its first commit; add `depends` links in the era where both ends exist. In a shared document give every record `s: [<repository>]`.
 - Metrics: add each series once, in the era it is first measured. In every later era, `set value` and `set observed` (the era's end) on the same record so the dashboard draws a chart. Never add one metric record per era. `observed` is never in the future: for the current era use the time of the latest counted commit.
@@ -81,3 +83,4 @@ Pick 4 to 8 eras. For each, list the goals, requirements, assumptions, decisions
 3. `gram_range {path, start: 0}` (pass `more` back as `start`): effective times rise with revision numbers. `gram_state {path, entity, selector: {revision: N}}` returns an item only from the revision that added it.
 4. `gram_recall` answers a real question with the right decision and risk.
 5. Every metric has a history: `gram_changes {path, since_revision: 0}` lists each metric id under `set` with `value` or `observed` in later revisions, and `gram_state {path, entity, selector: {revision: N}}` returns each era's value.
+6. The dashboard tells the truth: tasks are tracked work (none is a commit subject), each task links `part-of` a goal or the project, each goal's steps link `part-of` it, and resolved risks carry a closing status. Do not change records to improve a number; report a misleading one.
