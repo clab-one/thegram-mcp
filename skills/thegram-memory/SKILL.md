@@ -56,7 +56,8 @@ Each `set`/`unset` carries `old`, what you read (a string, an array for several,
 | edit-text | `{"op":"edit-text","entity":"doc","kind":"rich","old":"<exact text, once>","new":"…"}` |
 
 - `add` values are arrays; `set` takes `value` or `values`. Never remove a record; change its status.
-- `place` is `{"section": "<heading>"}`, `{"after": "<id>"}` or `"end"` (without it the record is not in the body) and cannot share a patch with `edit-text`. Inside `edit-text`, `[[id]]` alone on a line places a record and `[label](@id)` mentions one.
+- `place` is `{"section": "<heading>"}`, `{"after": "<id>"}` or `"end"` (without it the record is not in the body) and cannot share a patch with `edit-text`. `[[id]]` must be alone on a line with no whitespace or invisible characters; do not place a record already in the body. Inside `edit-text`, `[[id]]` alone on a line places a record and `[label](@id)` mentions one.
+- Use a short descriptive `t` title; never put an ISO time or ID in it. Put times only in `at`, `observed` or `due`.
 - Operations run in order; later ones can link to or place after records added earlier.
 - Follow a template action's required fields and operations, but send ordinary Cloud patch operations without native-only `action`/`action_target` arguments.
 
