@@ -1,5 +1,5 @@
 import { createInterface } from "node:readline";
-import { connectionId, errorCode, isJson, type McpResponse, parseMcpMessages, postMcp } from "./core.ts";
+import { connectionId, errorCode, isJson, type McpResponse, parseMcpMessages, postMcp, ThegramError } from "./core.ts";
 
 const REQUEST_TIMEOUT_MS = 120_000;
 
@@ -40,7 +40,12 @@ export async function runMcpProxy(): Promise<void> {
 			const response = await send(body);
 			if (response.sessionId) sessionId = response.sessionId;
 			if (isInitialize) initEndpoint = await connectionId();
-			const replies = parseMcpMessages(response);
+			let replies: unknown[];
+			try {
+				replies = parseMcpMessages(response);
+			} catch {
+				throw new ThegramError("E_RPC", `Thegram answered HTTP ${response.status} with a non-MCP body: ${response.body.trim().slice(0, 80)}`);
+			}
 			for (const reply of replies) {
 				if (isInitialize && isJson(reply) && isJson(reply.result) && typeof reply.result.protocolVersion === "string") {
 					protocol = reply.result.protocolVersion;

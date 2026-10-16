@@ -160,35 +160,57 @@ export interface McpResponse {
 	body: string;
 }
 
+const GATEWAY_STATUS = new Set([502, 503, 504]);
+const GATEWAY_RETRY_MS = 20_000;
+
 export async function postMcp(body: string, headers: Record<string, string>, timeoutMs: number): Promise<McpResponse> {
 	const settings = await connectionSettings();
-	try {
-		const response = await fetch(settings.url, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Accept: "application/json, text/event-stream",
-				...headers,
-				Authorization: `Bearer ${settings.apiKey}`,
-			},
-			body,
-			redirect: "error",
-			signal: AbortSignal.timeout(Math.max(1, timeoutMs)),
-		});
-		if (response.status === 401) throw new ThegramError("E_AUTH", "Thegram API key is invalid, expired or revoked; reconnect with a new key");
-		if (response.status === 403) throw new ThegramError("E_FORBIDDEN", "The API key does not permit this Thegram operation");
-		return {
-			status: response.status,
-			sessionId: response.headers.get("mcp-session-id") ?? undefined,
-			contentType: response.headers.get("content-type") ?? "",
-			body: await response.text(),
-		};
-	} catch (error) {
-		if (error instanceof ThegramError) throw error;
-		if (error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name)) {
-			throw new ThegramError("E_TIMEOUT", `Thegram did not answer within ${timeoutMs} ms`);
+	const deadline = Date.now() + Math.max(1, timeoutMs);
+	const retryUntil = Date.now() + Math.min(GATEWAY_RETRY_MS, Math.max(0, timeoutMs - 1_000));
+	for (let attempt = 0; ; attempt++) {
+		let answer: McpResponse;
+		try {
+			const response = await fetch(settings.url, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json, text/event-stream",
+					...headers,
+					Authorization: `Bearer ${settings.apiKey}`,
+				},
+				body,
+				redirect: "error",
+				signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())),
+			});
+			if (response.status === 401) throw new ThegramError("E_AUTH", "Thegram API key is invalid, expired or revoked; reconnect with a new key");
+			if (response.status === 403) throw new ThegramError("E_FORBIDDEN", "The API key does not permit this Thegram operation");
+			answer = {
+				status: response.status,
+				sessionId: response.headers.get("mcp-session-id") ?? undefined,
+				contentType: response.headers.get("content-type") ?? "",
+				body: await response.text(),
+			};
+		} catch (error) {
+			if (error instanceof ThegramError) throw error;
+			if (error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name)) {
+				throw new ThegramError("E_TIMEOUT", `Thegram did not answer within ${timeoutMs} ms`);
+			}
+			throw new ThegramError("E_CONNECT", "Thegram Cloud MCP is unreachable; check the endpoint and network");
 		}
-		throw new ThegramError("E_CONNECT", "Thegram Cloud MCP is unreachable; check the endpoint and network");
+		// A proxy answer (e.g. Traefik "no available server" while Vault restarts) is not an MCP reply.
+		const gateway = GATEWAY_STATUS.has(answer.status) && !answer.contentType.includes("json") && !answer.contentType.includes("text/event-stream");
+		if (!gateway) return answer;
+		const wait = Math.min(2_000, 500 * 2 ** attempt);
+		if (Date.now() + wait > retryUntil) {
+			const detail = answer.body.trim().slice(0, 80);
+			throw new ThegramError(
+				"E_UNAVAILABLE",
+				`Thegram Cloud is temporarily unavailable (HTTP ${answer.status}${detail ? `: ${detail}` : ""}), for example during a server update; retry in a moment`,
+			);
+		}
+		const { promise, resolve } = Promise.withResolvers<void>();
+		setTimeout(resolve, wait);
+		await promise;
 	}
 }
 
