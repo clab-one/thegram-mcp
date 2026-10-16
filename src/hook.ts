@@ -8,13 +8,14 @@ import {
 	pruneSessionStates,
 	renderOrientation,
 	resetMemoryState,
+	stopReminder,
 	str,
 	withSessionState,
 } from "./core.ts";
 
 const MAX_CONTEXT_CHARS = 9_500;
 
-// Codex rejects any hook output field other than hookSpecificOutput.additionalContext.
+// Codex rejects any hook output field other than hookSpecificOutput.additionalContext, except decision/reason on Stop.
 export async function runHook(raw: string): Promise<string> {
 	const input: unknown = JSON.parse(raw);
 	if (!isJson(input)) return "";
@@ -25,6 +26,11 @@ export async function runHook(raw: string): Promise<string> {
 	if (event === "SessionEnd") {
 		await dropSessionState(sessionId);
 		return "";
+	}
+	if (event === "Stop") {
+		if (input.stop_hook_active === true) return "";
+		const reason = await withSessionState(sessionId, async state => stopReminder(state));
+		return reason ? JSON.stringify({ decision: "block", reason }) : "";
 	}
 	const context = await withSessionState(sessionId, async state => {
 		if (event === "SessionStart") {

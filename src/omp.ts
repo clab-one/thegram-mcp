@@ -10,6 +10,7 @@ import {
 	orient,
 	renderOrientation,
 	resolveProject,
+	stopReminder,
 	str,
 } from "./core.ts";
 
@@ -85,6 +86,13 @@ export default function thegramMemory(pi: ExtensionAPI): void {
 			timestamp: Date.now(),
 		};
 		return { messages: [...event.messages, message] };
+	});
+
+	pi.on("session_stop", (event, ctx) => {
+		if (event.stop_hook_active || !isMainSession(ctx)) return;
+		const reason = stopReminder(state);
+		if (!reason) return;
+		return { continue: true, additionalContext: `<system-reminder>\n${reason}\n</system-reminder>` };
 	});
 
 	pi.registerCommand("thegram", {

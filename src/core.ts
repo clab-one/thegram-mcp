@@ -32,6 +32,8 @@ const LOCK_STALE_MS = ORIENT_BUDGET_MS + 5_000;
 const THEGRAM_WRITE = /thegram.*gram_(?:patch|create)$/;
 const MUTATING_TOOL = /^(?:edit|write|multiedit|notebookedit|apply_patch|patch|ast_edit)$/i;
 const GIT_COMMIT = /\bgit\b(?:\s+-C\s+\S+)?(?:\s+-c\s+\S+)*\s+commit\b/;
+const SHIP_COMMAND =
+	/\b(?:git\b(?:\s+-C\s+\S+)?(?:\s+-c\s+\S+)*\s+push|gh\s+(?:release\s+create|pr\s+(?:create|merge))|kubectl\b[^\n;&|]*\s(?:apply|rollout\s+restart|set\s+image|patch)|helm\s+(?:upgrade|install|rollback)|(?:npm|pnpm|yarn|bun)\s+publish|docker\s+push)\b/;
 const PATCH_FILE_HEADER = /^\*\*\* (?:Add|Update|Delete) File:/gm;
 
 export type Json = Record<string, unknown>;
@@ -301,8 +303,10 @@ export async function loadPolicy(): Promise<string> {
 export interface TurnState {
 	mutations: number;
 	committed: boolean;
+	shipped?: boolean;
 	wrote: boolean;
 	nudged: boolean;
+	stopped?: boolean;
 }
 
 export interface MemoryState {
@@ -607,19 +611,45 @@ export function observeTool(state: MemoryState, call: ToolObservation): string |
 	if (MUTATING_TOOL.test(call.name)) {
 		const files = stringsOf(call.input).reduce((sum, text) => sum + (text.match(PATCH_FILE_HEADER)?.length ?? 0), 0);
 		state.turn.mutations += Math.max(1, files);
-	} else if (stringsOf(call.input).some(text => GIT_COMMIT.test(text))) state.turn.committed = true;
+	} else {
+		const texts = stringsOf(call.input);
+		if (texts.some(text => GIT_COMMIT.test(text))) state.turn.committed = true;
+		if (texts.some(text => SHIP_COMMAND.test(text))) state.turn.shipped = true;
+	}
+	if (!needsRecord(state) || state.turn.nudged) return;
+	state.turn.nudged = true;
+	return recordingReminder(state, "Before your final answer");
+}
+
+/** One continuation per turn when the agent is about to finish without recording a change. */
+export function stopReminder(state: MemoryState): string | undefined {
+	if (!needsRecord(state) || state.turn.stopped) return;
+	state.turn.stopped = true;
+	return recordingReminder(state, "You are about to finish. First");
+}
+
+function needsRecord(state: MemoryState): boolean {
 	const turn = state.turn;
-	if (!state.documentPath || !state.available || !state.writable || turn.wrote || turn.nudged) return;
-	if (!turn.committed && turn.mutations < NUDGE_MUTATIONS) return;
-	turn.nudged = true;
+	if (!state.documentPath || !state.available || !state.writable || turn.wrote) return false;
+	return turn.committed || turn.shipped === true || turn.mutations >= NUDGE_MUTATIONS;
+}
+
+function recordingReminder(state: MemoryState, lead: string): string {
+	const turn = state.turn;
 	const where = state.exists
 		? `\`${state.documentPath}\` (gram_brief {path: "${state.documentPath}"} gives the current rev/hash)`
 		: `a new \`${state.documentPath}\` (one gram_create with a root project record in Overview and these records in their sections)`;
 	const project = state.projectId ?? "prj-<slug>";
-	const changed = `${turn.mutations} file edit${turn.mutations === 1 ? "" : "s"}${turn.committed ? ", a commit" : ""}`;
+	const changed = [
+		`${turn.mutations} file edit${turn.mutations === 1 ? "" : "s"}`,
+		turn.committed ? "a commit" : "",
+		turn.shipped ? "a push, release or deploy" : "",
+	]
+		.filter(Boolean)
+		.join(", ");
 	return (
-		`This turn changed the repository (${changed}) and nothing has been written to Thegram yet. ` +
-		`Before your final answer, record its durable outcomes in ${where}, in the document's language:\n` +
+		`This turn changed the project (${changed}) and nothing has been written to Thegram yet. ` +
+		`${lead}, record its durable outcomes in ${where}, in the document's language:\n` +
 		`- a choice the user or you settled ("let's…", "use X, not Y"): decision in Decisions, x accepted, part-of ${project}; a replaced one gets set x superseded plus a replaces link\n` +
 		`- the shipped change: event in Log with at (the commit's author time) and ref (commit/PR/release), implements its decision, else part-of ${project}\n` +
 		"- a caveat, limitation or follow-up you are about to report: risk or task in Plan, x open, related to what it concerns\n" +

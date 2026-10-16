@@ -62,7 +62,7 @@ Restart the agent session after installation. Remove any old manually registered
 
 Each Git repository maps to `@mounts/<selected-vault-id>/<repository>.gram`; worktrees share the same document. Names that cannot be Cloud filenames receive a deterministic hash suffix. Existing local-only memory is not uploaded or silently migrated.
 
-At session start the plugin injects the exact document's brief, recalls only within that document and then reads incremental changes. It reminds the agent to record durable outcomes after source changes. A read-only key never authorizes a write reminder.
+At session start the plugin injects the exact document's brief, recalls only within that document and then reads incremental changes. After source changes, a commit, or a push, release or deploy command it reminds the agent to record durable outcomes; if the agent is about to finish without writing, the Stop hook (Claude Code, Codex) or `session_stop` (OMP) asks for one continuation, and the agent either records or states why nothing qualified. A read-only key never authorizes a write reminder.
 
 Map a directory to a different top-level Cloud document in `~/.config/thegram-memory/projects.json` (longest prefix wins):
 

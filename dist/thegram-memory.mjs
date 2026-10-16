@@ -38,6 +38,7 @@ var LOCK_STALE_MS = ORIENT_BUDGET_MS + 5000;
 var THEGRAM_WRITE = /thegram.*gram_(?:patch|create)$/;
 var MUTATING_TOOL = /^(?:edit|write|multiedit|notebookedit|apply_patch|patch|ast_edit)$/i;
 var GIT_COMMIT = /\bgit\b(?:\s+-C\s+\S+)?(?:\s+-c\s+\S+)*\s+commit\b/;
+var SHIP_COMMAND = /\b(?:git\b(?:\s+-C\s+\S+)?(?:\s+-c\s+\S+)*\s+push|gh\s+(?:release\s+create|pr\s+(?:create|merge))|kubectl\b[^\n;&|]*\s(?:apply|rollout\s+restart|set\s+image|patch)|helm\s+(?:upgrade|install|rollback)|(?:npm|pnpm|yarn|bun)\s+publish|docker\s+push)\b/;
 var PATCH_FILE_HEADER = /^\*\*\* (?:Add|Update|Delete) File:/gm;
 
 class ThegramError extends Error {
@@ -570,18 +571,40 @@ function observeTool(state, call) {
   if (MUTATING_TOOL.test(call.name)) {
     const files = stringsOf(call.input).reduce((sum, text) => sum + (text.match(PATCH_FILE_HEADER)?.length ?? 0), 0);
     state.turn.mutations += Math.max(1, files);
-  } else if (stringsOf(call.input).some((text) => GIT_COMMIT.test(text)))
-    state.turn.committed = true;
+  } else {
+    const texts = stringsOf(call.input);
+    if (texts.some((text) => GIT_COMMIT.test(text)))
+      state.turn.committed = true;
+    if (texts.some((text) => SHIP_COMMAND.test(text)))
+      state.turn.shipped = true;
+  }
+  if (!needsRecord(state) || state.turn.nudged)
+    return;
+  state.turn.nudged = true;
+  return recordingReminder(state, "Before your final answer");
+}
+function stopReminder(state) {
+  if (!needsRecord(state) || state.turn.stopped)
+    return;
+  state.turn.stopped = true;
+  return recordingReminder(state, "You are about to finish. First");
+}
+function needsRecord(state) {
   const turn = state.turn;
-  if (!state.documentPath || !state.available || !state.writable || turn.wrote || turn.nudged)
-    return;
-  if (!turn.committed && turn.mutations < NUDGE_MUTATIONS)
-    return;
-  turn.nudged = true;
+  if (!state.documentPath || !state.available || !state.writable || turn.wrote)
+    return false;
+  return turn.committed || turn.shipped === true || turn.mutations >= NUDGE_MUTATIONS;
+}
+function recordingReminder(state, lead) {
+  const turn = state.turn;
   const where = state.exists ? `\`${state.documentPath}\` (gram_brief {path: "${state.documentPath}"} gives the current rev/hash)` : `a new \`${state.documentPath}\` (one gram_create with a root project record in Overview and these records in their sections)`;
   const project = state.projectId ?? "prj-<slug>";
-  const changed = `${turn.mutations} file edit${turn.mutations === 1 ? "" : "s"}${turn.committed ? ", a commit" : ""}`;
-  return `This turn changed the repository (${changed}) and nothing has been written to Thegram yet. ` + `Before your final answer, record its durable outcomes in ${where}, in the document's language:
+  const changed = [
+    `${turn.mutations} file edit${turn.mutations === 1 ? "" : "s"}`,
+    turn.committed ? "a commit" : "",
+    turn.shipped ? "a push, release or deploy" : ""
+  ].filter(Boolean).join(", ");
+  return `This turn changed the project (${changed}) and nothing has been written to Thegram yet. ` + `${lead}, record its durable outcomes in ${where}, in the document's language:
 ` + `- a choice the user or you settled ("let's…", "use X, not Y"): decision in Decisions, x accepted, part-of ${project}; a replaced one gets set x superseded plus a replaces link
 ` + `- the shipped change: event in Log with at (the commit's author time) and ref (commit/PR/release), implements its decision, else part-of ${project}
 ` + `- a caveat, limitation or follow-up you are about to report: risk or task in Plan, x open, related to what it concerns
@@ -698,6 +721,12 @@ async function runHook(raw) {
   if (event === "SessionEnd") {
     await dropSessionState(sessionId);
     return "";
+  }
+  if (event === "Stop") {
+    if (input.stop_hook_active === true)
+      return "";
+    const reason = await withSessionState(sessionId, async (state) => stopReminder(state));
+    return reason ? JSON.stringify({ decision: "block", reason }) : "";
   }
   const context = await withSessionState(sessionId, async (state) => {
     if (event === "SessionStart") {
