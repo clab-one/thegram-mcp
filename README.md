@@ -2,6 +2,17 @@
 
 Gives Claude Code, Codex, OpenCode and OMP shared project memory through [Thegram](https://thegram.one). Connect directly to the same Cloud MCP used by the ChatGPT and Claude OAuth integrations. No desktop app or DMG is required.
 
+The canonical skill and references live at `skills/thegram-memory/` in this repository. ChatGPT and Claude OAuth ZIPs in
+[`clab-one/thegram-plugin`](https://github.com/clab-one/thegram-plugin) import this committed directory and pin each file's hash.
+Their existing cloud skill name stays `thegram-cloud`; only that frontmatter name differs. The body, reference files, task/event
+rules, authorization, status semantics, field preconditions, conflict handling and synchronized readback are otherwise identical.
+Cloud packages use OAuth; local coding agents use an API key against the same Cloud MCP. Host context injection and reminders
+are adapters, not an independent memory policy.
+
+Change workflow rules here, commit them, then run `python3 scripts/sync_skill.py --source /path/to/thegram-mcp` in the cloud
+plugin checkout before building its host ZIPs. Cloud builds reject workflow/reference drift from `skill-source.lock.json`.
+Version 3.1 includes the shared references and reduces the local adapter policy to connection, binding and skill-loading guidance.
+
 ## Requirements
 
 - Node.js 22 or later
@@ -54,7 +65,7 @@ node dist/thegram-memory.mjs doctor
 
 For a managed secret store, supply `THEGRAM_API_KEY` and `THEGRAM_MCP_MOUNT` through the host's environment instead of saving the key. The MCP endpoint is `https://vault.thegram.one/mcp`. `THEGRAM_MCP_URL` selects an explicitly configured HTTPS endpoint; HTTP is accepted only on a loopback IP for local E2E. A saved key cannot be redirected to another endpoint by changing the URL alone.
 
-Restart the agent session after installation. Remove any old manually registered `thegram` MCP server so only this plugin supplies that binding. All supported coding hosts use the same API-key connection; ChatGPT's published plugin and Claude's OAuth connector keep OAuth.
+Restart the agent session after installation. Remove any old manually registered `thegram` MCP server so only this plugin supplies that binding. All coding hosts use the same API-key connection. ChatGPT and Claude cloud users install their respective OAuth ZIP from `clab-one/thegram-plugin`; updating those ZIPs keeps their stable plugin/server identity rather than replacing OAuth with an API key.
 
 `disconnect` removes this machine's saved credential. To disable a key everywhere, revoke it in Thegram Settings → Agents. The server refuses expired or revoked keys; the plugin never falls back to the desktop app or another storage destination.
 
@@ -62,7 +73,7 @@ Restart the agent session after installation. Remove any old manually registered
 
 Each Git repository binds to one document: the document whose root project record carries the tag `repo:<host/owner/name>` of its `origin` remote, in any folder of any vault the key can read (the selected vault first), else `@mounts/<selected-vault-id>/<repository>.gram`; worktrees share the same document. Documents created by the plugin carry the tag. For an older document, run `node dist/thegram-memory.mjs bind` in the repository once (`--project <id>` when it has several project records); after that it can be moved into a folder without the plugin creating a duplicate at the root. `doctor` shows how the repository is bound. Names that cannot be Cloud filenames receive a deterministic hash suffix. Existing local-only memory is not uploaded or silently migrated.
 
-At session start the plugin injects the exact document's brief, recalls only within that document and then reads incremental changes. After source changes, a commit, or a push, release or deploy command it reminds the agent to record durable outcomes; if the agent is about to finish without writing, the Stop hook (Claude Code, Codex) or `session_stop` (OMP) asks for one continuation, and the agent either records or states why nothing qualified. A read-only key never authorizes a write reminder.
+At session start the adapter injects the exact document's brief, recalls only within that document and then reads incremental changes. Source edits, commits, pushes, releases and deploys can trigger a reminder; a Stop hook (Claude Code, Codex) or `session_stop` (OMP) can ask once for a continuation. The adapter does not authorize storage: the shared skill requires the person's established purpose/destination authorization, and a read-only key never authorizes a write reminder. The agent records only a qualifying authorized outcome or explains why nothing was saved.
 
 Map a directory to a different Cloud document, folders allowed, in `~/.config/thegram-memory/projects.json` (longest prefix wins; a mapping wins over the tag):
 

@@ -1,0 +1,666 @@
+{
+  "note": "Fictional test data only. Use an authorized exact mount/path and replace CAS placeholders from the latest response. No owners, deadlines, priority, fake revisions or effective_at are supplied.",
+  "retrieval": [
+    {
+      "name": "gram_projects",
+      "arguments": {}
+    },
+    {
+      "name": "gram_brief",
+      "arguments": {
+        "path": "@mounts/example-vault/atlas.gram"
+      }
+    },
+    {
+      "name": "gram_recall",
+      "arguments": {
+        "folder": "@mounts/example-vault",
+        "query": "rollout",
+        "mode": "keyword",
+        "type": "decision",
+        "top_k": 5
+      }
+    },
+    {
+      "name": "gram_context",
+      "arguments": {
+        "ids": [
+          {
+            "path": "@mounts/example-vault/atlas.gram",
+            "entity": "dec-preview"
+          },
+          {
+            "path": "@mounts/example-vault/atlas.gram",
+            "entity": "met-availability"
+          }
+        ],
+        "fields": [
+          "t",
+          "d",
+          "x",
+          "source",
+          "ref",
+          "value",
+          "unit",
+          "observed"
+        ]
+      }
+    },
+    {
+      "name": "gram_read",
+      "arguments": {
+        "path": "@mounts/example-vault/atlas.gram",
+        "section": "Overview"
+      }
+    },
+    {
+      "name": "gram_relations",
+      "arguments": {
+        "from": {
+          "path": "@mounts/example-vault/atlas.gram",
+          "entity": "dec-preview"
+        },
+        "direction": "both"
+      }
+    }
+  ],
+  "create": {
+    "name": "gram_create",
+    "arguments": {
+      "path": "@mounts/example-vault/atlas.gram",
+      "title": "Atlas rollout memory",
+      "base_revision": null,
+      "content": {
+        "text": "# Overview\n\nAtlas prepares a constrained service rollout. The gradual rollout is approved; endpoint verification remains active. [Probe availability](@met-availability) is measured by successful probe requests within each report window.\n\n[[prj-atlas]]\n\n[[met-availability]]\n\n# Architecture\n\nThe rollout controller gates exposure; the verification task checks the intended endpoint before completion.\n\n[[cmp-controller]]\n\n# Plan\n\n[[goal-release]]\n\n[[task-verify]]\n\n[[*]]{type=task status=active view=list}\n\n# Decisions\n\nThe gradual rollout limits exposure while verification is still pending. Its adoption does not establish that rollout has happened.\n\n[[dec-gradual]]\n\n# Evolution\n\nThe initial choice limits exposure while verification remains unresolved.\n\n# Log\n\n[[src-probes-first]]\n\n[[evd-probes-first]]\n",
+        "fields": {
+          "d": [
+            "Atlas rollout purpose, current choices and verified probe observations."
+          ]
+        },
+        "records": [
+          {
+            "type": "project",
+            "id": "prj-atlas",
+            "fields": {
+              "t": [
+                "Atlas rollout"
+              ],
+              "d": [
+                "Prepare and verify a constrained service rollout."
+              ],
+              "x": [
+                "active"
+              ]
+            },
+            "links": []
+          },
+          {
+            "type": "goal",
+            "id": "goal-release",
+            "fields": {
+              "t": [
+                "Verified rollout endpoint"
+              ],
+              "d": [
+                "Confirm the constrained rollout reaches the intended endpoint."
+              ],
+              "x": [
+                "active"
+              ]
+            },
+            "links": [
+              [
+                "part-of",
+                "prj-atlas"
+              ]
+            ]
+          },
+          {
+            "type": "task",
+            "id": "task-verify",
+            "fields": {
+              "t": [
+                "Verify rollout endpoint"
+              ],
+              "d": [
+                "Run the approved endpoint check and retain its result."
+              ],
+              "x": [
+                "active"
+              ]
+            },
+            "links": [
+              [
+                "part-of",
+                "goal-release"
+              ]
+            ]
+          },
+          {
+            "type": "component",
+            "id": "cmp-controller",
+            "fields": {
+              "t": [
+                "Rollout controller"
+              ],
+              "d": [
+                "Gate service exposure within the approved rollout boundary."
+              ]
+            },
+            "links": [
+              [
+                "part-of",
+                "prj-atlas"
+              ]
+            ]
+          },
+          {
+            "type": "decision",
+            "id": "dec-gradual",
+            "fields": {
+              "t": [
+                "Use a gradual rollout"
+              ],
+              "d": [
+                "Limit initial exposure while endpoint verification remains pending."
+              ],
+              "x": [
+                "accepted"
+              ]
+            },
+            "links": [
+              [
+                "part-of",
+                "prj-atlas"
+              ]
+            ]
+          },
+          {
+            "type": "metric",
+            "id": "met-availability",
+            "fields": {
+              "t": [
+                "Probe availability"
+              ],
+              "d": [
+                "Successful probe requests as a percent of requests in each report window."
+              ],
+              "value": [
+                "99.7"
+              ],
+              "unit": [
+                "percent"
+              ],
+              "observed": [
+                "2026-10-10T09:00:00Z"
+              ],
+              "source": [
+                "src-probes-first"
+              ]
+            },
+            "links": [
+              [
+                "part-of",
+                "prj-atlas"
+              ]
+            ]
+          },
+          {
+            "type": "source",
+            "id": "src-probes-first",
+            "fields": {
+              "t": [
+                "First synthetic probe report"
+              ],
+              "d": [
+                "The fictional first report defines the window and successful-request denominator."
+              ],
+              "ref": [
+                "https://example.com/reports/atlas-probes-first"
+              ]
+            },
+            "links": [
+              [
+                "part-of",
+                "prj-atlas"
+              ]
+            ]
+          },
+          {
+            "type": "evidence",
+            "id": "evd-probes-first",
+            "fields": {
+              "t": [
+                "First probe observation"
+              ],
+              "d": [
+                "The fictional first report measures probe availability within its declared window."
+              ],
+              "source": [
+                "src-probes-first"
+              ]
+            },
+            "links": [
+              [
+                "supports",
+                "met-availability"
+              ]
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "patches": [
+    {
+      "name": "gram_patch",
+      "arguments": {
+        "path": "@mounts/example-vault/atlas.gram",
+        "base_revision": "${doc.rev}",
+        "expected_hash": "${doc.hash}",
+        "request_id": "atlas-replace-rollout",
+        "operations": [
+          {
+            "op": "set",
+            "entity": "dec-gradual",
+            "key": "x",
+            "value": "superseded"
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-preview-review",
+              "fields": {
+                "t": [
+                  "Synthetic rollout review"
+                ],
+                "d": [
+                  "The fictional review identifies a narrower preview boundary for this rollout."
+                ],
+                "ref": [
+                  "https://example.com/reviews/atlas-preview"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "decision",
+              "id": "dec-preview",
+              "fields": {
+                "t": [
+                  "Use a constrained preview"
+                ],
+                "d": [
+                  "Adopt the narrower preview boundary described in the rollout review."
+                ],
+                "x": [
+                  "accepted"
+                ],
+                "source": [
+                  "src-preview-review"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ],
+                [
+                  "replaces",
+                  "dec-gradual"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Decisions"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "evidence",
+              "id": "evd-preview-review",
+              "fields": {
+                "t": [
+                  "Preview boundary rationale"
+                ],
+                "d": [
+                  "The fictional review supports the narrower preview boundary; rollout verification is still pending."
+                ],
+                "source": [
+                  "src-preview-review"
+                ]
+              },
+              "links": [
+                [
+                  "supports",
+                  "dec-preview"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "gram_patch",
+      "arguments": {
+        "path": "@mounts/example-vault/atlas.gram",
+        "base_revision": "${doc.rev}",
+        "expected_hash": "${doc.hash}",
+        "request_id": "atlas-complete-verification",
+        "operations": [
+          {
+            "op": "set",
+            "entity": "task-verify",
+            "key": "x",
+            "value": "completed"
+          },
+          {
+            "op": "set",
+            "entity": "goal-release",
+            "key": "x",
+            "value": "completed"
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-endpoint-check",
+              "fields": {
+                "t": [
+                  "Synthetic endpoint-check report"
+                ],
+                "d": [
+                  "The fictional report confirms the preview reached the intended endpoint."
+                ],
+                "ref": [
+                  "https://example.com/checks/atlas-endpoint"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "event",
+              "id": "ev-preview-verified",
+              "fields": {
+                "t": [
+                  "Preview endpoint verified"
+                ],
+                "d": [
+                  "The fictional endpoint check confirms implementation of the preview choice."
+                ],
+                "at": [
+                  "2026-10-11T09:00:00Z"
+                ],
+                "source": [
+                  "src-endpoint-check"
+                ]
+              },
+              "links": [
+                [
+                  "implements",
+                  "dec-preview"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "artifact",
+              "id": "art-check-report",
+              "fields": {
+                "t": [
+                  "Endpoint-check artifact"
+                ],
+                "d": [
+                  "The fictional retained check report records the verified endpoint result."
+                ],
+                "ref": [
+                  "https://example.com/checks/atlas-endpoint"
+                ]
+              },
+              "links": [
+                [
+                  "derives",
+                  "ev-preview-verified"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "evidence",
+              "id": "evd-endpoint",
+              "fields": {
+                "t": [
+                  "Verified endpoint result"
+                ],
+                "d": [
+                  "The fictional endpoint report supports completing the verification task."
+                ],
+                "source": [
+                  "src-endpoint-check"
+                ]
+              },
+              "links": [
+                [
+                  "supports",
+                  "task-verify"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "gram_patch",
+      "arguments": {
+        "path": "@mounts/example-vault/atlas.gram",
+        "base_revision": "${doc.rev}",
+        "expected_hash": "${doc.hash}",
+        "request_id": "atlas-reconcile-narrative",
+        "operations": [
+          {
+            "op": "edit-text",
+            "entity": "doc",
+            "kind": "rich",
+            "old": "The gradual rollout is approved; endpoint verification remains active.",
+            "new": "The constrained preview replaces the gradual rollout, and the intended endpoint has been verified. Remaining project work has not been assessed."
+          },
+          {
+            "op": "edit-text",
+            "entity": "doc",
+            "kind": "rich",
+            "old": "The initial choice limits exposure while verification remains unresolved.",
+            "new": "The review narrowed the exposure boundary from gradual rollout to constrained preview. The endpoint check then verified that choice; acceptance and execution remain separate sourced outcomes."
+          },
+          {
+            "op": "edit-text",
+            "entity": "doc",
+            "kind": "rich",
+            "old": "The gradual rollout limits exposure while verification is still pending. Its adoption does not establish that rollout has happened.",
+            "new": "The initial gradual rollout choice was replaced after the review identified a narrower preview boundary. The accepted preview is now implemented, as confirmed by the endpoint-check event and evidence."
+          },
+          {
+            "op": "set",
+            "entity": "doc",
+            "key": "d",
+            "value": "Atlas uses the constrained preview; its endpoint verification is completed and probe observations retain their source windows."
+          }
+        ]
+      }
+    },
+    {
+      "name": "gram_patch",
+      "arguments": {
+        "path": "@mounts/example-vault/atlas.gram",
+        "base_revision": "${doc.rev}",
+        "expected_hash": "${doc.hash}",
+        "request_id": "atlas-observe-probes",
+        "operations": [
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-probes-second",
+              "fields": {
+                "t": [
+                  "Second synthetic probe report"
+                ],
+                "d": [
+                  "The fictional second report uses the same quantity, denominator and unit in its declared window."
+                ],
+                "ref": [
+                  "https://example.com/reports/atlas-probes-second"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "evidence",
+              "id": "evd-probes-second",
+              "fields": {
+                "t": [
+                  "Second probe observation"
+                ],
+                "d": [
+                  "The fictional second report provides the next comparable probe availability observation."
+                ],
+                "source": [
+                  "src-probes-second"
+                ]
+              },
+              "links": [
+                [
+                  "supports",
+                  "met-availability"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "set",
+            "entity": "met-availability",
+            "key": "value",
+            "value": "99.9"
+          },
+          {
+            "op": "set",
+            "entity": "met-availability",
+            "key": "observed",
+            "value": "2026-10-11T10:00:00Z"
+          },
+          {
+            "op": "set",
+            "entity": "met-availability",
+            "key": "source",
+            "value": "src-probes-second"
+          }
+        ]
+      }
+    }
+  ],
+  "readback": [
+    {
+      "name": "gram_context",
+      "arguments": {
+        "ids": [
+          {
+            "path": "@mounts/example-vault/atlas.gram",
+            "entity": "dec-gradual"
+          },
+          {
+            "path": "@mounts/example-vault/atlas.gram",
+            "entity": "dec-preview"
+          },
+          {
+            "path": "@mounts/example-vault/atlas.gram",
+            "entity": "task-verify"
+          },
+          {
+            "path": "@mounts/example-vault/atlas.gram",
+            "entity": "met-availability"
+          }
+        ],
+        "fields": [
+          "t",
+          "d",
+          "x",
+          "source",
+          "value",
+          "unit",
+          "observed"
+        ]
+      }
+    },
+    {
+      "name": "gram_read",
+      "arguments": {
+        "path": "@mounts/example-vault/atlas.gram",
+        "section": "Overview"
+      }
+    },
+    {
+      "name": "gram_state",
+      "arguments": {
+        "path": "@mounts/example-vault/atlas.gram",
+        "selector": {
+          "revision": 0
+        }
+      }
+    }
+  ]
+}

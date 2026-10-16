@@ -1,6 +1,6 @@
 # Backfilling memory from history
 
-Revisions are append-only. A record added later never shows up in an older revision, and `effective_at` only labels a revision; it does not move it. Write oldest first, and make each revision hold everything that existed in its period. Rebuilding means deleting the file, so ask the user first.
+Revisions are append-only and recording time is when the import actually happened. A record added now cannot be made to have existed in an earlier revision. `effective_at` labels an effective time without moving recording time. Import only when the person authorizes the purpose and destination; preserve sourced event dates and the existing file's history. Never delete or rebuild a document to make a chart or history look older or more complete.
 
 ## 1. Gather facts
 
@@ -10,11 +10,11 @@ Revisions are append-only. A record added later never shows up in an older revis
 - Open work: before calling anything open, scaffold or planned, search later history for its follow-ups.
 - Totals: era commit counts add up to the total commit count.
 - Several repositories in one document: read each one's remote default branch after `git fetch` (local checkouts can be stale), and take the repository name for `ref` and `s` from `git remote get-url origin`, not from the directory name.
-- Large histories: a subagent may gather candidate records as JSON (ids, `t`, `d`, `at`, `ref`, links, era); only the main agent writes them.
+- Large histories: when the person permits delegation, a subagent may gather candidate records as JSON; only the main agent writes. An explicit no-delegation instruction forbids this.
 
 ## 2. Plan the eras
 
-Pick 4 to 8 eras. For each, list the goals, requirements, assumptions, decisions, components, events, risks, tasks, blockers and evidence that start, close or carry over; adding them after their era is written forces a rebuild. Also pick a few metrics you can measure at every era end, such as total commits, packages or release tags.
+Group sourced history into meaningful eras without inventing phases, decisions or reasons. For each, identify the goals, requirements, decisions, components, events, risks, tasks and evidence actually supported by its sources. Add later-found facts as present-day corrections with their sourced event dates, not by deleting and replaying earlier history. Use a metric only when its quantity and values can actually be measured for the cited dates.
 
 Commits, merges and releases are `event`s. A `task` is tracked work with its own source: an issue, a PR, a milestone checklist, a TODO or roadmap item. Add it in the era it was planned, `part-of` its goal, and close it in the era it finished (`set x completed`, `set done`). Never turn commit subjects into tasks to fill the progress ring: a history without tracked work shows only its open follow-ups, and that is the truthful picture (see "What the dashboard counts" in SKILL.md).
 
