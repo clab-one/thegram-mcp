@@ -61,6 +61,21 @@ Add field values are arrays of strings; a set takes `value` (one string) or `val
 
 `at` accepts an event's known ISO date/time; task `due` can be date-only. Metric `observed` should retain the source's known precision. A timezone-bearing observation gives a supporting chart an actual time axis. `effective_at`, when deliberately used, requires a full ISO timestamp with a zone. Recording time is supplied by the runtime; never manufacture it.
 
+## Document chat
+
+A Thegram document chat request is a task bound server-side to one Vault document and the requesting account. Every chat tool takes `task_id` and none takes a path.
+
+| Tool or method | Arguments and result |
+| --- | --- |
+| `events/list` | `chat.task.created`: no subscription arguments, webhook delivery; payload `{task_id, document_title, message, url}`. Only on the `2026-07-28` protocol. |
+| `events/subscribe` | `{name:"chat.task.created", arguments:{}, delivery:{mode:"webhook", url, secret:"whsec_…"}}` → `{id, refreshBefore}`; the callback is challenge-verified and must be public HTTPS. The first subscription that accepts a delivery holds the task for its client. |
+| `chat_task_list` | `{}` → `tasks` open for this connected agent, oldest first, with `task_id`, `document_title`, `message`, `status`, `deadline`. |
+| `chat_task_get` | `{task_id}` claims the task → `task` (`message`, `selected_record?`, `timezone?`, `local_time?`, `deadline`), `conversation` (recent turns) and `document` (a `gram_brief` of the bound document). A finished task returns `task.result`. |
+| `chat_doc_read` | `{task_id}` outline, `{task_id, section, cursor?}` one section as `gram_read`, or `{task_id, entities:[ids]}` as `gram_context`. |
+| `chat_task_submit` | `{task_id, reply, operations?, base_revision?, expected_hash?, effective_at?}` → `{status:"done", changed, revision?, created}`. Operations are `gram_patch` operations (1–50) on the bound document, applied in one revision with request ID `chat-<task>-<digest>`; an identical resubmission returns `replayed:true`. |
+
+Errors: `E_TASK_NOT_FOUND` (not this account's task), `E_TASK_FORBIDDEN` (another connected agent holds it), `E_TASK_CLOSED` (done, expired after 15 minutes or cancelled), `E_BUSY` (a submission is running). Write errors are those of `gram_patch` and leave the task open until its deadline. The person sees the reply, status and revision in the document chat; changes appear in the document's history under their account with the agent's name.
+
 ## Supported representations
 
 Standalone `[[id]]` places a record. `[label](@id)` mentions a record. A field mention can be built with a rich text mark `{type:"mention",ref:"met-availability",field:"value"}` according to `gram_profile {task:"rich"}`; the mark's text should fit the sentence.
