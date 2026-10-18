@@ -1,6 +1,6 @@
 ---
 name: thegram-memory
-description: Use Thegram gram_* MCP tools as purpose-based memory shared by people and AI across ChatGPT, Claude and coding agents. Retrieve source-backed context, decisions and history; when saving is authorized, record durable outcomes in the established .gram document and verify synchronization and readback. Use also for authorized project-history imports.
+description: Use Thegram gram_* MCP tools as purpose-based memory shared by people and AI across ChatGPT, Claude and coding agents. Retrieve source-backed context, decisions and history; when saving is authorized, record durable outcomes in the established .gram document and verify synchronization and readback. Use also for authorized project-history imports and for requests sent from a Thegram document chat (chat.task.created events, chat_* tools).
 ---
 
 # Thegram shared memory
@@ -152,3 +152,14 @@ One `request_id` per exact intended change. After a lost answer, reconcile the o
 ## 11. Backfill
 
 To build memory from project history, follow [backfill.md](backfill.md).
+
+## 12. Document chat requests
+
+A person can send a request from the chat of one Thegram document. It reaches you as a `chat.task.created` event (ChatGPT subscribes with `events/subscribe`; the event carries `task_id`, document title, message and URL) or through `chat_task_list` when the person asks you to handle their chat requests. The request is authorization to act on that one document only, within what it asks.
+
+1. `chat_task_get {task_id}` takes the task and returns the message, the selected record, the person's time zone and local time, the recent conversation, the deadline and a brief of the bound document (`rev`/`hash` there are the CAS pair).
+2. Read only with `chat_doc_read {task_id}`: the outline, then `{task_id, section}`, or `{task_id, entities: [...]}` for exact field values to use as `old`. No path argument exists; never use `gram_*` tools for a chat task, never touch another document.
+3. Finish with one `chat_task_submit {task_id, reply, operations?}`. `reply` is shown to the person in their language: what changed, or the question you need answered. `operations` are `gram_patch` operations applied in one revision to the bound document; omit them when nothing should change. `remove` and whole-body text changes also need `base_revision` and `expected_hash` from the brief.
+4. A rejected submission (`E_TEMPLATE`, `E_PRECONDITION`, `E_ARGUMENT`) leaves the task open: read again, fix and submit before the deadline. Resubmitting the identical call replays its result; `E_TASK_CLOSED` means the task already finished or expired, and `E_TASK_FORBIDDEN` that another connected agent holds it. Report it and stop.
+
+Times come from the person's time zone: resolve "tomorrow 3 pm" against `local_time`, write `at` with its offset, and keep schedules to one event per occurrence.
