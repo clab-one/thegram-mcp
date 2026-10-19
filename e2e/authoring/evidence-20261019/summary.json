@@ -1,0 +1,27 @@
+{
+ "date": "2026-10-19",
+ "agent": "Codex CLI exec, model gpt-6.1-sol, skill as AGENTS.md, only the Thegram MCP auto-approved, shell read-only",
+ "documents": "@mounts/v-ulwhut6erxeh6b73nf5oi/e2e-authoring/<scenario>-<variant>.gram",
+ "variants": {
+  "a": {
+   "skill": "thegram-memory 3.2.2 (def22b5)",
+   "research": "18/54",
+   "monitoring": "10/38"
+  },
+  "b": {
+   "skill": "3.3.0 draft: automation rules (3f139e7)",
+   "research": "52/54",
+   "monitoring": "36/38"
+  },
+  "b2": {
+   "skill": "3.3.0 draft: first-run derives, project d decides what needs a person",
+   "research": "54/54",
+   "monitoring": "36/38"
+  },
+  "b3": {
+   "skill": "3.3.0 final: actionable change → task, uncontrollable harm → risk, never overdue",
+   "research": "54/54",
+   "monitoring": "38/38"
+  }
+ }
+}
