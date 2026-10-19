@@ -7,7 +7,11 @@
       "automation": "AI 리서치 3시간 갱신",
       "document": {
         "title": "AI 리서치 자동화",
-        "project": { "id": "prj-ai-research", "t": "AI 리서치 3시간 갱신", "d": "3시간마다 AI 뉴스(aibriefing.dev), Hacker News, GitHub 트렌딩, Reddit r/cscareerquestions에서 새 AI 소식을 모은다. 우리 팀이 쓰는 API(Anthropic, OpenAI)의 가격·정책 변경은 확인할 일로 올린다." }
+        "project": {
+          "id": "prj-ai-research",
+          "t": "AI 리서치 3시간 갱신",
+          "d": "3시간마다 AI 뉴스(aibriefing.dev), Hacker News, GitHub 트렌딩, Reddit r/cscareerquestions에서 새 AI 소식을 모은다. 우리 팀이 쓰는 API(Anthropic, OpenAI)의 가격·정책 변경은 확인할 일로 올린다."
+        }
       },
       "runs": [
         {
@@ -32,21 +36,65 @@
         }
       ],
       "expect": {
-        "runs": [{ "at": "2026-10-19T12:01:00+09:00", "failed": [] }, { "at": "2026-10-19T15:01:00+09:00", "failed": ["reddit"] }],
+        "runs": [
+          {
+            "at": "2026-10-19T12:01:00+09:00",
+            "failed": []
+          },
+          {
+            "at": "2026-10-19T15:01:00+09:00",
+            "failed": [
+              "reddit"
+            ]
+          }
+        ],
         "items": [
-          { "url": "https://aibriefing.dev/2026-10-18/deepseek-v41-flash", "run": 0 },
-          { "url": "https://news.ycombinator.com/item?id=45612301", "run": 0 },
-          { "url": "https://github.com/Graphify-Labs/graphify", "run": 0, "at": false },
-          { "url": "https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/", "run": 0 },
-          { "url": "https://aibriefing.dev/2026-10-19/gemini-4-argon", "run": 1 },
-          { "url": "https://news.ycombinator.com/item?id=45619999", "run": 1 },
-          { "url": "https://aibriefing.dev/2026-10-19/anthropic-pricing", "run": 1 }
+          {
+            "url": "https://aibriefing.dev/2026-10-18/deepseek-v41-flash",
+            "run": 0
+          },
+          {
+            "url": "https://news.ycombinator.com/item?id=45612301",
+            "run": 0
+          },
+          {
+            "url": "https://github.com/Graphify-Labs/graphify",
+            "run": 0,
+            "at": false
+          },
+          {
+            "url": "https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/",
+            "run": 0
+          },
+          {
+            "url": "https://aibriefing.dev/2026-10-19/gemini-4-argon",
+            "run": 1
+          },
+          {
+            "url": "https://news.ycombinator.com/item?id=45619999",
+            "run": 1
+          },
+          {
+            "url": "https://aibriefing.dev/2026-10-19/anthropic-pricing",
+            "run": 1
+          }
         ],
         "same_topic": [
-          ["https://aibriefing.dev/2026-10-18/deepseek-v41-flash", "https://news.ycombinator.com/item?id=45612301"],
-          ["https://aibriefing.dev/2026-10-19/gemini-4-argon", "https://news.ycombinator.com/item?id=45619999"]
+          [
+            "https://aibriefing.dev/2026-10-18/deepseek-v41-flash",
+            "https://news.ycombinator.com/item?id=45612301"
+          ],
+          [
+            "https://aibriefing.dev/2026-10-19/gemini-4-argon",
+            "https://news.ycombinator.com/item?id=45619999"
+          ]
         ],
-        "tasks": [{ "url": "https://aibriefing.dev/2026-10-19/anthropic-pricing", "due": "2026-10-25" }],
+        "tasks": [
+          {
+            "url": "https://aibriefing.dev/2026-10-19/anthropic-pricing",
+            "due": "2026-10-25"
+          }
+        ],
         "risks": [],
         "targets": [],
         "ranges": []
@@ -57,7 +105,11 @@
       "automation": "체인 업그레이드·서버 점검 알림",
       "document": {
         "title": "체인·서버 감시",
-        "project": { "id": "prj-chain-watch", "t": "체인 업그레이드·서버 점검 알림", "d": "매시간 sui-testnet, sei-mainnet 체인의 릴리스·거버넌스와 OVH 서버 ovh-node-4(Rack LIM0314A04A)의 유지보수 공지를 확인한다. 우리 노드에 영향이 있으면 할 일이나 위험으로 올린다." }
+        "project": {
+          "id": "prj-chain-watch",
+          "t": "체인 업그레이드·서버 점검 알림",
+          "d": "매시간 sui-testnet, sei-mainnet 체인의 릴리스·거버넌스와 OVH 서버 ovh-node-4(Rack LIM0314A04A)의 유지보수 공지를 확인한다. 우리 노드에 영향이 있으면 할 일이나 위험으로 올린다."
+        }
       },
       "runs": [
         {
@@ -78,23 +130,151 @@
         }
       ],
       "expect": {
-        "runs": [{ "at": "2026-10-19T15:00:00+09:00", "failed": [] }, { "at": "2026-10-19T16:00:00+09:00", "failed": [] }],
+        "runs": [
+          {
+            "at": "2026-10-19T15:00:00+09:00",
+            "failed": []
+          },
+          {
+            "at": "2026-10-19T16:00:00+09:00",
+            "failed": []
+          }
+        ],
         "items": [
-          { "url": "https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1", "run": 0 },
-          { "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a", "run": 0 },
-          { "url": "https://www.mintscan.io/sei/proposals/212", "run": 1 }
+          {
+            "url": "https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1",
+            "run": 0
+          },
+          {
+            "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a",
+            "run": 0
+          },
+          {
+            "url": "https://www.mintscan.io/sei/proposals/212",
+            "run": 1
+          }
         ],
         "same_topic": [],
-        "tasks": [{ "url": "https://www.mintscan.io/sei/proposals/212", "due": "2026-10-22" }],
-        "risks": [{ "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a" }],
+        "tasks": [
+          {
+            "url": "https://www.mintscan.io/sei/proposals/212",
+            "due": "2026-10-22"
+          }
+        ],
+        "risks": [
+          {
+            "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a"
+          }
+        ],
         "targets": [
-          { "name": "sui-testnet", "url": "https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1" },
-          { "name": "sei-mainnet", "url": "https://www.mintscan.io/sei/proposals/212" },
-          { "name": "ovh-node-4", "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a" }
+          {
+            "name": "sui-testnet",
+            "url": "https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1"
+          },
+          {
+            "name": "sei-mainnet",
+            "url": "https://www.mintscan.io/sei/proposals/212"
+          },
+          {
+            "name": "ovh-node-4",
+            "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a"
+          }
         ],
         "ranges": [
-          { "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a", "at": "2026-10-12T14:00:00+09:00", "end": "2026-10-24T00:00:00+09:00" },
-          { "url": "https://www.mintscan.io/sei/proposals/212", "at": "2026-10-22T09:00:00+09:00" }
+          {
+            "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a",
+            "at": "2026-10-12T14:00:00+09:00",
+            "end": "2026-10-24T00:00:00+09:00"
+          },
+          {
+            "url": "https://www.mintscan.io/sei/proposals/212",
+            "at": "2026-10-22T09:00:00+09:00"
+          }
+        ]
+      }
+    },
+    {
+      "id": "collection",
+      "automation": "업무·일상 수집 일지",
+      "document": {
+        "title": "업무·일상 수집",
+        "project": {
+          "id": "prj-daily-collect",
+          "t": "업무·일상 수집",
+          "d": "하루 두 번 Gmail, Slack, Google Calendar에서 Roy에게 온 새 일을 모은다. 회신이나 준비가 필요한 일은 기한이 있으면 할 일로 올린다."
+        }
+      },
+      "runs": [
+        {
+          "now": "2026-10-19T07:00:00+09:00",
+          "inputs": [
+            "- Google Calendar: \"SRE싱크\" 2026-10-19 13:30–14:00 KST, 수락함. https://calendar.google.com/calendar/event?eid=sre-sync-20261019",
+            "- Slack #general-announcement: \"Ponyo 결혼식 10월 31일 오후 5시, 참석 부탁드려요\" (2026-10-18 21:10 KST 게시) https://fourpillars.slack.com/archives/C01ANNOUNCE/p1760789400000100",
+            "- Gmail: Allium \"연말 리포트 인용구 요청\" — 이름/역할, 프로필 사진, 스테이블코인 관련 3~5문장을 10월 24일까지 보내 달라는 요청 (2026-10-19 06:20 KST 수신) https://mail.google.com/mail/u/0/#inbox/18f2a1c0"
+          ]
+        },
+        {
+          "now": "2026-10-19T12:00:00+09:00",
+          "inputs": [
+            "- Google Calendar: \"SRE싱크\" 2026-10-19 13:30–14:00 KST, 변화 없음. https://calendar.google.com/calendar/event?eid=sre-sync-20261019",
+            "- Gmail: \"AWS 10월 청구서\" — 지난달보다 12% 증가 (2026-10-19 08:12 KST 수신) https://mail.google.com/mail/u/0/#inbox/18f2b7d4",
+            "- Slack #sre: \"Cilium 업그레이드를 10월 21일 22:00–23:00 KST에 진행합니다\" (2026-10-19 11:20 KST 게시) https://fourpillars.slack.com/archives/C02SRE/p1760840400000200"
+          ]
+        }
+      ],
+      "expect": {
+        "runs": [
+          {
+            "at": "2026-10-19T07:00:00+09:00",
+            "failed": []
+          },
+          {
+            "at": "2026-10-19T12:00:00+09:00",
+            "failed": []
+          }
+        ],
+        "items": [
+          {
+            "url": "https://calendar.google.com/calendar/event?eid=sre-sync-20261019",
+            "run": 0
+          },
+          {
+            "url": "https://fourpillars.slack.com/archives/C01ANNOUNCE/p1760789400000100",
+            "run": 0
+          },
+          {
+            "url": "https://mail.google.com/mail/u/0/#inbox/18f2a1c0",
+            "run": 0
+          },
+          {
+            "url": "https://mail.google.com/mail/u/0/#inbox/18f2b7d4",
+            "run": 1
+          },
+          {
+            "url": "https://fourpillars.slack.com/archives/C02SRE/p1760840400000200",
+            "run": 1
+          }
+        ],
+        "same_topic": [],
+        "tasks": [
+          {
+            "url": "https://mail.google.com/mail/u/0/#inbox/18f2a1c0",
+            "due": "2026-10-24"
+          }
+        ],
+        "risks": [],
+        "targets": [],
+        "ranges": [
+          {
+            "url": "https://calendar.google.com/calendar/event?eid=sre-sync-20261019",
+            "at": "2026-10-19T13:30:00+09:00",
+            "end": "2026-10-19T14:00:00+09:00"
+          },
+          {
+            "url": "https://fourpillars.slack.com/archives/C02SRE/p1760840400000200",
+            "at": "2026-10-21T22:00:00+09:00",
+            "end": "2026-10-21T23:00:00+09:00"
+          }
         ]
       }
     }

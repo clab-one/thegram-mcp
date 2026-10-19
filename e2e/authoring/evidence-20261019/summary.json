@@ -6,7 +6,8 @@
   "a": {
    "skill": "thegram-memory 3.2.2 (def22b5)",
    "research": "18/54",
-   "monitoring": "10/38"
+   "monitoring": "10/38",
+   "collection": "17/44"
   },
   "b": {
    "skill": "3.3.0 draft: automation rules (3f139e7)",
@@ -21,7 +22,8 @@
   "b3": {
    "skill": "3.3.0 final: actionable change → task, uncontrollable harm → risk, never overdue",
    "research": "54/54",
-   "monitoring": "38/38"
+   "monitoring": "38/38",
+   "collection": "44/44"
   }
  }
 }
