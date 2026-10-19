@@ -2,42 +2,42 @@
 
 Revisions are append-only and recording time is when the import actually happened. A record added now cannot be made to have existed in an earlier revision. `effective_at` labels an effective time without moving recording time. Import only when the person authorizes the purpose and destination; preserve sourced event dates and the existing file's history. Never delete or rebuild a document to make a chart or history look older or more complete.
 
-## 1. Gather facts
+## 1. Gather and cover sources
 
-- Milestones: `git log --shortstat` per month ranked by size, release tags with dates, the first commit of each package (`git log --diff-filter=A --format='%h %aI' -- '<glob>/Cargo.toml'`), and READMEs and design docs at the first commit and at HEAD.
-- Reasons: the body of each decision commit; subjects rarely say why.
-- Themes: count words in commit subjects per period; sampling misses streams of small commits.
-- Open work: before calling anything open, scaffold or planned, search later history for its follow-ups.
-- Totals: era commit counts add up to the total commit count.
-- Several repositories in one document: read each one's remote default branch after `git fetch` (local checkouts can be stale), and take the repository name for `ref` and `s` from `git remote get-url origin`, not from the directory name.
-- Large histories: when the person permits delegation, a subagent may gather candidate records as JSON; only the main agent writes. An explicit no-delegation instruction forbids this.
+- Confirm the authorized document and existing records, current template/profile and fresh revision/hash. Inventory sources with stable IDs/permalinks, dates and inspected scope; account for skipped low-signal material without inventing domain records.
+- Read commit bodies/diffs, ADR status headers, issues/checklists, PR merge/review state, release/deployment reports and verification results together. Search later history before describing work as still open or completed. Commit size and subject counts can guide coverage but do not determine meaning or importance.
+- Use the actual remote for repository identity and `ref`/`s`, not the local folder name. State branch/ref/hash and coverage gaps. A local checkout is not proof of current remote state; refresh only when network access is authorized.
+- Separate documentary claims from inspected implementation and runtime observations. A report that says “deployed” remains a source report unless independently verified; preserve that distinction in `d` and completion reporting.
+- When delegation is permitted, helpers may gather candidate facts; only the main agent writes. A source read is not permission to store it.
 
-## 2. Plan the eras
+## 2. Classify atomic facts, then reconcile identity
 
-Group sourced history into meaningful eras without inventing phases, decisions or reasons. For each, identify the goals, requirements, decisions, components, events, risks, tasks and evidence actually supported by its sources. Add later-found facts as present-day corrections with their sourced event dates, not by deleting and replaying earlier history. Use a metric only when its quantity and values can actually be measured for the cited dates.
+Apply the decision procedure in SKILL.md section 2 to each fact, regardless of whether its container is a commit, ADR, PR, conversation or report. One commit may support a choice, a component change, a tracked task update and failed-test evidence; it may also warrant no domain record. There is no one-event-per-commit default.
 
-Commits, merges and releases are `event`s. A `task` is tracked work with its own source: an issue, a PR, a milestone checklist, a TODO or roadmap item. Add it in the era it was planned, `part-of` its goal, and close it in the era it finished (`set x completed`, `set done`). Never turn commit subjects into tasks to fill the progress ring: a history without tracked work shows only its open follow-ups, and that is the truthful picture (see "What the dashboard counts" in SKILL.md).
+A `task` represents actual tracked work, supported by a request, issue, PR, checklist or plan. Reuse that task across recurring fixes. Do not infer a historical task or a sequence of `open → active → completed` from a commit subject. Imported tracked work can be added at its latest supported state with prior sourced dates explained in provenance; no replay of invented intermediate revisions is needed. Partial implementation and an unmerged PR do not establish completion. An ADR marked proposed remains proposed even when a stage of code has merged.
 
-## 3. Write oldest first
+Prefer a `decision` for a choice, `component`/`service`/`system` for responsibility or dependency, `risk`/`blocker` for uncertainty or impediment, `evidence` for a scoped observation, `knowledge` for reusable explanation, `metric` for a measured quantity, and `artifact` for a deliverable. Use an `event` only for a meaningful sourced occurrence with an actual date. A release artifact, deployment occurrence and deployment verification are distinct facts; include only those supported.
 
-- r0 is one `gram_create` with `template: "project@1"` and `effective_at` set to the latest event it holds (the first commit's author date if it holds none). `content.text` has the five headings with each record placed as `[[id]]` on its own line, the first era's `history` record before its events in Log; `content.records` holds the project, the first day's components, goals, requirements, assumptions and evidence, and the first event.
-- Then one `gram_patch` per era or milestone group, with `effective_at` set to the latest event in it. Effective times must rise with every revision. It holds the era's `history` record (opening the era in Log), its decisions, components, events and plan records, `set x` (with `old`) on earlier items it resolves plus `link related` to the resolving event, `set x completed` on goals reached in the era, and any `set d` fixes.
-- A decision replaced in a later era: in that era's patch, `set x superseded` on the old one and `link replaces` from the new one.
-- Components: one per repository or package, added in the era of its first commit; add `depends` links in the era where both ends exist. In a shared document give every record `s: [<repository>]`.
-- Metrics: add each series once, in the era it is first measured. In every later era, `set value` and `set observed` (the era's end) on the same record so the dashboard draws a chart. Never add one metric record per era. `observed` is never in the future: for the current era use the time of the latest counted commit.
-- Place records in time order with `place: {"after": "<id>"}`, chained inside the patch, or append them to the section in time order.
-- Add an item in the era whose source states it, never earlier. Mark inference with `[INFERENCE]` in `d`. Corrections after the backfill go in a normal head patch without `effective_at`.
-- Open items another Thegram document already tracks: copy them as your own `risk`/`task` with that document's URL in `ref`; links across documents stay unresolved.
-- 30 to 60 operations per patch works. In OMP you can send them from Python eval with the `gram()` helper in step 5.
+Relations must express the source's meaning: `A depends B` does not license `B supports A`; use `supports`/`contradicts` for claim evidence. Allowed predicates are `related supports contradicts depends implements replaces derives blocks enables part-of`. Partial replacement keeps still-applicable old scope and status, explains the changed scope and uses `related`; full replacement may use `replaces` and old `superseded`. Do not invent relation names or infer decision acceptance from implementation.
 
-## 4. Facts and wording
+Group facts into meaningful eras only where the sources support them. An optional `history` record is a narrative summary using supported ordinary fields, not a special replay schema. It neither stores a lifecycle nor creates past revisions. See [classification cases](references/classification.json) and [examples](references/examples.md).
 
-- `d` says only what the commit, its body or the document says. No superlatives; no "first" or "only" unless checked.
-- `at` is the cited commit's author date with its zone (`git log -1 --format=%aI <hash>`). Never invent a time.
-- `ref` is one URI: a commit URL with a 10-character hash, a blob URL at a pinned commit, or a release tag URL.
-- Evidence `supports` its decision or risk. A metric's scope goes in `d`; keep its numbers out of prose. A release artifact `derives` its event.
-- Public documents: no personal names unless asked.
-- Last pass, in its own patch (body edits cannot share a patch with `place`): rewrite Overview and Architecture prose in the present tense with `edit-text`, draw the current components as a Mermaid flowchart under Architecture, add an era table that mentions records (`[label](@id)`) instead of copying numbers, `set d` on retired components, and `set doc view dashboard` when the user wants the dashboard first.
+## 3. Write the import at its real recording time
+
+- Reuse the authorized document. Only if creation is authorized and no established document exists, use one `gram_create` with `base_revision:null`, a stable `request_id`, the purpose's appropriate template and supported records. Place them under readable existing/template headings. No mandatory first event, era record or first-commit date.
+- Use ordinary head patches for coherent batches of facts, with `old` on `set`/`unset`; preserve concurrent edits and stable IDs. Batch by meaningful outcome and API limits, never by each commit to simulate history. Add targets before links and keep `place` separate from body edits. Document chat is restricted to its `chat_*` tools and one successful submit; it cannot run a multi-patch backfill.
+- Keep actual source/occurrence/observation times separately from runtime `recorded_at`. Do not invent timestamps or fields. Do not default `effective_at` to commit author dates; use it only for an explicitly authorized historical-state interpretation supported by the current API, with ordered effective boundaries understood and verified. It never backdates recording time.
+- Update only sourced states. Set a task's `done` when its finish time is known; omit unknown times. Resolve a risk only with evidence appropriate to its scope. Do not auto-close goals, decisions or all related work after a commit.
+- Reuse components by responsibility and metrics by comparable quantity/denominator/unit. A source-only image-pin change needs no component revision unless it establishes a meaningful change in responsibility, dependency or state.
+- Metrics: retain actual observations and their original precision, never the era end as a substitute. One point is valid. A request to preserve a multi-observation series may require distinct real writes under the current history contract; do that only for sourced observations within the authorized scope, using the same metric ID, and disclose today's recording dates. Never split an import just to populate sparklines.
+- Keep source coverage in a compact source record/narrative or existing source references. Repeat runs should reconcile the same facts and sources, not create duplicate entities or revisions. “No qualifying change” is valid.
+
+## 4. Facts, narrative and display
+
+- `d` states the source-supported outcome and scope; mark inference explicitly. No “first”, causal claim or runtime verification without evidence. Unknown owners, priorities and dates stay unknown.
+- Use a real `source` ID in `source` and URLs in `ref`. Describe source timestamps at their known precision with no invented clock or custom replay fields. An event's `at` is the occurrence time, not automatically the cited commit author date.
+- Keep Overview, Architecture, Decisions, evolution and unresolved work coherent. Summarize important transitions, not every commit. Reconcile prose after placed records in a separate head patch with fresh state.
+- Read [widget data contracts](references/widget-data.md) for selector/date/status requirements and saved-layout readiness. Missing data does not authorize fabrication, layout rewriting or publication. Keep public-document privacy boundaries; no raw messages, credentials or personal names without authorization.
 
 ## 5. Verify
 
@@ -80,7 +80,7 @@ Commits, merges and releases are `event`s. A `task` is tracked work with its own
    print(await unreachable("@mounts/<vault-id>/<project>.gram", "prj-<slug>"))
    ```
 
-3. `gram_range {path, start: 0}` (pass `more` back as `start`): effective times rise with revision numbers. `gram_state {path, entity, selector: {revision: N}}` returns an item only from the revision that added it.
+3. `gram_range {path, start: 0}` (pass `more` back as `start`): recording time is the actual import time, independently of sourced dates. Verify effective-time ordering and selected historical states only when deliberately used. A new record cannot exist in a revision before its real addition.
 4. `gram_recall` answers a real question with the right decision and risk.
-5. Every metric has a history: `gram_changes {path, since_revision: 0}` lists each metric id under `set` with `value` or `observed` in later revisions, and `gram_state {path, entity, selector: {revision: N}}` returns each era's value.
-6. The dashboard tells the truth: tasks are tracked work (none is a commit subject), each task links `part-of` a goal or the project, each goal's steps link `part-of` it, and resolved risks carry a closing status. Do not change records to improve a number; report a misleading one.
+5. Metrics have only the sourced observations: compare stable ID, definition, unit, `value` and `observed`; inspect real changes/history when multiple observations were authorized. A one-point series is valid and missing history remains disclosed.
+6. Check semantic and widget results: sources can yield several types or coverage only; proposed ADRs stay proposed, partial/unmerged work stays incomplete, failures stay failures and links retain direction/scope. Task/goal widgets use actual tracked tasks and `part-of`; dates and metric observations are sourced. Read saved presentation requirements when available and disclose missing fields, runtime capabilities or unverified rendering. Do not change records to improve a number.

@@ -4,7 +4,7 @@ Gives Claude Code, Codex, OpenCode and OMP shared project memory through [Thegra
 
 The canonical skill and references live at `skills/thegram-memory/` in this repository. ChatGPT and Claude OAuth ZIPs in
 [`clab-one/thegram-plugin`](https://github.com/clab-one/thegram-plugin) import this committed directory and pin each file's hash.
-Their existing cloud skill name stays `thegram-cloud`; only that frontmatter name differs. The body, reference files, task/event
+Their existing cloud skill name stays `thegram-cloud`; only that frontmatter name differs. The body, reference files, classification
 rules, authorization, status semantics, field preconditions, conflict handling and synchronized readback are otherwise identical.
 Cloud packages use OAuth; local coding agents use an API key against the same Cloud MCP. Host context injection and reminders
 are adapters, not an independent memory policy.
@@ -12,6 +12,14 @@ are adapters, not an independent memory policy.
 Change workflow rules here, commit them, then run `python3 scripts/sync_skill.py --source /path/to/thegram-mcp` in the cloud
 plugin checkout before building its host ZIPs. Cloud builds reject workflow/reference drift from `skill-source.lock.json`.
 Version 3.1 includes the shared references and reduces the local adapter policy to connection, binding and skill-loading guidance.
+
+## Semantic records and widget data (3.2.1)
+
+Classify atomic facts by meaning before writing: commits and PRs are provenance, not automatic events. Reuse existing tasks/components/metrics, keep proposed ADRs and incomplete work at their supported states, and retain scoped evidence separately from runtime verification. A meaningful dated deployment can be an event; routine image pins may need source coverage only. Never replay invented task lifecycles or historical revisions.
+
+The shared references map data to the 50-kind widget catalog, including task/goal relationships, status-class progress, actual occurrence/observation dates, stable metric history and runtime capability limits. Saved-layout readiness is separate from useful rendering. Local OMP installs the same skill with its API-key adapter; source/install checks do not establish live widget rendering.
+
+Offline validation: `python3 -m unittest discover -s tests -p 'test_*.py' -v`. Set `GRAM_CORE_BINARY` for native scratch readback tests. Set `THEGRAM_UI_SOURCE` and run `TZ=UTC node --test tests/widget_contract.test.mjs` against the matching UI checkout for actual selector/readiness checks. Tests use synthetic data and do not modify user documents.
 
 ## Requirements
 
@@ -40,6 +48,9 @@ OMP:
 ```sh
 omp plugin marketplace add clab-one/thegram-mcp
 omp plugin install thegram-memory@thegram-memory
+# Existing installation:
+omp plugin marketplace update thegram-memory
+omp plugin upgrade thegram-memory@thegram-memory --scope user
 ```
 
 OpenCode v2:

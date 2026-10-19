@@ -1,0 +1,1507 @@
+{
+  "note": "Synthetic semantic authoring oracle; not a classifier, API schema, user history or permission to write. source_text, expect and coverage are test metadata, never gram fields. Plans are head-patch operation candidates; callers provide authorized path/request_id and fresh reads.",
+  "cases": [
+    {
+      "id": "mixed-commit",
+      "source_text": "Commit aaaa: adopt bounded retry cache after review. Cache service owns token retention. Expired tokens must never be reused. Unit report says the expiry check passed locally; no rollout took place. Source author time 2026-10-10T08:00:00Z.",
+      "template": "project@1",
+      "initial": [
+        {
+          "type": "project",
+          "id": "prj-atlas",
+          "fields": {
+            "t": [
+              "Atlas"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": []
+        }
+      ],
+      "plan": {
+        "operations": [
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-mixed",
+              "fields": {
+                "t": [
+                  "Inspected synthetic source"
+                ],
+                "d": [
+                  "Commit aaaa authored 2026-10-10T08:00:00Z; body/diff and local test report inspected."
+                ],
+                "ref": [
+                  "https://example.com/sources/src-mixed"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "decision",
+              "id": "dec-retry-cache",
+              "fields": {
+                "t": [
+                  "Use bounded retry cache"
+                ],
+                "d": [
+                  "Review accepted bounded token retention."
+                ],
+                "x": [
+                  "accepted"
+                ],
+                "source": [
+                  "src-mixed"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Decisions"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "component",
+              "id": "cmp-retry-cache",
+              "fields": {
+                "t": [
+                  "Retry cache"
+                ],
+                "d": [
+                  "Own token retention within the cache service."
+                ],
+                "source": [
+                  "src-mixed"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Architecture"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "knowledge",
+              "id": "know-token-expiry",
+              "fields": {
+                "t": [
+                  "Expired-token constraint"
+                ],
+                "d": [
+                  "Expired tokens must not be reused."
+                ],
+                "source": [
+                  "src-mixed"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Architecture"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "evidence",
+              "id": "evd-expiry",
+              "fields": {
+                "t": [
+                  "Reported expiry test"
+                ],
+                "d": [
+                  "The retained unit report says expiry checks passed locally; rollout is unverified."
+                ],
+                "source": [
+                  "src-mixed"
+                ]
+              },
+              "links": [
+                [
+                  "supports",
+                  "dec-retry-cache"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "additions": {
+          "src-mixed": "source",
+          "dec-retry-cache": "decision",
+          "cmp-retry-cache": "component",
+          "know-token-expiry": "knowledge",
+          "evd-expiry": "evidence"
+        },
+        "fields": {
+          "dec-retry-cache": {
+            "x": [
+              "accepted"
+            ]
+          }
+        },
+        "links": [],
+        "absent_links": [],
+        "coverage": {
+          "aaaa": [
+            "dec-retry-cache",
+            "cmp-retry-cache",
+            "know-token-expiry",
+            "evd-expiry"
+          ]
+        }
+      }
+    },
+    {
+      "id": "open-adr-partial-implementation",
+      "source_text": "ADR-0047 status: proposed. Depends on ADR-0042. Commit bbbb merged Ethereum stage-1 adapter; stage 2 remains pending. Merge does not change the ADR status. Source date 2026-10-11 (date only).",
+      "template": "project@1",
+      "initial": [
+        {
+          "type": "project",
+          "id": "prj-atlas",
+          "fields": {
+            "t": [
+              "Atlas"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": []
+        },
+        {
+          "type": "goal",
+          "id": "goal-rollout",
+          "fields": {
+            "t": [
+              "Verified rollout"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        },
+        {
+          "type": "task",
+          "id": "task-ethereum",
+          "fields": {
+            "t": [
+              "Implement Ethereum support"
+            ],
+            "d": [
+              "Stage 1 implementation is active; stage 2 is pending."
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "goal-rollout"
+            ]
+          ]
+        },
+        {
+          "type": "component",
+          "id": "cmp-ethereum",
+          "fields": {
+            "t": [
+              "Ethereum adapter"
+            ],
+            "d": [
+              "Adapter responsibility is not yet documented."
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        },
+        {
+          "type": "decision",
+          "id": "dec-adr-0047",
+          "fields": {
+            "t": [
+              "ADR-0047 staged Ethereum support"
+            ],
+            "d": [
+              "Documentary status remains proposed."
+            ],
+            "x": [
+              "proposed"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        },
+        {
+          "type": "decision",
+          "id": "dec-adr-0042",
+          "fields": {
+            "t": [
+              "ADR-0042 shared transaction envelope"
+            ],
+            "d": [
+              "Adopt shared transaction envelope."
+            ],
+            "x": [
+              "accepted"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        }
+      ],
+      "plan": {
+        "operations": [
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-ethereum",
+              "fields": {
+                "t": [
+                  "Inspected synthetic source"
+                ],
+                "d": [
+                  "ADR header and merged diff inspected; source date 2026-10-11, clock unknown."
+                ],
+                "ref": [
+                  "https://example.com/sources/src-ethereum"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "set",
+            "entity": "cmp-ethereum",
+            "key": "d",
+            "value": "Stage-1 transaction translation is implemented; runtime deployment unverified.",
+            "old": "Adapter responsibility is not yet documented."
+          },
+          {
+            "op": "set",
+            "entity": "cmp-ethereum",
+            "key": "source",
+            "value": "src-ethereum",
+            "old": null
+          },
+          {
+            "op": "set",
+            "entity": "task-ethereum",
+            "key": "d",
+            "value": "Stage 1 merged; stage 2 and end-to-end verification remain pending.",
+            "old": "Stage 1 implementation is active; stage 2 is pending."
+          },
+          {
+            "op": "set",
+            "entity": "task-ethereum",
+            "key": "source",
+            "value": "src-ethereum",
+            "old": null
+          },
+          {
+            "op": "link",
+            "entity": "dec-adr-0047",
+            "predicate": "depends",
+            "target": "dec-adr-0042"
+          }
+        ]
+      },
+      "expect": {
+        "additions": {
+          "src-ethereum": "source"
+        },
+        "fields": {
+          "dec-adr-0047": {
+            "x": [
+              "proposed"
+            ]
+          },
+          "task-ethereum": {
+            "x": [
+              "active"
+            ],
+            "done": null
+          },
+          "cmp-ethereum": {
+            "source": [
+              "src-ethereum"
+            ]
+          }
+        },
+        "links": [
+          [
+            "dec-adr-0047",
+            "depends",
+            "dec-adr-0042"
+          ]
+        ],
+        "absent_links": [
+          [
+            "dec-adr-0042",
+            "supports",
+            "dec-adr-0047"
+          ]
+        ],
+        "coverage": {
+          "bbbb": [
+            "cmp-ethereum",
+            "task-ethereum",
+            "dec-adr-0047"
+          ]
+        }
+      }
+    },
+    {
+      "id": "unmerged-pr-failed-verification",
+      "source_text": "PR #17 is unmerged and under review. Required endpoint test failed with 403; approval is blocked on a scoped credential grant. The test did not verify deployment. PR/test source date: 2026-10-12.",
+      "template": "project@1",
+      "initial": [
+        {
+          "type": "project",
+          "id": "prj-atlas",
+          "fields": {
+            "t": [
+              "Atlas"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": []
+        },
+        {
+          "type": "task",
+          "id": "task-review",
+          "fields": {
+            "t": [
+              "Review export PR"
+            ],
+            "d": [
+              "PR is under review."
+            ],
+            "x": [
+              "review"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        }
+      ],
+      "plan": {
+        "operations": [
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-pr",
+              "fields": {
+                "t": [
+                  "Inspected synthetic source"
+                ],
+                "d": [
+                  "PR #17 review and failed test report inspected, source date 2026-10-12."
+                ],
+                "ref": [
+                  "https://example.com/sources/src-pr"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "evidence",
+              "id": "evd-denial",
+              "fields": {
+                "t": [
+                  "Failed endpoint verification"
+                ],
+                "d": [
+                  "The PR test report records 403; endpoint success is unverified."
+                ],
+                "source": [
+                  "src-pr"
+                ]
+              },
+              "links": [
+                [
+                  "contradicts",
+                  "task-review"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "blocker",
+              "id": "blk-grant",
+              "fields": {
+                "t": [
+                  "Required credential grant"
+                ],
+                "d": [
+                  "Required test cannot proceed without the scoped grant."
+                ],
+                "x": [
+                  "open"
+                ],
+                "source": [
+                  "src-pr"
+                ]
+              },
+              "links": [
+                [
+                  "blocks",
+                  "task-review"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Plan"
+            }
+          },
+          {
+            "op": "set",
+            "entity": "task-review",
+            "key": "source",
+            "value": "src-pr",
+            "old": null
+          }
+        ]
+      },
+      "expect": {
+        "additions": {
+          "src-pr": "source",
+          "evd-denial": "evidence",
+          "blk-grant": "blocker"
+        },
+        "fields": {
+          "task-review": {
+            "x": [
+              "review"
+            ],
+            "done": null
+          }
+        },
+        "links": [
+          [
+            "blk-grant",
+            "blocks",
+            "task-review"
+          ],
+          [
+            "evd-denial",
+            "contradicts",
+            "task-review"
+          ]
+        ],
+        "absent_links": [],
+        "coverage": {}
+      }
+    },
+    {
+      "id": "recurring-fixes",
+      "source_text": "Commits cccc and dddd adjust the same tracked retry-expiry bug. The second test report passes the duplicate-request case; long-window expiry remains unresolved. No new work item or deployment is stated.",
+      "template": "project@1",
+      "initial": [
+        {
+          "type": "project",
+          "id": "prj-atlas",
+          "fields": {
+            "t": [
+              "Atlas"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": []
+        },
+        {
+          "type": "task",
+          "id": "task-retry",
+          "fields": {
+            "t": [
+              "Fix retry expiry"
+            ],
+            "d": [
+              "Retry edge cases remain."
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        },
+        {
+          "type": "component",
+          "id": "cmp-cache",
+          "fields": {
+            "t": [
+              "Token cache"
+            ],
+            "d": [
+              "Own retry tokens."
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        }
+      ],
+      "plan": {
+        "operations": [
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-fixes",
+              "fields": {
+                "t": [
+                  "Inspected synthetic source"
+                ],
+                "d": [
+                  "Commits cccc and dddd and the duplicate-request test report inspected."
+                ],
+                "ref": [
+                  "https://example.com/sources/src-fixes"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "set",
+            "entity": "task-retry",
+            "key": "d",
+            "value": "Duplicate-request case passes in the report; long-window expiry remains open.",
+            "old": "Retry edge cases remain."
+          },
+          {
+            "op": "set",
+            "entity": "task-retry",
+            "key": "source",
+            "value": "src-fixes",
+            "old": null
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "evidence",
+              "id": "evd-duplicate",
+              "fields": {
+                "t": [
+                  "Duplicate-request test report"
+                ],
+                "d": [
+                  "The report passes the duplicate-request case only."
+                ],
+                "source": [
+                  "src-fixes"
+                ]
+              },
+              "links": [
+                [
+                  "supports",
+                  "task-retry"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "additions": {
+          "src-fixes": "source",
+          "evd-duplicate": "evidence"
+        },
+        "fields": {
+          "task-retry": {
+            "x": [
+              "active"
+            ],
+            "done": null
+          },
+          "cmp-cache": {
+            "d": [
+              "Own retry tokens."
+            ]
+          }
+        },
+        "links": [],
+        "absent_links": [],
+        "coverage": {}
+      }
+    },
+    {
+      "id": "deployment-report",
+      "source_text": "Release report: build R7 deployed to preview at 2026-10-13T10:15:00Z. Endpoint report at 2026-10-13T10:20:00Z confirms the exact task-verify endpoint check passed. Commit author time was 2026-10-12T09:00:00Z. Build URL https://example.com/builds/r7. Importing agent did not rerun checks.",
+      "template": "project@1",
+      "initial": [
+        {
+          "type": "project",
+          "id": "prj-atlas",
+          "fields": {
+            "t": [
+              "Atlas"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": []
+        },
+        {
+          "type": "goal",
+          "id": "goal-rollout",
+          "fields": {
+            "t": [
+              "Verified rollout"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        },
+        {
+          "type": "task",
+          "id": "task-verify",
+          "fields": {
+            "t": [
+              "Verify rollout endpoint"
+            ],
+            "d": [
+              "Run the scoped endpoint check."
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "goal-rollout"
+            ]
+          ]
+        },
+        {
+          "type": "decision",
+          "id": "dec-preview",
+          "fields": {
+            "t": [
+              "Constrained preview"
+            ],
+            "d": [
+              "Adopt the preview boundary."
+            ],
+            "x": [
+              "accepted"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        }
+      ],
+      "plan": {
+        "operations": [
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-rollout",
+              "fields": {
+                "t": [
+                  "Inspected synthetic source"
+                ],
+                "d": [
+                  "Deployment/endpoint report dated 2026-10-13; commit authored 2026-10-12T09:00:00Z. No independent live rerun."
+                ],
+                "ref": [
+                  "https://example.com/sources/src-rollout"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "event",
+              "id": "ev-preview-rollout",
+              "fields": {
+                "t": [
+                  "Preview rollout"
+                ],
+                "d": [
+                  "The deployment report records build R7 reaching preview."
+                ],
+                "at": [
+                  "2026-10-13T10:15:00Z"
+                ],
+                "source": [
+                  "src-rollout"
+                ]
+              },
+              "links": [
+                [
+                  "implements",
+                  "dec-preview"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "artifact",
+              "id": "art-r7",
+              "fields": {
+                "t": [
+                  "Build R7"
+                ],
+                "d": [
+                  "Identifiable build retained by the report."
+                ],
+                "ref": [
+                  "https://example.com/builds/r7"
+                ]
+              },
+              "links": [
+                [
+                  "derives",
+                  "ev-preview-rollout"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "evidence",
+              "id": "evd-endpoint",
+              "fields": {
+                "t": [
+                  "Reported endpoint success"
+                ],
+                "d": [
+                  "The retained report confirms the scoped check at 2026-10-13T10:20:00Z; this agent has not rerun it."
+                ],
+                "source": [
+                  "src-rollout"
+                ]
+              },
+              "links": [
+                [
+                  "supports",
+                  "task-verify"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "set",
+            "entity": "task-verify",
+            "key": "x",
+            "value": "completed",
+            "old": "active"
+          },
+          {
+            "op": "set",
+            "entity": "task-verify",
+            "key": "done",
+            "value": "2026-10-13T10:20:00Z",
+            "old": null
+          },
+          {
+            "op": "set",
+            "entity": "task-verify",
+            "key": "source",
+            "value": "src-rollout",
+            "old": null
+          }
+        ]
+      },
+      "expect": {
+        "additions": {
+          "src-rollout": "source",
+          "ev-preview-rollout": "event",
+          "art-r7": "artifact",
+          "evd-endpoint": "evidence"
+        },
+        "fields": {
+          "ev-preview-rollout": {
+            "at": [
+              "2026-10-13T10:15:00Z"
+            ]
+          },
+          "task-verify": {
+            "x": [
+              "completed"
+            ],
+            "done": [
+              "2026-10-13T10:20:00Z"
+            ]
+          },
+          "goal-rollout": {
+            "x": [
+              "active"
+            ]
+          }
+        },
+        "links": [
+          [
+            "ev-preview-rollout",
+            "implements",
+            "dec-preview"
+          ],
+          [
+            "art-r7",
+            "derives",
+            "ev-preview-rollout"
+          ]
+        ],
+        "absent_links": [],
+        "coverage": {}
+      }
+    },
+    {
+      "id": "stable-metric-series",
+      "source_text": "First one-hour preview probe report observed 99.7 percent at 2026-10-10T09:00:00Z. Next comparable report observed 99.9 percent at 2026-10-11T09:00:00Z using identical quantity, denominator and unit. Reports do not establish causation or live health.",
+      "template": "project@1",
+      "initial": [
+        {
+          "type": "project",
+          "id": "prj-atlas",
+          "fields": {
+            "t": [
+              "Atlas"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": []
+        },
+        {
+          "type": "source",
+          "id": "src-probes-first",
+          "fields": {
+            "t": [
+              "Inspected synthetic source"
+            ],
+            "d": [
+              "First actual observation window."
+            ],
+            "ref": [
+              "https://example.com/sources/src-probes-first"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        },
+        {
+          "type": "metric",
+          "id": "met-availability",
+          "fields": {
+            "t": [
+              "Probe availability"
+            ],
+            "d": [
+              "Successful probes divided by all probes in each one-hour preview window."
+            ],
+            "value": [
+              "99.7"
+            ],
+            "unit": [
+              "percent"
+            ],
+            "observed": [
+              "2026-10-10T09:00:00Z"
+            ],
+            "source": [
+              "src-probes-first"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        }
+      ],
+      "plan": {
+        "operations": [
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-probes-next",
+              "fields": {
+                "t": [
+                  "Inspected synthetic source"
+                ],
+                "d": [
+                  "Next comparable observation at 2026-10-11T09:00:00Z, same probe denominator and unit."
+                ],
+                "ref": [
+                  "https://example.com/sources/src-probes-next"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "set",
+            "entity": "met-availability",
+            "key": "value",
+            "value": "99.9",
+            "old": "99.7"
+          },
+          {
+            "op": "set",
+            "entity": "met-availability",
+            "key": "observed",
+            "value": "2026-10-11T09:00:00Z",
+            "old": "2026-10-10T09:00:00Z"
+          },
+          {
+            "op": "set",
+            "entity": "met-availability",
+            "key": "source",
+            "value": "src-probes-next",
+            "old": "src-probes-first"
+          }
+        ]
+      },
+      "expect": {
+        "additions": {
+          "src-probes-next": "source"
+        },
+        "fields": {
+          "met-availability": {
+            "value": [
+              "99.9"
+            ],
+            "unit": [
+              "percent"
+            ],
+            "observed": [
+              "2026-10-11T09:00:00Z"
+            ]
+          }
+        },
+        "links": [],
+        "absent_links": [],
+        "coverage": {}
+      }
+    },
+    {
+      "id": "image-pins-coverage",
+      "source_text": "Commits eeee, ffff and gggg only refresh pinned preview image digests. No stated architecture, behavior, delivery or verification result. User requests source coverage.",
+      "template": "project@1",
+      "initial": [
+        {
+          "type": "project",
+          "id": "prj-atlas",
+          "fields": {
+            "t": [
+              "Atlas"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": []
+        }
+      ],
+      "plan": {
+        "operations": [
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-image-pins",
+              "fields": {
+                "t": [
+                  "Inspected synthetic source"
+                ],
+                "d": [
+                  "Inspected eeee, ffff and gggg: image pin maintenance only; no qualifying domain fact."
+                ],
+                "ref": [
+                  "https://example.com/sources/src-image-pins"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "additions": {
+          "src-image-pins": "source"
+        },
+        "fields": {},
+        "links": [],
+        "absent_links": [],
+        "coverage": {
+          "eeee": [],
+          "ffff": [],
+          "gggg": []
+        }
+      }
+    },
+    {
+      "id": "partial-replacement",
+      "source_text": "Review adopts longer retention only for batch tokens. Existing short-retention policy remains accepted for interactive tokens. No complete supersession of the old policy.",
+      "template": "project@1",
+      "initial": [
+        {
+          "type": "project",
+          "id": "prj-atlas",
+          "fields": {
+            "t": [
+              "Atlas"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": []
+        },
+        {
+          "type": "decision",
+          "id": "dec-retention",
+          "fields": {
+            "t": [
+              "Token retention policy"
+            ],
+            "d": [
+              "Short retention applies to all tokens."
+            ],
+            "x": [
+              "accepted"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        }
+      ],
+      "plan": {
+        "operations": [
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-retention",
+              "fields": {
+                "t": [
+                  "Inspected synthetic source"
+                ],
+                "d": [
+                  "Accepted batch-only review; old interactive policy remains valid."
+                ],
+                "ref": [
+                  "https://example.com/sources/src-retention"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "decision",
+              "id": "dec-batch-retention",
+              "fields": {
+                "t": [
+                  "Batch token retention"
+                ],
+                "d": [
+                  "Longer retention applies only to batch tokens; interactive policy remains valid."
+                ],
+                "x": [
+                  "accepted"
+                ],
+                "source": [
+                  "src-retention"
+                ]
+              },
+              "links": [
+                [
+                  "related",
+                  "dec-retention"
+                ],
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Decisions"
+            }
+          },
+          {
+            "op": "set",
+            "entity": "dec-retention",
+            "key": "d",
+            "value": "Short retention remains applicable to interactive tokens; batch scope is described separately.",
+            "old": "Short retention applies to all tokens."
+          }
+        ]
+      },
+      "expect": {
+        "additions": {
+          "src-retention": "source",
+          "dec-batch-retention": "decision"
+        },
+        "fields": {
+          "dec-retention": {
+            "x": [
+              "accepted"
+            ]
+          }
+        },
+        "links": [
+          [
+            "dec-batch-retention",
+            "related",
+            "dec-retention"
+          ]
+        ],
+        "absent_links": [
+          [
+            "dec-batch-retention",
+            "replaces",
+            "dec-retention"
+          ]
+        ],
+        "coverage": {}
+      }
+    },
+    {
+      "id": "covered-source-rerun",
+      "source_text": "The same image-pin sources eeee, ffff and gggg are inspected again with no new facts.",
+      "template": "project@1",
+      "initial": [
+        {
+          "type": "project",
+          "id": "prj-atlas",
+          "fields": {
+            "t": [
+              "Atlas"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": []
+        },
+        {
+          "type": "source",
+          "id": "src-image-pins",
+          "fields": {
+            "t": [
+              "Inspected synthetic source"
+            ],
+            "d": [
+              "Inspected eeee, ffff and gggg: image pin maintenance only; no qualifying domain fact."
+            ],
+            "ref": [
+              "https://example.com/sources/src-image-pins"
+            ]
+          },
+          "links": [
+            [
+              "part-of",
+              "prj-atlas"
+            ]
+          ]
+        }
+      ],
+      "plan": {
+        "operations": []
+      },
+      "expect": {
+        "additions": {},
+        "fields": {},
+        "links": [],
+        "absent_links": [],
+        "coverage": {
+          "eeee": [],
+          "ffff": [],
+          "gggg": []
+        }
+      }
+    },
+    {
+      "id": "risk-versus-blocker",
+      "source_text": "Load review rates possible preview saturation high priority. There is no current outage or impeded task; no incident date, owner or due date is supplied. Review date: 2026-10-14.",
+      "template": "project@1",
+      "initial": [
+        {
+          "type": "project",
+          "id": "prj-atlas",
+          "fields": {
+            "t": [
+              "Atlas"
+            ],
+            "x": [
+              "active"
+            ]
+          },
+          "links": []
+        }
+      ],
+      "plan": {
+        "operations": [
+          {
+            "op": "add",
+            "record": {
+              "type": "source",
+              "id": "src-load-review",
+              "fields": {
+                "t": [
+                  "Synthetic load review"
+                ],
+                "d": [
+                  "Review dated 2026-10-14 identifies a high-priority saturation risk; no outage observed."
+                ],
+                "ref": [
+                  "https://example.com/reviews/load"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Log"
+            }
+          },
+          {
+            "op": "add",
+            "record": {
+              "type": "risk",
+              "id": "risk-saturation",
+              "fields": {
+                "t": [
+                  "Preview saturation risk"
+                ],
+                "d": [
+                  "The review identifies possible saturation at peak demand; no outage has been observed."
+                ],
+                "x": [
+                  "open"
+                ],
+                "p": [
+                  "high"
+                ],
+                "source": [
+                  "src-load-review"
+                ]
+              },
+              "links": [
+                [
+                  "part-of",
+                  "prj-atlas"
+                ]
+              ]
+            },
+            "place": {
+              "section": "Plan"
+            }
+          }
+        ]
+      },
+      "expect": {
+        "additions": {
+          "src-load-review": "source",
+          "risk-saturation": "risk"
+        },
+        "fields": {
+          "risk-saturation": {
+            "x": [
+              "open"
+            ],
+            "p": [
+              "high"
+            ],
+            "owner": null,
+            "due": null,
+            "at": null
+          }
+        },
+        "links": [],
+        "absent_links": [],
+        "coverage": {}
+      }
+    }
+  ]
+}

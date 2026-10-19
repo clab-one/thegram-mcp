@@ -23,28 +23,39 @@ OAuth access is limited by the account's connected-agent grants; API-key access 
 
 ## 2. What to record
 
-Within an authorized purpose, record when the outcome happens, not only at the end. One fact per record. Use the document's language and preserve sourced reasons, unresolved uncertainty and meaningful relations.
+Within an authorized purpose, keep one atomic fact per record and reuse existing identities. A commit, PR, report or chat is a source container, not a record type. One source may support several kinds of fact, or only source coverage.
 
-| This turn… | Record | Section | Link | Status |
-|---|---|---|---|---|
-| settled a choice ("let's…", "use X, not Y", a design you picked) | `decision` | Decisions | `part-of` project | `accepted` |
-| replaced an earlier decision | new `decision` + `set x` on the old | Decisions | new `replaces` old | old → `superseded` |
-| committed, pushed, released, deployed, migrated | `event` with `at` and `ref` | Log | `implements` its decision, else `part-of` project | none |
-| published a release or build | `artifact` with `ref` | Log | `derives` its event | none |
-| started planned work worth tracking (a goal's step, a requested feature, a fix with follow-up) | `task` | Plan | `part-of` its goal, else `part-of` project | `active` |
-| left a caveat, limitation or follow-up you will mention | `risk` or `task` | Plan | `related` to what it concerns (a task: `part-of` its goal) | `open` |
-| hit an outage or regression | `event` + `risk` or `task` | Log / Plan | `related` | `open` |
-| finished or unblocked something already recorded | `set x` with `old` (task: also `set done` to the finish time) | — | `link related` to the resolving event | `completed` / `resolved` |
-| measured a number that has a metric | `set value` and `set observed` on that metric | — | — | — |
-| verified a claim with a test or run | `evidence` | Log | `supports` the decision or risk | none |
+### Classify before writing
 
-Do not record: chatter, plans you did not act on, raw logs, secrets, reverted experiments, typo-level edits. If nothing qualifies, say so in the final answer.
+1. Read the source body/diff and relevant follow-ups; separate choices, implementation, tracked work, observations and claims. Retain source identity, timestamp, scope and uncertainty for each fact.
+2. Look up the existing fact/work/component/metric before adding anything. Update its fields and relations when the meaning is unchanged; repeated fixes do not create a new task lifecycle per commit.
+3. Choose the type by meaning using the table below. Use only the current profile's fields, statuses and predicates. A merged implementation does not accept a proposed ADR, complete an entire task, or prove deployment or successful verification.
+4. Add only relations the source establishes, in the stated direction. `A depends B` does not imply `B supports A`. For partial replacement, retain the still-applicable old decision and describe the changed scope with `related`; reserve `replaces` plus old `superseded` for full replacement.
+5. Preserve source time separately from this write's runtime recording time. Reconcile current state and supported widget requirements, then submit the smallest sourced delta. No fact worth a record means no domain record; source coverage can still account for inspected material.
 
-An event's `at` is the time of the actual sourced event, never an invented time. For a commit, use its author time (`git log -1 --format=%aI <hash>`), not the current time for an older commit. Keep date-only facts date-only. `ref` is one URI: a source permalink, release/PR URL or commit URL built from its actual remote (`https://github.com/<owner>/<repo>/commit/<first 10 hash chars>`); without a remote use the hash. Put a source record ID, not a URL, in `source`.
+| Atomic meaning | Record/update | Section and relation | State boundary |
+|---|---|---|---|
+| a choice, proposed alternative or adopted policy | `decision` | Decisions; `part-of` project | `proposed`/`accepted`/`rejected` as supported; without a template use its allowed equivalent |
+| a desired outcome, required behavior or untested premise | `goal`, `requirement` or `assumption` respectively | Plan; `part-of` project/goal as sourced | do not infer these merely to fill a widget |
+| tracked work or a sourced change to its progress | existing `task`, or add a genuinely sourced work item | Plan; `part-of` goal/project | partial → retain active work; review/unmerged PR → `review` when supported; `completed` only for the work's verified completion |
+| architecture responsibility, interface or dependency | existing/new `component`, `system` or `service` | Architecture; `depends` in the sourced direction | code existence does not establish runtime health |
+| possible harm versus an actual impediment | `risk` versus `blocker`; update affected task if sourced | Plan; `related` concern or blocker `blocks` task | use that type/template's state; do not invent priority, owner or due date |
+| observation, test or report supporting/contradicting a claim | `evidence` | Log; `supports` or `contradicts` the claim | failed verification is evidence of failure; a source report is not this agent's runtime verification |
+| reusable explanation or constraint | `knowledge` (or `context` for situational background) | relevant existing section; `part-of` project | preserve scope and uncertainty |
+| a comparable measured quantity | same `metric` ID; `set value` + `set observed` | relevant section; retain report via `source`/`ref` | same definition, denominator and unit; one observation is valid |
+| an identifiable build, report or deliverable | `artifact` with `ref` | Log; `derives` only from an actual producing record | publishing an artifact alone does not require an event |
+| a meaningful dated occurrence, incident, verified rollout or milestone | `event` with sourced `at` and `ref`/`source` | Log; `implements` only a demonstrated choice, else `part-of` project | no event per commit/merge/push; no guessed deployment or milestone |
+| provenance or inspected low-signal material | reusable `source` or coverage note | cite near supported facts | routine image pins/formatting may need coverage only, with no event/task/evidence |
+
+A factual outcome can update a task and component, explain a decision, and retain verification evidence from one commit. Do not fabricate completed historical tasks, intermediate statuses, events or revisions from its subject. Do not record chatter, raw logs, secrets, private assistant notes or every transient experiment. See [worked classification cases](references/examples.md) for ambiguous inputs.
+
+An event's `at` is the actual occurrence time: a commit author date proves the commit time only, not a deployment time. Record source timestamps at their known precision in source descriptions or profile-supported source fields; do not force a decision or component onto a calendar with an invented `at`. Keep date-only facts date-only. `ref` is one URI: a source permalink, release/PR URL or commit URL built from its actual remote; without a remote retain its hash in provenance. Put a real source record ID, not a URL, in `source`.
 
 ## 3. One turn, one patch
 
-Write the whole outcome of a turn as one `gram_patch` against the head. Operations run in order, so later ones can link to records added earlier.
+After classification, write the whole outcome of a turn as one `gram_patch` against the head. Operations run in order, so later ones can link to records added earlier.
+
+This example assumes `project@1`, a sourced full replacement and a retained passing check; it does not claim a release or deployment.
 
 ```json
 {"path": "@mounts/<vault-id>/<project>.gram", "request_id": "slugify-unicode",
@@ -53,11 +64,11 @@ Write the whole outcome of a turn as one `gram_patch` against the head. Operatio
     "fields": {"t": ["Keep Unicode letters in slugs"], "d": ["slugify keeps letters and digits of every script and joins the rest with one hyphen."], "x": ["accepted"]},
     "links": [["part-of", "prj-strings"], ["replaces", "dec-ascii-slugs"]]}, "place": {"section": "Decisions"}},
   {"op": "set", "entity": "dec-ascii-slugs", "key": "x", "value": "superseded", "old": "accepted"},
-  {"op": "add", "record": {"type": "event", "id": "ev-unicode-slugs",
-    "fields": {"t": ["Unicode slugs shipped"], "d": ["slugify now maps '카페 Latte' to '카페-latte'."], "at": ["2026-10-16T11:49:19+09:00"], "ref": ["https://github.com/acme/strings/commit/6b96f595bd"]},
-    "links": [["implements", "dec-unicode-slugs"]]}, "place": {"section": "Log"}},
+  {"op": "add", "record": {"type": "evidence", "id": "evd-unicode-slugs",
+    "fields": {"t": ["Unicode regression check"], "d": ["The retained local test report confirms '카페 Latte' maps to '카페-latte'."], "ref": ["https://example.com/reports/unicode-regression"]},
+    "links": [["supports", "dec-unicode-slugs"]]}, "place": {"section": "Log"}},
   {"op": "set", "entity": "risk-ascii-only", "key": "x", "value": "resolved", "old": "open"},
-  {"op": "link", "entity": "risk-ascii-only", "predicate": "related", "target": "ev-unicode-slugs"},
+  {"op": "link", "entity": "risk-ascii-only", "predicate": "related", "target": "evd-unicode-slugs"},
   {"op": "add", "record": {"type": "task", "id": "task-slug-length",
     "fields": {"t": ["Cap slug length"], "d": ["Very long titles still produce unbounded slugs."], "x": ["open"]},
     "links": [["part-of", "prj-strings"], ["related", "dec-unicode-slugs"]]}, "place": {"section": "Plan"}}
@@ -103,21 +114,26 @@ Other optional fields: `p` (`urgent` `high` `medium` `low`), `owner`, `tag`, `du
 - Callouts: `> [!note]` (or `tip`, `important`, `warning`, `caution`) followed by `> ` lines. Tables need a `|---|` row and equal cells.
 - Prose changes use `{"op":"edit-text","entity":"doc","kind":"rich","old":"<exact text, once>","new":"…"}`; it cannot share a patch with `place`, so add records first, then edit text in the next patch. `gram_read` returns Markdown with mentions flattened to their labels; copy `old` from it but keep the `[label](@id)` syntax in `new`.
 - Mermaid: only `flowchart`/`graph`; label only `-->` edges.
+- For saved widgets, read [widget data contracts](references/widget-data.md) and, when exposed, `gram_profile {path, topic:"presentation"}`. Preserve the saved layout and report missing data or unavailable capabilities; never invent records, owners or dates to make a widget ready.
 - Metrics: one `metric` record per quantity (`value` a plain number, constant `unit`, `observed` a past ISO time with zone). Each new measurement is `set value` + `set observed` on that record, never a new record.
 - `d` on `doc` is the document summary; `set doc view dashboard` opens it on the dashboard.
 
 ## 7. What the dashboard counts
 
-The Project Tracker summarizes records; it never reads commits, events or prose as progress. Record the facts truthfully and let the numbers follow. Never add, split, relabel or complete records to move a number; if a number misleads, say so in the answer instead. A record of the wrong kind (a commit or release written as a task) is a mistake, not history: say so, and with the person's consent make sure the fact exists as an `event`, then `remove` the wrong record (`{"op":"remove","entity":"<id>"}`, needs `base_revision`). Fixing a mistake may move a number; moving a number is never the reason.
+Widgets select stored records, their template states, relationships and real history; they do not turn commit prose into progress. Never add, split, relabel or complete records to move a number. With the person's consent, correct a misclassified record to the type its facts support (which may be a task update, decision, component, evidence, artifact, event or coverage only). Preserve useful content and provenance; removals require fresh CAS. Do not force every wrongly recorded commit into an event.
 
-| On screen | Counts | Record it this way |
+| Surface | Data needed | Authoring consequence |
 |---|---|---|
-| 진척 (progress), 열린 할 일, task board | every `task` record in the document: `completed` ÷ all tasks; `cancelled`/`superseded` stay in the total | A task is planned work: add it when the work is decided or starts, close it with `x completed` and `done`. A shipped commit, release or deploy is an `event`, never a task. A document whose history is all events and whose tasks are open follow-ups correctly shows 0 %. |
-| Goal ring and card | tasks that link `part-of` the goal | Link each step of a goal with `part-of`, not `related`. The ring is that task share; the goal's own `x` is shown as its status, so set it too when the goal is reached. |
-| 위험 (risks) | risk records by status | Close a risk with the template's closing status (`resolved`, `mitigated`, `accepted`, `closed`) and link the resolving event. |
-| Metric chart | one series per `metric` id, one point per revision that changed `value`/`observed`, x-axis `observed` | A single write is a single point. A history needs `set value` + `set observed` on the same id in later revisions. Bars compare only metrics with the same `unit`. |
-| Revision history | revisions by recording time | An import made today stays today; `effective_at` labels a revision, it does not move it. |
-| Side panel families | decisions with requirements, risks with blockers, by status | Keep `x` accurate; an `open`/`proposed` decision is a question still waiting for an answer. |
+| Task board/checklist and progress rings | selected tasks and valid template status classes | track real work; update existing tasks from completion evidence; do not manufacture historical tasks |
+| Goal progress | tasks with `part-of` that goal | `related` does not count; a goal with no linked tasks can remain without a ratio |
+| Decisions/pending choices | decision `x`; full replacement `replaces` links | proposed stays proposed despite merged code; acceptance is distinct from implementation |
+| Risk/attention | actual risks/blockers, explicit states and sourced priority | an empty attention list does not prove health |
+| Calendar/timeline | event `at`, metric `observed`, other records' supported `due` | omit unknown dates; a source commit date is not every fact's occurrence date |
+| Metric trend | same ID, numeric `value`, same `unit`, sourced `observed` and available history | retain real observations; never create revisions just to draw a line |
+| Activity/revision history | actual runtime recording time and loaded revision history | imports remain recorded today; no fake commit-era activity |
+| Sync/team/presence/workspace | runtime/capability data | document records cannot fabricate live sync, membership, presence or access |
+
+The inspected newer widget model counts completion as done ÷ (open + done), excluding closed and unknown states; older Core tracker summaries can use all-task totals. Check the target's current contract and selected records before explaining a percentage. Details, version limits and offline selector checks are in [widget-data.md](references/widget-data.md).
 
 ## 8. Read
 
@@ -125,7 +141,7 @@ The Project Tracker summarizes records; it never reads commits, events or prose 
 - `gram_list {path, select: {type, status}}` filters; `gram_get {path, entity}` one record.
 - `gram_relations {from: {path, entity}}` lists edges both ways.
 - `gram_changes {path, since}` later changes; `gram_range {path, query}` revisions that touched matching records; past state via `revision`, `effective_at` or `recorded_at` on `gram_read`/`gram_get`/`gram_list {path}` and `gram_state {path, entity, selector}`.
-- Decisions have no date field; their date is the earliest event that `implements` them.
+- Some read views display a decision using its earliest implementing event date. That is an implementation date, not its acceptance date; leave it absent when no such event exists and retain documentary dates in provenance.
 - Recall: `mode` `hybrid` or `keyword` when semantic hits look loose; date filters `from`/`to` (inclusive; `YYYY-MM` covers the month). Retry once with other wording before concluding nothing is recorded.
 
 ## 9. Reminders and the stop check

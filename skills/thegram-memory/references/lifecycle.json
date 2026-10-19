@@ -248,7 +248,9 @@
             ]
           }
         ]
-      }
+      },
+      "template": "project@1",
+      "request_id": "atlas-establish-memory"
     }
   },
   "patches": [
@@ -264,7 +266,8 @@
             "op": "set",
             "entity": "dec-gradual",
             "key": "x",
-            "value": "superseded"
+            "value": "superseded",
+            "old": "accepted"
           },
           {
             "op": "add",
@@ -369,13 +372,22 @@
             "op": "set",
             "entity": "task-verify",
             "key": "x",
-            "value": "completed"
+            "value": "completed",
+            "old": "active"
+          },
+          {
+            "op": "set",
+            "entity": "task-verify",
+            "key": "done",
+            "value": "2026-10-11T09:00:00Z",
+            "old": null
           },
           {
             "op": "set",
             "entity": "goal-release",
             "key": "x",
-            "value": "completed"
+            "value": "completed",
+            "old": "active"
           },
           {
             "op": "add",
@@ -524,7 +536,8 @@
             "op": "set",
             "entity": "doc",
             "key": "d",
-            "value": "Atlas uses the constrained preview; its endpoint verification is completed and probe observations retain their source windows."
+            "value": "Atlas uses the constrained preview; its endpoint verification is completed and probe observations retain their source windows.",
+            "old": "Atlas rollout purpose, current choices and verified probe observations."
           }
         ]
       }
@@ -595,19 +608,22 @@
             "op": "set",
             "entity": "met-availability",
             "key": "value",
-            "value": "99.9"
+            "value": "99.9",
+            "old": "99.7"
           },
           {
             "op": "set",
             "entity": "met-availability",
             "key": "observed",
-            "value": "2026-10-11T10:00:00Z"
+            "value": "2026-10-11T10:00:00Z",
+            "old": "2026-10-10T09:00:00Z"
           },
           {
             "op": "set",
             "entity": "met-availability",
             "key": "source",
-            "value": "src-probes-second"
+            "value": "src-probes-second",
+            "old": "src-probes-first"
           }
         ]
       }

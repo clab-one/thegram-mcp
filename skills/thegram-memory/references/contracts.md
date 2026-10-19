@@ -34,7 +34,7 @@ Historical selectors also work on `gram_read`, `gram_get`, `gram_list` without `
 
 `gram_create` requires `{path,title,base_revision:null}` and `content` (text or `{text|rich,records,fields,blocks}`) unless `template` (`schedule@1`, `project@1`, `knowledge@1`) starts the body from its own headings. A template declares the document: Core then checks its records against `gram_profile {topic:"templates"}` and refuses violations with `E_TEMPLATE` and `details.diagnostics`. Give it a `request_id`: resending the identical create replays its receipt (`replayed:true`) instead of failing. Without one, a lost answer means inspecting the destination before retrying; never create a similarly named duplicate. An already existing path is not an overwrite route.
 
-`gram_patch` requires `{path,request_id,operations}`; request ID is 1–128 characters and operations are nonempty. Without `base_revision`/`expected_hash` it writes to the head: each set/unset carries `old`, the value read (string, array in order, or `null`), and Core refuses with `E_PRECONDITION` and `details.conditions` only when such a field changed, an added ID exists with other content or a place target is gone. With a nonnegative `base_revision` and the opaque 16-hex `expected_hash` the whole document must be unchanged; `remove` and whole-body `text`/`drop-text`/`rich` need them. The cloud schema has no `action`/`action_target` (`E_ARGUMENT: Unknown argument action`); a template's required fields and values are still checked on ordinary operations. One successful call is one real revision.
+`gram_patch` requires `{path,request_id,operations}`; request ID is 1–128 characters and operations are nonempty. Without `base_revision`/`expected_hash` it writes to the head: each set/unset carries `old`, the value read (string, array in order, or `null`), and Core refuses with `E_PRECONDITION` and `details.conditions` only when such a field changed, an added ID exists with other content or a place target is gone. With a nonnegative `base_revision` and the opaque 16-hex `expected_hash` the whole document must be unchanged; `remove` and whole-body `text`/`drop-text`/`rich` need them. The cloud schema has no `action`/`action_target` (`E_ARGUMENT: Unknown argument action`); a template's required fields and values are still checked on ordinary operations. One changed successful call is one real revision; a no-op/replay does not create a new outcome.
 
 | Operation | Shape |
 | --- | --- |
@@ -48,6 +48,16 @@ Add field values are arrays of strings; a set takes `value` (one string) or `val
 `source` refers to a real `source` record ID, not a URL. Put URLs in `ref`. Preserve sourced owners/deadlines and omit unknown ones. Raw `x` accepts strings; misspellings can appear as open work. Missing `x` can omit a task/risk from the open brief, so compare both brief and selected records.
 
 `place` belongs on an add and supports `"end"`, `{after:"id"}` or `{section:"exact heading or node ID"}`. It requires a rich document body and cannot share a patch with `edit-text`, `rich`, `text` or `drop-text`. A record without placement can exist without being visible in the body. Operations run in order; add a target before linking to it in a patch. In create content, records may link to each other regardless of order; place them with standalone `[[id]]` lines or appropriate collections.
+
+`history` is a supported record type with ordinary profile fields; it has no special lifecycle/replay schema. The source container does not dictate type. Classify atomic facts before choosing operations (SKILL.md section 2); preserve documentary decision state independently of implementation. `depends` is not evidential `supports`, and `replaces` must not imply that still-valid old scope disappeared.
+
+## Saved presentation requirements
+
+When exposed, `gram_profile {path,topic:"presentation"}` returns the saved layout's `coreTemplateRef`, selected `coreProfile`, `uiRequirements` (schema/digest, per-widget selectors, capabilities, minimum data) and revision-specific `readiness`. This is read-only guidance, not Core write validity or permission to publish, change layouts, fetch other files or invent missing facts. See [widget-data.md](widget-data.md) for inspected source contracts and limits. Current schemas win; legacy and newer widget contracts differ.
+
+Some versions expose optional `presentation_digest` on `gram_patch`, requiring fresh `base_revision` and `expected_hash`. Use it only when actually exposed and a profile digest was obtained; never send a guessed argument/digest. It protects the saved presentation snapshot, not factual truth.
+
+If this profile returns `E_CONTEXT_BUDGET` while the exposed schema has only `path/task/topic`, there is no supported field selector or cursor to narrow it. Report saved-layout requirements as unavailable, preserve the layout and continue only independently supported record work. Do not infer that no layout exists or silently bypass the budget through another endpoint. A compact/paginated profile response is a separate integration repair.
 
 ## Recovery and completion
 

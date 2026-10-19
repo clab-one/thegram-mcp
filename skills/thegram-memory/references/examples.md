@@ -1,6 +1,6 @@
 # Worked project-memory lifecycle
 
-The linked [lifecycle.json](lifecycle.json) is **fictional, synthetic test data**, not facts to persist about a person or a project. `example-vault` and `example.com` are placeholders. Replace the path with the exact authorized mount/document. The fixture pins `base_revision`/`expected_hash` to exercise whole-document checks; replace `${doc.rev}` and `${doc.hash}` with the fresh brief or preceding write response and never submit the placeholders. Ordinary writes go to the head with `old` instead. The example deliberately omits owners, deadlines and priority because the hypothetical evidence supplies none.
+The linked [lifecycle.json](lifecycle.json) is **fictional, synthetic test data**, not facts to persist about a person or a project. `example-vault` and `example.com` are placeholders. Replace the path with the exact authorized mount/document. The fixture explicitly uses `project@1`, a stable create request ID and sourced completion time. The fixture pins `base_revision`/`expected_hash` to exercise whole-document checks; replace `${doc.rev}` and `${doc.hash}` with the fresh brief or preceding write response and never submit the placeholders. Ordinary writes go to the head with `old` instead. The example deliberately omits owners, deadlines and priority because the hypothetical evidence supplies none.
 
 ## Retrieve before deciding
 
@@ -38,3 +38,18 @@ If an actual source gives only `2026-10-10`, retain that date; do not attach the
 ## Verification limits
 
 The repository's packaging tests verify bundled discovery and private metadata preservation. The optional offline cloud gateway checks run these synthetic payloads against the actual server wrapper/native Core in scratch storage, including CAS, replay, history and readback. Neither proves installation in an end-user host, live OAuth/provider behavior, or rendered dashboard/diagram behavior. State each verified layer separately.
+
+## Classify mixed sources before importing
+
+The linked [classification.json](classification.json) contains fictional raw inputs, existing records, candidate operations and explicit expectations. It is an offline authoring oracle, not a runtime inference engine or facts to save. Its cases distinguish:
+
+- A single commit containing an accepted cache choice, component responsibility, reusable constraint and scoped test result: four atomic facts plus provenance, no commit event.
+- ADR-0047 still marked proposed while Ethereum stage-1 code is merged: retain documentary `proposed`, update the component and active task description, leave later stages incomplete. Its stated dependency on another ADR stays `depends`, with no inverse evidential `supports`.
+- An unmerged PR under review and a failed check: the existing task remains `review`; record failure evidence and a real blocking condition. No completion, deployment or success event.
+- Repeated fixes to one tracked problem: reuse the task/component, preserve current incomplete status and attach new scoped evidence. No new task per commit and no fabricated intermediate revisions.
+- A real dated deployment report and retained build: event for the actual rollout time, artifact for the build and evidence explicitly attributed to the report; an existing verification task completes only when that report establishes its completion. This fixture does not assert that the importing agent ran a live check.
+- Two comparable observations: use the same metric ID, quantity and unit, with actual observation timestamps. Their updates are real writes; an unrelated import need not generate metric history.
+- Noisy image pin commits: account for the source range only. No new task, component, event or verification evidence is required.
+- A partial decision replacement: keep still-applicable old scope accepted, describe the narrower change with `related`. Reserve whole-record `replaces`/`superseded` for the full replacement shown in the lifecycle fixture.
+
+Sourced dates remain in provenance unless the fact has an actual supported date field. Current imports do not recreate old revision activity. [Widget data contracts](widget-data.md) explains why correct type, status, dates, relationships and real revision history matter for useful display; layout readiness never authorizes fake data.
