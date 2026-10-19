@@ -1547,6 +1547,34 @@
         "absent_links": [["k-hn-45612301", "derives", "run-20261019-1801"]],
         "coverage": {}
       }
+    },
+    {
+      "id": "agent-work-session",
+      "source_text": "Codex session ending 2026-10-19T15:25:00+09:00 on clab-one/thegram-ui. Roy approved PR #25 at 14:45. Codex merged it at 14:50 (https://github.com/clab-one/thegram-ui/commit/827054c), released v3.31.0 at 15:05 (https://github.com/clab-one/thegram-ui/releases/tag/v3.31.0), deployed to production at 15:20 and saw all six widgets render. Along the way it pushed three fixup commits and reran the tests twice.",
+      "initial": [
+        {"type": "project", "id": "prj-thegram-dev", "fields": {"t": ["Thegram development"], "x": ["active"]}, "links": []},
+        {"type": "task", "id": "task-automation-widgets", "fields": {"t": ["Automation widgets in thegram-ui"], "x": ["review"], "owner": ["Codex"], "s": ["clab-one/thegram-ui"], "start": ["2026-10-19T10:05:00+09:00"], "ref": ["https://github.com/clab-one/thegram-ui/pull/25"], "d": ["PR #25 waits for Roy's review."]}, "links": [["part-of", "prj-thegram-dev"]]},
+        {"type": "event", "id": "ev-pr-25-review", "fields": {"t": ["PR #25 opened for review"], "at": ["2026-10-19T11:40:00+09:00"], "x": ["confirmed"], "ref": ["https://github.com/clab-one/thegram-ui/pull/25"]}, "links": [["part-of", "task-automation-widgets"]]}
+      ],
+      "plan": {
+        "operations": [
+          {"op": "add", "record": {"type": "event", "id": "ev-pr-25-merged", "fields": {"t": ["PR #25 merged"], "at": ["2026-10-19T14:50:00+09:00"], "x": ["confirmed"], "ref": ["https://github.com/clab-one/thegram-ui/commit/827054c"]}, "links": [["part-of", "task-automation-widgets"]]}, "place": {"section": "Log"}},
+          {"op": "add", "record": {"type": "event", "id": "ev-ui-v3-31-0", "fields": {"t": ["v3.31.0 released"], "at": ["2026-10-19T15:05:00+09:00"], "x": ["confirmed"], "ref": ["https://github.com/clab-one/thegram-ui/releases/tag/v3.31.0"]}, "links": [["part-of", "task-automation-widgets"]]}, "place": {"section": "Log"}},
+          {"op": "add", "record": {"type": "event", "id": "ev-ui-v3-31-0-live", "fields": {"t": ["v3.31.0 deployed and checked in production"], "at": ["2026-10-19T15:20:00+09:00"], "x": ["confirmed"], "ref": ["https://github.com/clab-one/thegram-ui/releases/tag/v3.31.0"]}, "links": [["part-of", "task-automation-widgets"]]}, "place": {"section": "Log"}},
+          {"op": "set", "entity": "task-automation-widgets", "key": "x", "value": "completed", "old": "review"},
+          {"op": "set", "entity": "task-automation-widgets", "key": "done", "value": "2026-10-19T15:20:00+09:00", "old": null},
+          {"op": "set", "entity": "task-automation-widgets", "key": "d", "value": "Six automation widgets shipped in v3.31.0 and render in production.", "old": "PR #25 waits for Roy's review."}
+        ]
+      },
+      "expect": {
+        "additions": {"ev-pr-25-merged": "event", "ev-ui-v3-31-0": "event", "ev-ui-v3-31-0-live": "event"},
+        "fields": {
+          "task-automation-widgets": {"x": ["completed"], "done": ["2026-10-19T15:20:00+09:00"], "owner": ["Codex"], "start": ["2026-10-19T10:05:00+09:00"]}
+        },
+        "links": [["ev-pr-25-merged", "part-of", "task-automation-widgets"], ["ev-ui-v3-31-0", "part-of", "task-automation-widgets"], ["ev-ui-v3-31-0-live", "part-of", "task-automation-widgets"]],
+        "absent_links": [],
+        "coverage": {}
+      }
     }
   ]
 }

@@ -44,7 +44,7 @@ Within an authorized purpose, keep one atomic fact per record and reuse existing
 | reusable explanation or constraint | `knowledge` (or `context` for situational background) | relevant existing section; `part-of` project | preserve scope and uncertainty |
 | a comparable measured quantity | same `metric` ID; `set value` + `set observed` | relevant section; retain report via `source`/`ref` | same definition, denominator and unit; one observation is valid |
 | an identifiable build, report or deliverable | `artifact` with `ref` | Log; `derives` only from an actual producing record | publishing an artifact alone does not require an event |
-| a meaningful dated occurrence, incident, verified rollout or milestone | `event` with sourced `at` and `ref`/`source` | Log; `implements` only a demonstrated choice, else `part-of` project | no event per commit/merge/push; no guessed deployment or milestone |
+| a meaningful dated occurrence, incident, verified rollout or milestone | `event` with sourced `at` and `ref`/`source` | Log; `implements` only a demonstrated choice, else `part-of` project | no event per commit or push; a tracked task's PR, merge, release, deployment or verification is one step event `part-of` that task (Agent work in 5); no guessed deployment or milestone |
 | provenance or inspected low-signal material | reusable `source` or coverage note | cite near supported facts | routine image pins/formatting may need coverage only, with no event/task/evidence |
 
 A factual outcome can update a task and component, explain a decision, and retain verification evidence from one commit. Do not fabricate completed historical tasks, intermediate statuses, events or revisions from its subject. Do not record chatter, raw logs, secrets, private assistant notes or every transient experiment. See [worked classification cases](references/examples.md) for ambiguous inputs.
@@ -127,6 +127,15 @@ A document a scheduled run writes (a research digest, a monitor, a collected log
 4. Each watched thing (a chain, server, repository or mailbox) is one record tagged `target`, created once and reused; every detection links `related` to its target.
 5. What needs a person follows the automation's own rule in the root project's `d`. A change still ahead that someone must act on (an upgrade to apply, a price change to review) becomes a `task` due by its start; a possible harm nobody here can act on (a reboot during a provider's maintenance) is a `risk`, with `p` only when stated. A task is never created already overdue. Link either `related` to its item. Status belongs in `x` and dates, never in a title (`[완료]`, `[과거]`).
 6. The schedule itself (cadence, sources, scope) is the root project's `d`; the dashboard reads the cadence from the runs, so never invent a run that did not happen.
+
+### Agent work
+
+When an agent works for the person (code, a release, an investigation), the AI 작업 보드 dashboard shows who is doing what and how it went from exactly these records:
+
+1. One `task` per piece of work, added when the work starts or reused when it continues (find it by title, `ref` or repository with `gram_recall`). `t` names the work, not a step; `owner` is your agent name as the person knows it (`Codex`, `Claude Code`, `OMP`, `ChatGPT`); `s` the repository; `start` when you began; `part-of` the project or goal. Never a task per commit or per session.
+2. Move `x` with the work, in the same patch as the step that moved it: `active` while you work; `review` when the result waits for the person's review or approval (`d` says what to look at); `waiting` when you need the person's answer (`d` asks the question; a choice between options is also a `proposed` decision linked `related`); `blocked` when something else stops it (`d` says what); `completed` with `done` the finish time and `d` rewritten to the outcome; `cancelled` with the reason. Before you stop, never leave your task `active`: set what it actually waits for.
+3. Each meaningful step is one `event` linked `part-of` the task: a PR opened for review, merged, a release, a deployment, a verification, or a plan the person agreed to. `at` is when it happened and `ref` the PR, commit, release or run URL. No event per commit, push or test run, and none for a step that did not happen.
+4. A choice settled along the way is a decision (rules above); the step that carries it out may also link `implements` it.
 
 ## 6. Body and dashboard
 

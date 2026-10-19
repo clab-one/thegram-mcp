@@ -277,6 +277,95 @@
           }
         ]
       }
+    },
+    {
+      "id": "agent-work",
+      "prompt": "너는 {agent}이다. Roy가 혼자 개발하는 Thegram 프로젝트에서 맡은 일을 하고 있다. 작업 기록 문서: {path}\n지금 시각: {now} (Asia/Seoul). 이 문서에 너의 작업을 기록하는 것은 허락되어 있다.\n이번 세션에서 실제로 한 일과 지금 상태:\n{inputs}\n이번 세션의 작업을 이 문서에 기록하고, 무엇을 기록했는지 한두 문장으로 답해.",
+      "document": {
+        "title": "AI 작업 기록",
+        "project": {
+          "id": "prj-thegram-dev",
+          "t": "Thegram 개발",
+          "d": "Roy가 혼자 개발하는 Thegram. Codex, Claude Code 같은 AI 에이전트가 맡은 일을 이 문서에 남긴다."
+        }
+      },
+      "runs": [
+        {
+          "agent": "Codex",
+          "now": "2026-10-19T11:45:00+09:00",
+          "inputs": [
+            "- 10:05 Roy가 'thegram-ui에 자동화 위젯 추가'를 맡겼고 바로 작업을 시작했다 (저장소 clab-one/thegram-ui, 브랜치 feat/automation-templates).",
+            "- 10:20~11:30 위젯 6종을 구현하며 커밋 9개를 올렸고 typecheck와 테스트를 여러 번 돌렸다.",
+            "- 11:40 PR #25를 열고 Roy에게 리뷰를 요청했다: https://github.com/clab-one/thegram-ui/pull/25 . 지금은 Roy의 리뷰를 기다린다."
+          ]
+        },
+        {
+          "agent": "Claude Code",
+          "now": "2026-10-19T13:20:00+09:00",
+          "inputs": [
+            "- 13:00 Roy가 'thegram-mcp 스킬에 자동화 실행 규칙 추가'를 맡겼고 작업을 시작했다 (저장소 clab-one/thegram-mcp).",
+            "- 13:15 규칙 초안을 SKILL.md에 썼다 (아직 커밋하지 않았다).",
+            "- 감시 대상에 component 종류를 써도 되는지 Roy의 답이 있어야 다음으로 갈 수 있어 지금 멈췄다."
+          ]
+        },
+        {
+          "agent": "Codex",
+          "now": "2026-10-19T15:25:00+09:00",
+          "inputs": [
+            "- 14:45 Roy가 PR #25를 승인했다.",
+            "- 14:50 PR #25를 머지했다: https://github.com/clab-one/thegram-ui/commit/827054cffa88b51ea31fa7ae8d790728316b5c99",
+            "- 15:05 v3.31.0을 릴리스했다: https://github.com/clab-one/thegram-ui/releases/tag/v3.31.0",
+            "- 15:20 운영에 배포하고 화면에서 위젯 6종이 그려지는 것을 확인했다. 이 작업은 끝났다."
+          ]
+        }
+      ],
+      "expect": {
+        "work": [
+          {
+            "id": "codex-widgets",
+            "owner": "codex",
+            "match": [
+              "위젯",
+              "pull/25"
+            ],
+            "repo": "thegram-ui",
+            "start": "2026-10-19T10:05:00+09:00",
+            "x": "completed",
+            "done": "2026-10-19T15:20:00+09:00",
+            "steps": [
+              {
+                "at": "2026-10-19T11:40:00+09:00",
+                "ref": "https://github.com/clab-one/thegram-ui/pull/25"
+              },
+              {
+                "at": "2026-10-19T14:50:00+09:00",
+                "ref": "https://github.com/clab-one/thegram-ui/commit/827054cffa88b51ea31fa7ae8d790728316b5c99"
+              },
+              {
+                "at": "2026-10-19T15:05:00+09:00",
+                "ref": "https://github.com/clab-one/thegram-ui/releases/tag/v3.31.0"
+              },
+              {
+                "at": "2026-10-19T15:20:00+09:00"
+              }
+            ],
+            "steps_max": 6
+          },
+          {
+            "id": "claude-rules",
+            "owner": "claude",
+            "match": [
+              "규칙",
+              "스킬"
+            ],
+            "repo": "thegram-mcp",
+            "start": "2026-10-19T13:00:00+09:00",
+            "x": "waiting",
+            "asks": "component",
+            "steps_max": 0
+          }
+        ]
+      }
     }
   ]
 }

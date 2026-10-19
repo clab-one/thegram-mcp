@@ -98,6 +98,17 @@ class ClassificationTests(unittest.TestCase):
                 'type':'event','id':'ev-commit','fields':{'t':['Commit shipped'],'at':['2026-10-10']},'links':[['part-of','prj-atlas']]}})
             with self.subTest(case=id), self.assertRaises(AssertionError): evaluate(case, plan)
 
+    def test_agent_session_continues_its_task_without_commit_steps(self):
+        second_task = {'op':'add','place':{'section':'Log'},'record':{'type':'task','id':'task-automation-widgets-2','fields':{'t':['Ship automation widgets'],'x':['completed'],'owner':['Codex']},'links':[['part-of','prj-thegram-dev']]}}
+        commit_step = {'op':'add','place':{'section':'Log'},'record':{'type':'event','id':'ev-fixup-commit','fields':{'t':['Fixup commit pushed'],'at':['2026-10-19T14:30:00+09:00']},'links':[['part-of','task-automation-widgets']]}}
+        for op in [second_task, commit_step]:
+            case, plan = self.mutate('agent-work-session')
+            plan['operations'].append(op)
+            with self.subTest(op=op['record']['id']), self.assertRaises(AssertionError): evaluate(case, plan)
+        case, plan = self.mutate('agent-work-session')
+        plan['operations'] = [op for op in plan['operations'] if op.get('key') != 'done']
+        with self.assertRaises(AssertionError): evaluate(case, plan)
+
     def test_open_adr_cannot_be_accepted_from_merged_code(self):
         case, plan = self.mutate('open-adr-partial-implementation')
         plan['operations'].append({'op':'set','entity':'dec-adr-0047','key':'x','value':'accepted','old':'proposed'})
