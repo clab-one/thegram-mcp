@@ -1,5 +1,6 @@
-// LLM authoring E2E: a real agent (Codex CLI) records scheduled-automation runs into Cloud documents through one skill
-// version, then this reads the documents back and scores them against the contract the automation dashboards read.
+// LLM authoring E2E: a real agent (Codex CLI) records scheduled-automation runs or its own work sessions into Cloud
+// documents through one skill version, then this reads the documents back and scores them against the contract the
+// automation and agent-work dashboards read.
 // Usage: node e2e/authoring/run.mjs --skill <skills/thegram-memory dir> --variant <name> --doc-root <@mounts/<vault>/<folder>>
 //          --out <dir> [--model gpt-6.1-sol] [--ui <thegram-ui checkout>] [--only <scenario>] [--score-only]
 // Output: <out>/<variant>/report.json, plus each run's agent events and final message. Needs a connected thegram-memory CLI.
@@ -87,7 +88,7 @@ async function records(client, docPath) {
   const ids = [];
   let page = await client.call('gram_list', { path: docPath });
   for (;;) { ids.push(...page.entities.map(([id, type]) => ({ id, type }))); if (!page.more) break; page = await client.call('gram_list', { path: docPath, cursor: page.more }); }
-  const fields = ['t', 'd', 'x', 'at', 'end', 'due', 'p', 'ref', 'tag', 'source'];
+  const fields = ['t', 'd', 'x', 'at', 'end', 'due', 'p', 'ref', 'tag', 'source', 'owner', 's', 'start', 'done'];
   const out = [];
   for (let i = 0; i < ids.length; i += 40) {
     const request = { ids: ids.slice(i, i + 40).map(({ id }) => ({ path: docPath, entity: id })), fields };
@@ -114,15 +115,17 @@ function score(scenario, { records: all, body }) {
   const checks = [];
   const check = (name, pass, detail) => checks.push({ name, pass: !!pass, ...(detail === undefined ? {} : { detail }) });
   const runs = all.filter(record => record.type === 'event' && tags(record).includes('run'));
-  check('run records', runs.length === expect.runs.length, runs.map(run => first(run, 'at')));
-  const runFor = expect.runs.map(want => runs.find(run => time(first(run, 'at')) === time(want.at)) ?? null);
-  expect.runs.forEach((want, index) => {
-    const run = runFor[index];
-    check(`run ${index + 1} at ${want.at}`, run);
-    check(`run ${index + 1} failed sources`, run && JSON.stringify(tags(run).filter(tag => tag.startsWith('failed:')).map(tag => tag.slice(7)).sort()) === JSON.stringify([...want.failed].sort()), run && tags(run));
-  });
-  const byUrl = new Map(expect.items.map(item => [item.url, all.filter(record => !tags(record).includes('run') && record.type !== 'project' && mentions(record, item.url) && !['task', 'risk'].includes(record.type) && !tags(record).includes('target'))]));
-  for (const item of expect.items) {
+  const runFor = (expect.runs ?? []).map(want => runs.find(run => time(first(run, 'at')) === time(want.at)) ?? null);
+  if (expect.runs) {
+    check('run records', runs.length === expect.runs.length, runs.map(run => first(run, 'at')));
+    expect.runs.forEach((want, index) => {
+      const run = runFor[index];
+      check(`run ${index + 1} at ${want.at}`, run);
+      check(`run ${index + 1} failed sources`, run && JSON.stringify(tags(run).filter(tag => tag.startsWith('failed:')).map(tag => tag.slice(7)).sort()) === JSON.stringify([...want.failed].sort()), run && tags(run));
+    });
+  }
+  const byUrl = new Map((expect.items ?? []).map(item => [item.url, all.filter(record => !tags(record).includes('run') && record.type !== 'project' && mentions(record, item.url) && !['task', 'risk'].includes(record.type) && !tags(record).includes('target'))]));
+  for (const item of expect.items ?? []) {
     const found = byUrl.get(item.url);
     const record = found.find(candidate => (candidate.fields.ref ?? []).includes(item.url)) ?? found[0];
     check(`item ${item.url} recorded once`, found.length === 1, found.map(candidate => candidate.id));
@@ -134,33 +137,55 @@ function score(scenario, { records: all, body }) {
     check(`item ${item.url} derives from no later run`, record && !!run && record.links.every(link => link.predicate !== 'derives' || link.target === run.id), record?.links);
   }
   const itemOf = url => byUrl.get(url)?.find(candidate => (candidate.fields.ref ?? []).includes(url)) ?? byUrl.get(url)?.[0];
-  for (const [a, b] of expect.same_topic) {
+  for (const [a, b] of expect.same_topic ?? []) {
     const topic = record => tags(record ?? { fields: {} }).find(tag => tag.startsWith('topic:'));
     check(`same topic ${a} ~ ${b}`, topic(itemOf(a)) && topic(itemOf(a)) === topic(itemOf(b)), [topic(itemOf(a)), topic(itemOf(b))]);
   }
-  for (const want of expect.tasks) {
+  for (const want of expect.tasks ?? []) {
     const item = itemOf(want.url);
     const task = all.find(record => record.type === 'task' && (item ? related(record, item) : false)) ?? all.find(record => record.type === 'task' && mentions(record, want.url));
     check(`task for ${want.url}`, task, task?.id);
     check(`task due ${want.due}`, task && first(task, 'due') === want.due, task && first(task, 'due'));
   }
-  for (const want of expect.risks) {
+  for (const want of expect.risks ?? []) {
     const item = itemOf(want.url);
     const target = expect.targets.find(t => t.url === want.url);
     const targetRecord = target ? all.find(record => tags(record).includes('target') && (first(record, 't') ?? '').toLowerCase().includes(target.name)) : null;
     check(`risk for ${want.url}`, all.some(record => record.type === 'risk' && ((item && related(record, item)) || (targetRecord && related(record, targetRecord)))));
   }
-  for (const want of expect.targets) {
+  for (const want of expect.targets ?? []) {
     const target = all.filter(record => tags(record).includes('target') && (first(record, 't') ?? '').toLowerCase().includes(want.name));
     check(`target ${want.name} once`, target.length === 1, target.map(record => record.id));
     const item = itemOf(want.url);
     check(`detection related to ${want.name}`, target[0] && item && related(item, target[0]));
   }
-  for (const want of expect.ranges) {
+  for (const want of expect.ranges ?? []) {
     const item = itemOf(want.url);
     const event = item?.type === 'event' ? item : all.find(record => record.type === 'event' && !tags(record).includes('run') && item && related(record, item));
     check(`event at ${want.at}`, event && time(first(event, 'at')) === time(want.at), event && first(event, 'at'));
     if (want.end) check(`event end ${want.end}`, event && time(first(event, 'end')) === time(want.end), event && first(event, 'end'));
+  }
+  if (expect.work) {
+    const tasks = all.filter(record => record.type === 'task');
+    check('one task per piece of work', tasks.length === expect.work.length, tasks.map(record => `${record.id} ${first(record, 'owner')}`));
+    const stepsOf = task => all.filter(record => record.type === 'event' && record.links.some(link => link.predicate === 'part-of' && link.target === task.id));
+    for (const want of expect.work) {
+      const mine = tasks.filter(record => new RegExp(want.owner, 'i').test(first(record, 'owner') ?? '') && want.match.some(word => (first(record, 't') ?? '').includes(word) || (record.fields.ref ?? []).some(url => url.includes(word)) || (first(record, 'd') ?? '').includes(word)));
+      const task = mine[0];
+      check(`${want.id}: one task owned by ${want.owner}`, mine.length === 1, mine.map(record => record.id));
+      check(`${want.id}: repository ${want.repo}`, task && (first(task, 's') ?? '').includes(want.repo), task && first(task, 's'));
+      check(`${want.id}: start ${want.start}`, task && time(first(task, 'start')) === time(want.start), task && first(task, 'start'));
+      check(`${want.id}: status ${want.x}`, task && first(task, 'x') === want.x, task && first(task, 'x'));
+      if (want.done) check(`${want.id}: done ${want.done}`, task && time(first(task, 'done')) === time(want.done), task && first(task, 'done'));
+      if (want.asks) check(`${want.id}: d says what it waits for`, task && (first(task, 'd') ?? '').toLowerCase().includes(want.asks), task && first(task, 'd'));
+      const steps = task ? stepsOf(task) : [];
+      for (const step of want.steps ?? []) {
+        const hit = steps.filter(record => Math.abs(time(first(record, 'at')) - time(step.at)) < 60_000);
+        check(`${want.id}: step at ${step.at}`, hit.length >= 1, steps.map(record => first(record, 'at')));
+        if (step.ref) check(`${want.id}: step ${step.at} ref`, hit.some(record => (record.fields.ref ?? []).includes(step.ref)), hit.map(record => record.fields.ref));
+      }
+      check(`${want.id}: at most ${want.steps_max ?? 0} steps (none per commit or test run)`, steps.length <= (want.steps_max ?? 0), steps.map(record => first(record, 't')));
+    }
   }
   const firstDay = scenario.runs[0].now.slice(0, 10);
   const overdue = all.filter(record => record.type === 'task' && first(record, 'due') && first(record, 'due').slice(0, 10) < firstDay);
@@ -172,11 +197,22 @@ function score(scenario, { records: all, body }) {
   return { passed: checks.filter(c => c.pass).length, total: checks.length, checks };
 }
 
-async function widgetView(all) {
+async function widgetView(scenario, all) {
   if (!arg.ui) return null;
   registerHooks({ load(url, context, nextLoad) { return nextLoad(url, url.endsWith('.json') ? { ...context, importAttributes: { type: 'json' } } : context); } });
-  const model = await import(pathToFileURL(path.join(arg.ui, 'src/features/dashboard/model/automation.ts')));
   const owners = all.map(record => ({ ...record, args: [], blocks: [], rich: null }));
+  if (scenario.expect.work) {
+    const work = await import(pathToFileURL(path.join(arg.ui, 'src/features/dashboard/model/work.ts')));
+    const now = new Date(scenario.runs.at(-1).now);
+    const works = work.worksOf(owners, [], null);
+    return {
+      lanes: Object.fromEntries(work.LANES.map(lane => [lane, works.filter(item => item.lane === lane && (lane !== 'done' || work.recentlyDone(item, now))).map(item => ({ task: item.task.id, agent: item.agent, steps: item.steps.length }))])),
+      agents: work.agentsOf(works, now).map(row => ({ name: row.name, doing: row.doing.length, check: row.check.length, blocked: row.blocked.length, done: row.done.length })),
+      asks: work.asksOf(owners, [], null).map(ask => [ask.reason, ask.record.id]),
+      flow: work.flowOf(owners, [], null, now, now.getTime() - 14 * 86_400_000).map(entry => [new Date(entry.at).toISOString(), entry.kind, entry.record.id, entry.context?.id ?? null]),
+    };
+  }
+  const model = await import(pathToFileURL(path.join(arg.ui, 'src/features/dashboard/model/automation.ts')));
   const runs = model.runsOf(owners);
   const usual = model.cadence(runs);
   return {
@@ -197,7 +233,7 @@ for (const scenario of spec.scenarios.filter(item => !arg.only || item.id === ar
   if (!arg['score-only']) {
     await ensureDocument(client, docPath, scenario);
     for (const [index, run] of scenario.runs.entries()) {
-      const prompt = spec.prompt.replace('{automation}', scenario.automation).replace('{path}', docPath).replace('{now}', run.now).replace('{inputs}', run.inputs.join('\n'));
+      const prompt = (scenario.prompt ?? spec.prompt).replace('{automation}', scenario.automation ?? '').replace('{agent}', run.agent ?? '').replace('{path}', docPath).replace('{now}', run.now).replace('{inputs}', run.inputs.join('\n'));
       const result = runAgent(workdir(`${scenario.id}-run${index + 1}`), prompt);
       runs.push({ now: run.now, ...result });
       console.log(`${arg.variant} ${scenario.id} run ${index + 1}: exit ${result.exit}, ${result.seconds}s, ${result.calls.length} tool calls`);
@@ -205,7 +241,7 @@ for (const scenario of spec.scenarios.filter(item => !arg.only || item.id === ar
   }
   const read = await records(client, docPath);
   const result = score(scenario, read);
-  report.scenarios.push({ id: scenario.id, document: docPath, runs, score: { passed: result.passed, total: result.total }, checks: result.checks, widgets: await widgetView(read.records), records: read.records });
+  report.scenarios.push({ id: scenario.id, document: docPath, runs, score: { passed: result.passed, total: result.total }, checks: result.checks, widgets: await widgetView(scenario, read.records), records: read.records });
   console.log(`${arg.variant} ${scenario.id}: ${result.passed}/${result.total}`);
 }
 client.close();

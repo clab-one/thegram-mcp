@@ -1,6 +1,6 @@
 {
 	"name": "thegram-memory",
-	"version": "3.3.0",
+	"version": "3.4.0",
 	"description": "Thegram Cloud project memory for coding agents through scoped API keys",
 	"private": true,
 	"type": "module",

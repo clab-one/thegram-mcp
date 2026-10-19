@@ -25,5 +25,9 @@
    "monitoring": "38/38",
    "collection": "44/44"
   }
+ },
+ "agent_work": {
+  "thegram-memory 3.3.0 (63a8bf6)": "14/23",
+  "3.4.0: one task per piece of work, owner = agent, steps part-of the task": "23/23"
  }
 }
