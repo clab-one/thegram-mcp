@@ -1,0 +1,873 @@
+{
+ "variant": "b3",
+ "model": "gpt-6.1-sol",
+ "startedAt": "2026-10-19T08:40:17.254Z",
+ "scenarios": [
+  {
+   "id": "collection",
+   "document": "@mounts/v-ulwhut6erxeh6b73nf5oi/e2e-authoring/collection-b3.gram",
+   "runs": [
+    {
+     "now": "2026-10-19T07:00:00+09:00",
+     "exit": 0,
+     "seconds": 53,
+     "calls": [
+      {
+       "tool": "gram_projects",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_list",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_capabilities",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_brief",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "failed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_context",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_patch",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      }
+     ],
+     "last": "지정 문서에 이번 실행, SRE싱크(10/19 13:30), Ponyo 결혼식(10/31 17:00), Allium 요청과 10/24 마감 할 일을 기록했습니다. `collection-b3.gram#ev-collect-morning` 등은 revision 1에 저장되었으며 동기화와 내용 재확인을 마쳤습니다."
+    },
+    {
+     "now": "2026-10-19T12:00:00+09:00",
+     "exit": 0,
+     "seconds": 42,
+     "calls": [
+      {
+       "tool": "gram_projects",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_brief",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_list",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_capabilities",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "failed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_context",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_patch",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_context",
+       "status": "completed"
+      }
+     ],
+     "last": "지정 문서에 정오 실행 기록과 AWS 청구서 12% 증가, Cilium 업그레이드 일정(10/21 22:00–23:00 KST)을 저장했고, 변화 없는 SRE싱크는 중복 추가하지 않았습니다. `collection-b3.gram` 리비전 2의 `#ev-collect-noon`, `#k-aws-oct-bill`, `#ev-cilium-upgrade`, `#ctx-slack-sre`를 재확인했으며 동기화도 완료됐습니다."
+    }
+   ],
+   "score": {
+    "passed": 44,
+    "total": 44
+   },
+   "checks": [
+    {
+     "name": "run records",
+     "pass": true,
+     "detail": [
+      "2026-10-19T07:00:00+09:00",
+      "2026-10-19T12:00:00+09:00"
+     ]
+    },
+    {
+     "name": "run 1 at 2026-10-19T07:00:00+09:00",
+     "pass": true
+    },
+    {
+     "name": "run 1 failed sources",
+     "pass": true,
+     "detail": [
+      "run"
+     ]
+    },
+    {
+     "name": "run 2 at 2026-10-19T12:00:00+09:00",
+     "pass": true
+    },
+    {
+     "name": "run 2 failed sources",
+     "pass": true,
+     "detail": [
+      "run"
+     ]
+    },
+    {
+     "name": "item https://calendar.google.com/calendar/event?eid=sre-sync-20261019 recorded once",
+     "pass": true,
+     "detail": [
+      "ev-sre-sync"
+     ]
+    },
+    {
+     "name": "item https://calendar.google.com/calendar/event?eid=sre-sync-20261019 ref",
+     "pass": true
+    },
+    {
+     "name": "item https://calendar.google.com/calendar/event?eid=sre-sync-20261019 at",
+     "pass": true,
+     "detail": "2026-10-19T13:30:00+09:00"
+    },
+    {
+     "name": "item https://calendar.google.com/calendar/event?eid=sre-sync-20261019 source tag",
+     "pass": true,
+     "detail": [
+      "source:calendar",
+      "topic:sre-sync"
+     ]
+    },
+    {
+     "name": "item https://calendar.google.com/calendar/event?eid=sre-sync-20261019 derives from its run",
+     "pass": true,
+     "detail": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-morning"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-calendar"
+      }
+     ]
+    },
+    {
+     "name": "item https://calendar.google.com/calendar/event?eid=sre-sync-20261019 derives from no later run",
+     "pass": true,
+     "detail": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-morning"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-calendar"
+      }
+     ]
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C01ANNOUNCE/p1760789400000100 recorded once",
+     "pass": true,
+     "detail": [
+      "ev-ponyo-wedding"
+     ]
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C01ANNOUNCE/p1760789400000100 ref",
+     "pass": true
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C01ANNOUNCE/p1760789400000100 at",
+     "pass": true,
+     "detail": "2026-10-31T17:00:00+09:00"
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C01ANNOUNCE/p1760789400000100 source tag",
+     "pass": true,
+     "detail": [
+      "source:slack",
+      "topic:ponyo-wedding"
+     ]
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C01ANNOUNCE/p1760789400000100 derives from its run",
+     "pass": true,
+     "detail": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-morning"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-slack-announcement"
+      }
+     ]
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C01ANNOUNCE/p1760789400000100 derives from no later run",
+     "pass": true,
+     "detail": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-morning"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-slack-announcement"
+      }
+     ]
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2a1c0 recorded once",
+     "pass": true,
+     "detail": [
+      "k-allium-quote-request"
+     ]
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2a1c0 ref",
+     "pass": true
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2a1c0 at",
+     "pass": true,
+     "detail": "2026-10-19T06:20:00+09:00"
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2a1c0 source tag",
+     "pass": true,
+     "detail": [
+      "source:gmail",
+      "topic:allium-quote"
+     ]
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2a1c0 derives from its run",
+     "pass": true,
+     "detail": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-morning"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-gmail"
+      }
+     ]
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2a1c0 derives from no later run",
+     "pass": true,
+     "detail": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-morning"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-gmail"
+      }
+     ]
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2b7d4 recorded once",
+     "pass": true,
+     "detail": [
+      "k-aws-oct-bill"
+     ]
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2b7d4 ref",
+     "pass": true
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2b7d4 at",
+     "pass": true,
+     "detail": "2026-10-19T08:12:00+09:00"
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2b7d4 source tag",
+     "pass": true,
+     "detail": [
+      "source:gmail",
+      "topic:aws-oct-bill"
+     ]
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2b7d4 derives from its run",
+     "pass": true,
+     "detail": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-noon"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-gmail"
+      }
+     ]
+    },
+    {
+     "name": "item https://mail.google.com/mail/u/0/#inbox/18f2b7d4 derives from no later run",
+     "pass": true,
+     "detail": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-noon"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-gmail"
+      }
+     ]
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C02SRE/p1760840400000200 recorded once",
+     "pass": true,
+     "detail": [
+      "ev-cilium-upgrade"
+     ]
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C02SRE/p1760840400000200 ref",
+     "pass": true
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C02SRE/p1760840400000200 at",
+     "pass": true,
+     "detail": "2026-10-21T22:00:00+09:00"
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C02SRE/p1760840400000200 source tag",
+     "pass": true,
+     "detail": [
+      "source:slack",
+      "topic:cilium-upgrade"
+     ]
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C02SRE/p1760840400000200 derives from its run",
+     "pass": true,
+     "detail": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-noon"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-slack-sre"
+      }
+     ]
+    },
+    {
+     "name": "item https://fourpillars.slack.com/archives/C02SRE/p1760840400000200 derives from no later run",
+     "pass": true,
+     "detail": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-noon"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-slack-sre"
+      }
+     ]
+    },
+    {
+     "name": "task for https://mail.google.com/mail/u/0/#inbox/18f2a1c0",
+     "pass": true,
+     "detail": "task-allium-quote"
+    },
+    {
+     "name": "task due 2026-10-24",
+     "pass": true,
+     "detail": "2026-10-24"
+    },
+    {
+     "name": "event at 2026-10-19T13:30:00+09:00",
+     "pass": true,
+     "detail": "2026-10-19T13:30:00+09:00"
+    },
+    {
+     "name": "event end 2026-10-19T14:00:00+09:00",
+     "pass": true,
+     "detail": "2026-10-19T14:00:00+09:00"
+    },
+    {
+     "name": "event at 2026-10-21T22:00:00+09:00",
+     "pass": true,
+     "detail": "2026-10-21T22:00:00+09:00"
+    },
+    {
+     "name": "event end 2026-10-21T23:00:00+09:00",
+     "pass": true,
+     "detail": "2026-10-21T23:00:00+09:00"
+    },
+    {
+     "name": "no task created overdue",
+     "pass": true,
+     "detail": []
+    },
+    {
+     "name": "no status in titles",
+     "pass": true,
+     "detail": []
+    },
+    {
+     "name": "every record placed",
+     "pass": true,
+     "detail": []
+    }
+   ],
+   "widgets": {
+    "cadence": "Every 5 h",
+    "runs": [
+     {
+      "id": "ev-collect-noon",
+      "at": "2026-10-19T03:00:00.000Z",
+      "found": 2,
+      "failed": []
+     },
+     {
+      "id": "ev-collect-morning",
+      "at": "2026-10-18T22:00:00.000Z",
+      "found": 3,
+      "failed": []
+     }
+    ],
+    "latestTopics": [
+     {
+      "label": "Cilium 업그레이드",
+      "records": 1
+     },
+     {
+      "label": "AWS 10월 청구서",
+      "records": 1
+     }
+    ],
+    "sources": [
+     [
+      "gmail",
+      2
+     ],
+     [
+      "slack",
+      2
+     ],
+     [
+      "calendar",
+      1
+     ]
+    ],
+    "watches": [
+     {
+      "target": "ctx-slack-sre",
+      "hits": 1,
+      "next": "ahead"
+     },
+     {
+      "target": "ctx-slack-announcement",
+      "hits": 1,
+      "next": "ahead"
+     },
+     {
+      "target": "ctx-calendar",
+      "hits": 1,
+      "next": null
+     },
+     {
+      "target": "ctx-gmail",
+      "hits": 2,
+      "next": null
+     }
+    ]
+   },
+   "records": [
+    {
+     "id": "prj-daily-collect",
+     "type": "project",
+     "fields": {
+      "d": [
+       "하루 두 번 Gmail, Slack, Google Calendar에서 Roy에게 온 새 일을 모은다. 회신이나 준비가 필요한 일은 기한이 있으면 할 일로 올린다."
+      ],
+      "t": [
+       "업무·일상 수집"
+      ],
+      "x": [
+       "active"
+      ]
+     },
+     "links": []
+    },
+    {
+     "id": "ev-collect-morning",
+     "type": "event",
+     "fields": {
+      "at": [
+       "2026-10-19T07:00:00+09:00"
+      ],
+      "d": [
+       "사용자가 제공한 Google Calendar·Slack·Gmail 결과 3건을 확인하여 새 항목 3건과 회신 준비 할 일 1건을 기록했으며 웹 재조회는 하지 않았다."
+      ],
+      "t": [
+       "업무·일상 수집 실행"
+      ],
+      "tag": [
+       "run"
+      ],
+      "x": [
+       "confirmed"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-daily-collect"
+      }
+     ]
+    },
+    {
+     "id": "ctx-calendar",
+     "type": "context",
+     "fields": {
+      "t": [
+       "Google Calendar 일정"
+      ],
+      "tag": [
+       "target"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-daily-collect"
+      }
+     ]
+    },
+    {
+     "id": "ctx-slack-announcement",
+     "type": "context",
+     "fields": {
+      "t": [
+       "Slack #general-announcement"
+      ],
+      "tag": [
+       "target"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-daily-collect"
+      }
+     ]
+    },
+    {
+     "id": "ctx-gmail",
+     "type": "context",
+     "fields": {
+      "t": [
+       "Gmail 수신함"
+      ],
+      "tag": [
+       "target"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-daily-collect"
+      }
+     ]
+    },
+    {
+     "id": "ev-sre-sync",
+     "type": "event",
+     "fields": {
+      "at": [
+       "2026-10-19T13:30:00+09:00"
+      ],
+      "d": [
+       "제공된 Google Calendar 결과에 따르면 13:30–14:00 KST 일정이며 참석 응답은 수락함이다."
+      ],
+      "end": [
+       "2026-10-19T14:00:00+09:00"
+      ],
+      "ref": [
+       "https://calendar.google.com/calendar/event?eid=sre-sync-20261019"
+      ],
+      "t": [
+       "SRE싱크"
+      ],
+      "tag": [
+       "source:calendar",
+       "topic:sre-sync"
+      ],
+      "x": [
+       "confirmed"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-morning"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-calendar"
+      }
+     ]
+    },
+    {
+     "id": "ev-ponyo-wedding",
+     "type": "event",
+     "fields": {
+      "at": [
+       "2026-10-31T17:00:00+09:00"
+      ],
+      "d": [
+       "제공된 Slack #general-announcement의 2026-10-18 21:10 KST 게시물은 10월 31일 오후 5시 결혼식 참석을 요청하며 본인의 참석 여부는 확인되지 않았다."
+      ],
+      "ref": [
+       "https://fourpillars.slack.com/archives/C01ANNOUNCE/p1760789400000100"
+      ],
+      "t": [
+       "Ponyo 결혼식"
+      ],
+      "tag": [
+       "source:slack",
+       "topic:ponyo-wedding"
+      ],
+      "x": [
+       "confirmed"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-morning"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-slack-announcement"
+      }
+     ]
+    },
+    {
+     "id": "k-allium-quote-request",
+     "type": "knowledge",
+     "fields": {
+      "at": [
+       "2026-10-19T06:20:00+09:00"
+      ],
+      "d": [
+       "제공된 Gmail 수신 결과에 따르면 Allium은 이름·역할, 프로필 사진과 스테이블코인 관련 3~5문장을 2026-10-24까지 보내 달라고 요청했다."
+      ],
+      "ref": [
+       "https://mail.google.com/mail/u/0/#inbox/18f2a1c0"
+      ],
+      "t": [
+       "Allium 연말 리포트 인용구 요청"
+      ],
+      "tag": [
+       "source:gmail",
+       "topic:allium-quote"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-morning"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-gmail"
+      }
+     ]
+    },
+    {
+     "id": "task-allium-quote",
+     "type": "task",
+     "fields": {
+      "d": [
+       "Allium의 2026-10-19 06:20 KST 수신 요청에 따라 이름·역할, 프로필 사진과 스테이블코인 관련 3~5문장을 10월 24일까지 준비해 보내야 한다."
+      ],
+      "due": [
+       "2026-10-24"
+      ],
+      "ref": [
+       "https://mail.google.com/mail/u/0/#inbox/18f2a1c0"
+      ],
+      "t": [
+       "Allium 리포트 인용구 자료 보내기"
+      ],
+      "tag": [
+       "source:gmail",
+       "topic:allium-quote"
+      ],
+      "x": [
+       "open"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-daily-collect"
+      },
+      {
+       "predicate": "related",
+       "target": "k-allium-quote-request"
+      }
+     ]
+    },
+    {
+     "id": "ev-collect-noon",
+     "type": "event",
+     "fields": {
+      "at": [
+       "2026-10-19T12:00:00+09:00"
+      ],
+      "d": [
+       "사용자가 제공한 Google Calendar·Gmail·Slack 결과 3건을 확인하여 새 항목 2건을 기록했고 SRE싱크는 변화가 없어 기존 기록을 유지했으며 웹 재조회는 하지 않았다."
+      ],
+      "t": [
+       "업무·일상 수집 실행"
+      ],
+      "tag": [
+       "run"
+      ],
+      "x": [
+       "confirmed"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-daily-collect"
+      }
+     ]
+    },
+    {
+     "id": "ctx-slack-sre",
+     "type": "context",
+     "fields": {
+      "t": [
+       "Slack #sre"
+      ],
+      "tag": [
+       "target"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-daily-collect"
+      }
+     ]
+    },
+    {
+     "id": "k-aws-oct-bill",
+     "type": "knowledge",
+     "fields": {
+      "at": [
+       "2026-10-19T08:12:00+09:00"
+      ],
+      "d": [
+       "제공된 Gmail 결과에 따르면 2026-10-19 08:12 KST 수신한 AWS 10월 청구서는 지난달보다 12% 증가했다."
+      ],
+      "ref": [
+       "https://mail.google.com/mail/u/0/#inbox/18f2b7d4"
+      ],
+      "t": [
+       "AWS 10월 청구서"
+      ],
+      "tag": [
+       "source:gmail",
+       "topic:aws-oct-bill"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-noon"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-gmail"
+      }
+     ]
+    },
+    {
+     "id": "ev-cilium-upgrade",
+     "type": "event",
+     "fields": {
+      "at": [
+       "2026-10-21T22:00:00+09:00"
+      ],
+      "d": [
+       "제공된 Slack #sre의 2026-10-19 11:20 KST 게시물에 따르면 Cilium 업그레이드는 2026-10-21 22:00–23:00 KST에 예정되어 있다."
+      ],
+      "end": [
+       "2026-10-21T23:00:00+09:00"
+      ],
+      "ref": [
+       "https://fourpillars.slack.com/archives/C02SRE/p1760840400000200"
+      ],
+      "t": [
+       "Cilium 업그레이드"
+      ],
+      "tag": [
+       "source:slack",
+       "topic:cilium-upgrade"
+      ],
+      "x": [
+       "confirmed"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "derives",
+       "target": "ev-collect-noon"
+      },
+      {
+       "predicate": "related",
+       "target": "ctx-slack-sre"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-10-19T08:41:53.229Z",
+ "skill_label": "3.3.0 final: actionable change → task, uncontrollable harm → risk, never overdue"
+}
