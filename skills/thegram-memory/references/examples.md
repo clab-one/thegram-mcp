@@ -1,6 +1,6 @@
 # Worked project-memory lifecycle
 
-The linked [lifecycle.json](lifecycle.json) is **fictional, synthetic test data**, not facts to persist about a person or a project. `example-vault` and `example.com` are placeholders. Replace the path with the exact authorized mount/document. The fixture explicitly uses `project@1`, a stable create request ID and sourced completion time. The fixture pins `base_revision`/`expected_hash` to exercise whole-document checks; replace `${doc.rev}` and `${doc.hash}` with the fresh brief or preceding write response and never submit the placeholders. Ordinary writes go to the head with `old` instead. The example deliberately omits owners, deadlines and priority because the hypothetical evidence supplies none.
+The linked [lifecycle.json](lifecycle.json) is **fictional, synthetic test data**, not facts to persist about a person or a project. `example-vault` and `example.com` are placeholders. Replace the path with the exact authorized mount/document. The fixture uses a stable create request ID and sourced completion time; like every document it names no template. The fixture pins `base_revision`/`expected_hash` to exercise whole-document checks; replace `${doc.rev}` and `${doc.hash}` with the fresh brief or preceding write response and never submit the placeholders. Ordinary writes go to the head with `old` instead. The example deliberately omits owners, deadlines and priority because the hypothetical evidence supplies none.
 
 ## Retrieve before deciding
 
@@ -51,5 +51,6 @@ The linked [classification.json](classification.json) contains fictional raw inp
 - Two comparable observations: use the same metric ID, quantity and unit, with actual observation timestamps. Their updates are real writes; an unrelated import need not generate metric history.
 - Noisy image pin commits: account for the source range only. No new task, component, event or verification evidence is required.
 - A partial decision replacement: keep still-applicable old scope accepted, describe the narrower change with `related`. Reserve whole-record `replaces`/`superseded` for the full replacement shown in the lifecycle fixture.
+- A fix that resolves one risk and only reduces another: set the fixed risk `resolved` and rewrite its `d` to how it ended in the same patch; link the regression report `related`, not `supports`. The reduced risk becomes `mitigated` and stays open with a `d` that says what is still uncertain.
 
 Sourced dates remain in provenance unless the fact has an actual supported date field. Current imports do not recreate old revision activity. [Widget data contracts](widget-data.md) explains why correct type, status, dates, relationships and real revision history matter for useful display; layout readiness never authorizes fake data.

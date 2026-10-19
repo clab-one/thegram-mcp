@@ -159,9 +159,9 @@ class ClassificationTests(unittest.TestCase):
         next(op for op in plan['operations'] if op.get('key')=='value')['old']='99.8'
         with self.assertRaises(AssertionError): evaluate(case, plan)
 
-    def test_lifecycle_has_stable_create_template_and_known_done_time(self):
+    def test_lifecycle_creates_without_a_template_and_keeps_the_done_time(self):
         f=json.loads((FIXTURE.parent/'lifecycle.json').read_text())
-        self.assertEqual(f['create']['arguments']['template'],'project@1')
+        self.assertNotIn('template',f['create']['arguments'])
         self.assertTrue(f['create']['arguments']['request_id'])
         state = f['create']['arguments']['content']['records']
         # Head-style old checks are exercised even though the example also supplies CAS.

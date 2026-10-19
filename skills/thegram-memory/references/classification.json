@@ -4,7 +4,6 @@
     {
       "id": "mixed-commit",
       "source_text": "Commit aaaa: adopt bounded retry cache after review. Cache service owns token retention. Expired tokens must never be reused. Unit report says the expiry check passed locally; no rollout took place. Source author time 2026-10-10T08:00:00Z.",
-      "template": "project@1",
       "initial": [
         {
           "type": "project",
@@ -192,7 +191,6 @@
     {
       "id": "open-adr-partial-implementation",
       "source_text": "ADR-0047 status: proposed. Depends on ADR-0042. Commit bbbb merged Ethereum stage-1 adapter; stage 2 remains pending. Merge does not change the ADR status. Source date 2026-10-11 (date only).",
-      "template": "project@1",
       "initial": [
         {
           "type": "project",
@@ -420,7 +418,6 @@
     {
       "id": "unmerged-pr-failed-verification",
       "source_text": "PR #17 is unmerged and under review. Required endpoint test failed with 403; approval is blocked on a scoped credential grant. The test did not verify deployment. PR/test source date: 2026-10-12.",
-      "template": "project@1",
       "initial": [
         {
           "type": "project",
@@ -585,7 +582,6 @@
     {
       "id": "recurring-fixes",
       "source_text": "Commits cccc and dddd adjust the same tracked retry-expiry bug. The second test report passes the duplicate-request case; long-window expiry remains unresolved. No new work item or deployment is stated.",
-      "template": "project@1",
       "initial": [
         {
           "type": "project",
@@ -738,7 +734,6 @@
     {
       "id": "deployment-report",
       "source_text": "Release report: build R7 deployed to preview at 2026-10-13T10:15:00Z. Endpoint report at 2026-10-13T10:20:00Z confirms the exact task-verify endpoint check passed. Commit author time was 2026-10-12T09:00:00Z. Build URL https://example.com/builds/r7. Importing agent did not rerun checks.",
-      "template": "project@1",
       "initial": [
         {
           "type": "project",
@@ -996,7 +991,6 @@
     {
       "id": "stable-metric-series",
       "source_text": "First one-hour preview probe report observed 99.7 percent at 2026-10-10T09:00:00Z. Next comparable report observed 99.9 percent at 2026-10-11T09:00:00Z using identical quantity, denominator and unit. Reports do not establish causation or live health.",
-      "template": "project@1",
       "initial": [
         {
           "type": "project",
@@ -1140,7 +1134,6 @@
     {
       "id": "image-pins-coverage",
       "source_text": "Commits eeee, ffff and gggg only refresh pinned preview image digests. No stated architecture, behavior, delivery or verification result. User requests source coverage.",
-      "template": "project@1",
       "initial": [
         {
           "type": "project",
@@ -1204,7 +1197,6 @@
     {
       "id": "partial-replacement",
       "source_text": "Review adopts longer retention only for batch tokens. Existing short-retention policy remains accepted for interactive tokens. No complete supersession of the old policy.",
-      "template": "project@1",
       "initial": [
         {
           "type": "project",
@@ -1345,7 +1337,6 @@
     {
       "id": "covered-source-rerun",
       "source_text": "The same image-pin sources eeee, ffff and gggg are inspected again with no new facts.",
-      "template": "project@1",
       "initial": [
         {
           "type": "project",
@@ -1400,7 +1391,6 @@
     {
       "id": "risk-versus-blocker",
       "source_text": "Load review rates possible preview saturation high priority. There is no current outage or impeded task; no incident date, owner or due date is supplied. Review date: 2026-10-14.",
-      "template": "project@1",
       "initial": [
         {
           "type": "project",
@@ -1500,6 +1490,35 @@
         },
         "links": [],
         "absent_links": [],
+        "coverage": {}
+      }
+    },
+    {
+      "id": "risk-resolved-by-fix",
+      "source_text": "Commit eeee fixes the signup crash; the regression report at https://example.com/reports/signup-crash passes on build 41. The store review was submitted a day early to absorb a slow review, which has not finished.",
+      "initial": [
+        {"type": "project", "id": "prj-atlas", "fields": {"t": ["Atlas"], "x": ["active"]}, "links": []},
+        {"type": "risk", "id": "risk-signup-crash", "fields": {"t": ["Signup crash"], "d": ["The signup screen crashes on build 40."], "x": ["open"], "p": ["high"]}, "links": [["part-of", "prj-atlas"]]},
+        {"type": "risk", "id": "risk-store-review", "fields": {"t": ["Slow store review"], "d": ["A review longer than three days delays the launch."], "x": ["open"], "p": ["medium"]}, "links": [["part-of", "prj-atlas"]]}
+      ],
+      "plan": {
+        "operations": [
+          {"op": "add", "record": {"type": "source", "id": "src-crash-fix", "fields": {"t": ["Signup crash fix"], "d": ["Commit eeee and the build 41 regression report inspected."], "ref": ["https://example.com/commits/eeee"]}, "links": [["part-of", "prj-atlas"]]}, "place": {"section": "Log"}},
+          {"op": "add", "record": {"type": "evidence", "id": "evd-signup-crash", "fields": {"t": ["Signup crash regression report"], "d": ["Build 41 passes the signup crash regression report."], "ref": ["https://example.com/reports/signup-crash"], "source": ["src-crash-fix"]}, "links": [["related", "risk-signup-crash"]]}, "place": {"section": "Log"}},
+          {"op": "set", "entity": "risk-signup-crash", "key": "x", "value": "resolved", "old": "open"},
+          {"op": "set", "entity": "risk-signup-crash", "key": "d", "value": "Resolved in build 41: the signup crash regression report passes; build 40 crashed.", "old": "The signup screen crashes on build 40."},
+          {"op": "set", "entity": "risk-store-review", "key": "x", "value": "mitigated", "old": "open"},
+          {"op": "set", "entity": "risk-store-review", "key": "d", "value": "Submitted a day early to absorb a slow review; the review has not finished.", "old": "A review longer than three days delays the launch."}
+        ]
+      },
+      "expect": {
+        "additions": {"src-crash-fix": "source", "evd-signup-crash": "evidence"},
+        "fields": {
+          "risk-signup-crash": {"x": ["resolved"], "d": ["Resolved in build 41: the signup crash regression report passes; build 40 crashed."]},
+          "risk-store-review": {"x": ["mitigated"], "p": ["medium"]}
+        },
+        "links": [["evd-signup-crash", "related", "risk-signup-crash"]],
+        "absent_links": [["evd-signup-crash", "supports", "risk-signup-crash"]],
         "coverage": {}
       }
     }

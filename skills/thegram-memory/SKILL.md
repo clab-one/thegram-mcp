@@ -35,11 +35,11 @@ Within an authorized purpose, keep one atomic fact per record and reuse existing
 
 | Atomic meaning | Record/update | Section and relation | State boundary |
 |---|---|---|---|
-| a choice, proposed alternative or adopted policy | `decision` | Decisions; `part-of` project | `proposed`/`accepted`/`rejected` as supported; without a template use its allowed equivalent |
+| a choice, proposed alternative or adopted policy | `decision` | Decisions; `part-of` project | `proposed` until a person accepts it, then `accepted`; `rejected`, or `superseded` when fully replaced |
 | a desired outcome, required behavior or untested premise | `goal`, `requirement` or `assumption` respectively | Plan; `part-of` project/goal as sourced | do not infer these merely to fill a widget |
 | tracked work or a sourced change to its progress | existing `task`, or add a genuinely sourced work item | Plan; `part-of` goal/project | partial → retain active work; review/unmerged PR → `review` when supported; `completed` only for the work's verified completion |
 | architecture responsibility, interface or dependency | existing/new `component`, `system` or `service` | Architecture; `depends` in the sourced direction | code existence does not establish runtime health |
-| possible harm versus an actual impediment | `risk` versus `blocker`; update affected task if sourced | Plan; `related` concern or blocker `blocks` task | use that type/template's state; do not invent priority, owner or due date |
+| possible harm versus an actual impediment | `risk` versus `blocker`; update affected task if sourced | Plan; `related` concern or blocker `blocks` task | `mitigated` while the harm is reduced but still possible, `resolved` once it is gone; do not invent priority, owner or due date |
 | observation, test or report supporting/contradicting a claim | `evidence` | Log; `supports` or `contradicts` the claim | failed verification is evidence of failure; a source report is not this agent's runtime verification |
 | reusable explanation or constraint | `knowledge` (or `context` for situational background) | relevant existing section; `part-of` project | preserve scope and uncertainty |
 | a comparable measured quantity | same `metric` ID; `set value` + `set observed` | relevant section; retain report via `source`/`ref` | same definition, denominator and unit; one observation is valid |
@@ -49,13 +49,13 @@ Within an authorized purpose, keep one atomic fact per record and reuse existing
 
 A factual outcome can update a task and component, explain a decision, and retain verification evidence from one commit. Do not fabricate completed historical tasks, intermediate statuses, events or revisions from its subject. Do not record chatter, raw logs, secrets, private assistant notes or every transient experiment. See [worked classification cases](references/examples.md) for ambiguous inputs.
 
-An event's `at` is the actual occurrence time: a commit author date proves the commit time only, not a deployment time. Record source timestamps at their known precision in source descriptions or profile-supported source fields; do not force a decision or component onto a calendar with an invented `at`. Keep date-only facts date-only. `ref` is one URI: a source permalink, release/PR URL or commit URL built from its actual remote; without a remote retain its hash in provenance. Put a real source record ID, not a URL, in `source`.
+An event's `at` is the actual occurrence time: a commit author date proves the commit time only, not a deployment time. Record source timestamps at their known precision in source descriptions or profile-supported source fields; do not force a decision or component onto a calendar with an invented `at`. Keep date-only facts date-only. `ref` is one URI others can open: a source permalink, release/PR URL or commit URL built from its actual remote. Never put a `file://` URL or a local path in `ref`; a local report stays in `d` with its path and hash, and without a remote retain the commit hash in provenance. Put a real source record ID, not a URL, in `source`.
 
 ## 3. One turn, one patch
 
 After classification, write the whole outcome of a turn as one `gram_patch` against the head. Operations run in order, so later ones can link to records added earlier.
 
-This example assumes `project@1`, a sourced full replacement and a retained passing check; it does not claim a release or deployment.
+This example assumes a sourced full replacement and a retained passing check; it does not claim a release or deployment. Both closed records get a `d` that says how they ended.
 
 ```json
 {"path": "@mounts/<vault-id>/<project>.gram", "request_id": "slugify-unicode",
@@ -64,10 +64,12 @@ This example assumes `project@1`, a sourced full replacement and a retained pass
     "fields": {"t": ["Keep Unicode letters in slugs"], "d": ["slugify keeps letters and digits of every script and joins the rest with one hyphen."], "x": ["accepted"]},
     "links": [["part-of", "prj-strings"], ["replaces", "dec-ascii-slugs"]]}, "place": {"section": "Decisions"}},
   {"op": "set", "entity": "dec-ascii-slugs", "key": "x", "value": "superseded", "old": "accepted"},
+  {"op": "set", "entity": "dec-ascii-slugs", "key": "d", "value": "Replaced by keeping Unicode letters; slugs used to drop every non-ASCII character.", "old": "Slugs keep only ASCII letters and digits."},
   {"op": "add", "record": {"type": "evidence", "id": "evd-unicode-slugs",
     "fields": {"t": ["Unicode regression check"], "d": ["The retained local test report confirms '카페 Latte' maps to '카페-latte'."], "ref": ["https://example.com/reports/unicode-regression"]},
     "links": [["supports", "dec-unicode-slugs"]]}, "place": {"section": "Log"}},
   {"op": "set", "entity": "risk-ascii-only", "key": "x", "value": "resolved", "old": "open"},
+  {"op": "set", "entity": "risk-ascii-only", "key": "d", "value": "Resolved: Korean titles now keep their letters in slugs, as the regression check shows.", "old": "Korean titles turn into empty slugs."},
   {"op": "link", "entity": "risk-ascii-only", "predicate": "related", "target": "evd-unicode-slugs"},
   {"op": "add", "record": {"type": "task", "id": "task-slug-length",
     "fields": {"t": ["Cap slug length"], "d": ["Very long titles still produce unbounded slugs."], "x": ["open"]},
@@ -84,27 +86,35 @@ This example assumes `project@1`, a sourced full replacement and a retained pass
 
 ## 4. Status values
 
-A document that declares a template accepts only that template's values; check `gram_profile {topic: "templates"}` when unsure.
+Every document follows one record vocabulary (`gram@1`); there is no template to choose. Each status belongs to one class, and the dashboard, `gram_brief`, `gram_recall {status}` and the graph all count by it: `open` still needs attention, `done` ended as intended, `closed` is no longer pursued. Check `gram_profile {topic: "templates"}` when unsure.
 
-| type | `project@1` | no template |
-|---|---|---|
-| task | `backlog` `open` `active` `review` `blocked` `waiting` `completed` `cancelled` `archived` | `open` `active` `blocked` `completed` `superseded` |
-| decision | `proposed` `accepted` `rejected` `superseded` | `open` `accepted` `superseded` |
-| risk | `open` `mitigated` `resolved` `accepted` `closed` | `open` `completed` `superseded` |
-| goal | `open` `active` `completed` `cancelled` `archived` | `active` `completed` |
-| project | `planning` `active` `at-risk` `on-hold` `completed` `cancelled` `archived` | `active` `completed` |
-| blocker | no fixed list; use `open`, then `completed` | `open` `blocked` `completed` |
+| type | open | done | closed |
+|---|---|---|---|
+| task | `backlog` `open` `active` `review` `blocked` `waiting` | `completed` | `cancelled` `archived` |
+| goal | `open` `active` | `completed` | `cancelled` `archived` |
+| project | `planning` `active` `at-risk` `on-hold` | `completed` | `cancelled` `archived` |
+| decision | `proposed` | `accepted` | `rejected` `superseded` |
+| risk | `open` `mitigated` | `resolved` | `accepted` `closed` |
+| event | `confirmed` `tentative` | — | `cancelled` |
+| blocker | `open` (no fixed list) | `completed` `resolved` | `closed` `cancelled` |
 
-Other optional fields: `p` (`urgent` `high` `medium` `low`), `owner`, `tag`, `due` (task, ISO date), `start` and `done` (project@1 task: when work began and finished). Unknown keys warn `W_EXTENSION_FIELD`.
+Task, goal, project, decision and risk need `x`; an event needs `at`, a metric `value` and `unit`, an artifact `ref`. Other optional fields: `p` (`urgent` `high` `medium` `low`), `owner`, `tag`, `due` (task, ISO date), `start` and `done` (task: when work began and finished). Unknown keys warn `W_EXTENSION_FIELD`.
+
+Closing a record:
+
+- When a status moves to `done` or `closed`, rewrite `d` in the same patch to say how it ended (what replaced it, how the harm went away). Keep the old situation as a clause when it helps; the revision history keeps the earlier text. Thegram marks a description that was written before the status change.
+- Link the evidence or event that resolved a risk or blocker with `related`. `supports`/`contradicts` argue for or against a claim (a decision, requirement or knowledge), not that a risk is gone.
+- `mitigated` stays open. Do not mark a risk `resolved` or a decision `accepted` without a source that says so; a merged change does not accept a proposal.
+- Before changing a state, look for the same fact in the purpose's other documents (`gram_recall {query, folder}`, or each document's brief) and reconcile them in the same turn, one patch per document.
 
 ## 5. Documents
 
 - A purpose can be a plan, research topic, shared project or everyday work, not only a Git repository. Reuse its established document and readable structure. An existing project document has Overview, Architecture, Plan, Decisions and Log; keep the overview, sources, decisions, evolution and unresolved work understandable without rebuilding context.
-- Create a document only when authorized: one `gram_create` with `base_revision: null`, the appropriate template, a short descriptive title, a root purpose/project record and the first sourced records. Preserve the exact authorized mount, folder and path. Use an existing writable Cloud destination; use Drive only when requested. Create folders or move documents only when asked.
+- Create a document only when authorized: one `gram_create` with `base_revision: null`, a short descriptive title, a body with the purpose's sections, a root purpose/project record and the first sourced records. Preserve the exact authorized mount, folder and path. Use an existing writable Cloud destination; use Drive only when requested. Create folders or move documents only when asked.
 - For coding repositories, the adapter binds a document by `repo:<host/owner/name>` on its root project record, in any folder of an accessible vault (selected vault first). An explicit `projects.json` mapping wins. Without a binding tag the fallback is `<vault>/<repository>.gram`; reuse a moved document and follow the adapter's `bind` instruction rather than creating another.
 - Several repositories can share one document through a directory mapping in `~/.config/thegram-memory/projects.json`. Put the current repository in `s` on its new records so `gram_recall {scope}` can filter it; do not add repository tags to unrelated personal purposes.
-- Select the one template matching the purpose: `schedule@1` for schedules/journals, `project@1` for tracked projects/tasks, `knowledge@1` for research, knowledge and operations notes. Follow the template's actual required fields and statuses from `gram_profile {topic:"templates"}`. Schedules use an event per occurrence and a completion time in `done`.
-- Each template has one dashboard (Project Tracker, Journal, Knowledge). A document without a template shows Core's recommended dashboard read-only (`~project@1` in listings); declare a template only when asked.
+- Every document uses the same record types and statuses; shape it by its sections and records. Schedules use an event per occurrence and a completion time in `done`.
+- Each document has one dashboard, editable by anyone who can write. Its view follows the records (Project Tracker, Journal, Knowledge, Operations), and a person can apply a dashboard starter in the app. An older document's `template` line only hints the view; leave it.
 - Link only within the document. For a record in another document, cite its URL in `ref` (cross-document targets stay unresolved).
 
 ## 6. Body and dashboard
@@ -124,7 +134,7 @@ Widgets select stored records, their template states, relationships and real his
 
 | Surface | Data needed | Authoring consequence |
 |---|---|---|
-| Task board/checklist and progress rings | selected tasks and valid template status classes | track real work; update existing tasks from completion evidence; do not manufacture historical tasks |
+| Task board/checklist and progress rings | selected tasks and their status class | track real work; update existing tasks from completion evidence; do not manufacture historical tasks |
 | Goal progress | tasks with `part-of` that goal | `related` does not count; a goal with no linked tasks can remain without a ratio |
 | Decisions/pending choices | decision `x`; full replacement `replaces` links | proposed stays proposed despite merged code; acceptance is distinct from implementation |
 | Risk/attention | actual risks/blockers, explicit states and sourced priority | an empty attention list does not prove health |
@@ -153,7 +163,7 @@ Coding-agent adapters can remind after file edits, commits or releases and can r
 | code | cause → fix |
 |---|---|
 | `E_PRECONDITION` | a field you read changed, the id exists with other content, or a `place` target is gone (`details.conditions`) → reread, decide, resend with a new `request_id` |
-| `E_TEMPLATE` | the write breaks the template; `details.diagnostics` names record, field, expected → fix them |
+| `E_TEMPLATE` | the write breaks the record vocabulary (a required field is missing, or the type has no such status); `details.diagnostics` names record, field, expected → fix them |
 | `STALE_REVISION`, `E_CAS_REQUIRED` | with `base_revision`, another revision landed; `remove` or a body replacement without it → `gram_brief`, recheck, resend |
 | `E_ARGUMENT` | value not an array, `set` without `old`, `place` with a body edit, unknown section or argument shape |
 | `E_FIELD`, `E_LINK`, `E_TIME`, `E_MISSING_TITLE` | bad field key, unknown predicate, `effective_at` without time or zone, no `t` |

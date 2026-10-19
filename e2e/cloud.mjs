@@ -55,7 +55,7 @@ try {
   assert.equal(memory.available, true);
   assert(missingMemory.sections.some(section => section.includes(document) && section.includes('gram_create')));
   await callTool('gram_create', {
-    path: document, title: 'API key E2E', base_revision: null, template: 'project@1',
+    path: document, title: 'API key E2E', base_revision: null,
     content: {
       text: '# Overview\n\n[[prj-api-key]]\n\n# Decisions\n\n[[dec-api-key]]\n\n# Plan\n\n[[task-record-connection]]\n\n# Log\n',
       records: [
