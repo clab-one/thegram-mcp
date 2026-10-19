@@ -17,7 +17,9 @@ Version 3.1 includes the shared references and reduces the local adapter policy 
 
 Classify atomic facts by meaning before writing: commits and PRs are provenance, not automatic events. Reuse existing tasks/components/metrics, keep proposed ADRs and incomplete work at their supported states, and retain scoped evidence separately from runtime verification. A meaningful dated deployment can be an event; routine image pins may need source coverage only. Never replay invented task lifecycles or historical revisions.
 
-The shared references map data to the 50-kind widget catalog, including task/goal relationships, status-class progress, actual occurrence/observation dates, stable metric history and runtime capability limits. Saved-layout readiness is separate from useful rendering. Local OMP installs the same skill with its API-key adapter; source/install checks do not establish live widget rendering.
+The shared references map data to the 56-kind widget catalog, including task/goal relationships, status-class progress, actual occurrence/observation dates, stable metric history and runtime capability limits. Saved-layout readiness is separate from useful rendering. Local OMP installs the same skill with its API-key adapter; source/install checks do not establish live widget rendering.
+
+Scheduled automations (3.3.0): a document a scheduled run writes records one `run` event per run (`failed:<source>` tags for unread sources), keeps each found item under one stable ID with `ref`, `at` and `source:`/`topic:` tags linked `derives` only to the run that first found it, and tags watched things `target`. The 리서치, 감시·알림 and 수집 일지 dashboards in thegram-ui 3.31.0 read exactly this shape.
 
 Offline validation: `python3 -m unittest discover -s tests -p 'test_*.py' -v`. Set `GRAM_CORE_BINARY` for native scratch readback tests. Set `THEGRAM_UI_SOURCE` and run `TZ=UTC node --test tests/widget_contract.test.mjs` against the matching UI checkout for actual selector/readiness checks. Tests use synthetic data and do not modify user documents.
 
@@ -103,5 +105,11 @@ python3 e2e/hidden_tty.py --state /path/to/local-fixture-state.json --evidence /
 ```
 
 The E2Es use the real loopback Vault/key-authority fixture, issue and revoke scratch keys, exercise the packaged CLI, stdio MCP and project hooks, and retain redacted JSON reports. The terminal regression types immediately when the prompt appears and verifies that the key is never echoed. Private temporary configurations are removed; fixtures and writable vaults must be disposable.
+
+```sh
+node e2e/authoring/run.mjs --skill skills/thegram-memory --variant <name> --doc-root '@mounts/<vault>/<folder>' --out /path/to/evidence --ui /path/to/thegram-ui
+```
+
+The authoring E2E has a real agent (Codex CLI, the skill as `AGENTS.md`, only this Cloud MCP auto-approved, shell read-only) record two scheduled runs of each scenario in `e2e/authoring/scenarios.json` into Cloud documents, then reads them back and scores the automation contract: run records and failed sources, one record per item with `ref`, `at`, source tag and `derives` only to its first run, shared topics, targets and their detections, `at`→`end` windows, tasks with due dates (never already overdue), risks and placement. With `--ui` it also reports what the automation widgets would show. Point `--skill` at another skill checkout to compare versions on fresh documents (one per variant).
 
 Commit `dist/` with the source; installation does not build. Keep `package.json`, `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` versions aligned. Version 3 switches from desktop sockets to scoped Cloud API keys; it has no local-app fallback. It preserves template-aware creation and head-mode field preconditions; native-only `action`/`action_target` metadata is replaced by explicit Cloud operations.

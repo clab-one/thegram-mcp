@@ -1,0 +1,1155 @@
+{
+ "variant": "a",
+ "model": "gpt-6.1-sol",
+ "startedAt": "2026-10-19T08:25:56.442Z",
+ "scenarios": [
+  {
+   "id": "research",
+   "document": "@mounts/v-ulwhut6erxeh6b73nf5oi/e2e-authoring/research-a.gram",
+   "runs": [
+    {
+     "now": "2026-10-19T12:01:00+09:00",
+     "exit": 0,
+     "seconds": 43,
+     "calls": [
+      {
+       "tool": "gram_projects",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_brief",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_capabilities",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_list",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_context",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_patch",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      }
+     ],
+     "last": "지정 문서의 Log에 DeepSeek 공개·성능·가격, HN 반응, Graphify 트렌딩, Reddit 채용 논쟁을 출처 링크와 함께 기록했습니다. 실행 요약은 `@mounts/v-ulwhut6erxeh6b73nf5oi/e2e-authoring/research-a.gram#ctx-research-noon-run`에 저장했으며, revision 1의 동기화와 읽기 검증을 완료했습니다."
+    },
+    {
+     "now": "2026-10-19T15:01:00+09:00",
+     "exit": 0,
+     "seconds": 47,
+     "calls": [
+      {
+       "tool": "gram_projects",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_brief",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_capabilities",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "failed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_list",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_context",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_patch",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_context",
+       "status": "completed"
+      }
+     ],
+     "last": "지정 문서에 DeepSeek·Graphify 수치를 갱신하고 Gemini 소식, Claude API 10월 25일 가격 15% 인상 보도와 확인 과제, Reddit 시간 초과를 기록했습니다. 실행 요약은 `@mounts/v-ulwhut6erxeh6b73nf5oi/e2e-authoring/research-a.gram#ctx-research-afternoon-run`에 저장했으며 revision 2의 동기화와 재조회를 확인했습니다."
+    }
+   ],
+   "score": {
+    "passed": 18,
+    "total": 54
+   },
+   "checks": [
+    {
+     "name": "run records",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "run 1 at 2026-10-19T12:01:00+09:00",
+     "pass": false
+    },
+    {
+     "name": "run 1 failed sources",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "run 2 at 2026-10-19T15:01:00+09:00",
+     "pass": false
+    },
+    {
+     "name": "run 2 failed sources",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-18/deepseek-v41-flash recorded once",
+     "pass": true,
+     "detail": [
+      "src-deepseek-flash-news"
+     ]
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-18/deepseek-v41-flash ref",
+     "pass": true
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-18/deepseek-v41-flash at",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-18/deepseek-v41-flash source tag",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-18/deepseek-v41-flash derives from its run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-18/deepseek-v41-flash derives from no later run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45612301 recorded once",
+     "pass": true,
+     "detail": [
+      "src-deepseek-flash-hn"
+     ]
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45612301 ref",
+     "pass": true
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45612301 at",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45612301 source tag",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45612301 derives from its run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45612301 derives from no later run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://github.com/Graphify-Labs/graphify recorded once",
+     "pass": true,
+     "detail": [
+      "src-graphify-trending"
+     ]
+    },
+    {
+     "name": "item https://github.com/Graphify-Labs/graphify ref",
+     "pass": true
+    },
+    {
+     "name": "item https://github.com/Graphify-Labs/graphify at",
+     "pass": true,
+     "detail": null
+    },
+    {
+     "name": "item https://github.com/Graphify-Labs/graphify source tag",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "item https://github.com/Graphify-Labs/graphify derives from its run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://github.com/Graphify-Labs/graphify derives from no later run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/ recorded once",
+     "pass": true,
+     "detail": [
+      "src-junior-hiring-reddit"
+     ]
+    },
+    {
+     "name": "item https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/ ref",
+     "pass": true
+    },
+    {
+     "name": "item https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/ at",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/ source tag",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "item https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/ derives from its run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/ derives from no later run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/gemini-4-argon recorded once",
+     "pass": true,
+     "detail": [
+      "src-gemini-argon-news"
+     ]
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/gemini-4-argon ref",
+     "pass": true
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/gemini-4-argon at",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/gemini-4-argon source tag",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/gemini-4-argon derives from its run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/gemini-4-argon derives from no later run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45619999 recorded once",
+     "pass": true,
+     "detail": [
+      "src-gemini-argon-hn"
+     ]
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45619999 ref",
+     "pass": true
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45619999 at",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45619999 source tag",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45619999 derives from its run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://news.ycombinator.com/item?id=45619999 derives from no later run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/anthropic-pricing recorded once",
+     "pass": true,
+     "detail": [
+      "src-anthropic-pricing"
+     ]
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/anthropic-pricing ref",
+     "pass": true
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/anthropic-pricing at",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/anthropic-pricing source tag",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/anthropic-pricing derives from its run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "item https://aibriefing.dev/2026-10-19/anthropic-pricing derives from no later run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "name": "same topic https://aibriefing.dev/2026-10-18/deepseek-v41-flash ~ https://news.ycombinator.com/item?id=45612301",
+     "pass": false,
+     "detail": [
+      null,
+      null
+     ]
+    },
+    {
+     "name": "same topic https://aibriefing.dev/2026-10-19/gemini-4-argon ~ https://news.ycombinator.com/item?id=45619999",
+     "pass": false,
+     "detail": [
+      null,
+      null
+     ]
+    },
+    {
+     "name": "task for https://aibriefing.dev/2026-10-19/anthropic-pricing",
+     "pass": false
+    },
+    {
+     "name": "task due 2026-10-25",
+     "pass": false
+    },
+    {
+     "name": "no task created overdue",
+     "pass": true,
+     "detail": []
+    },
+    {
+     "name": "no status in titles",
+     "pass": true,
+     "detail": []
+    },
+    {
+     "name": "every record placed",
+     "pass": true,
+     "detail": []
+    }
+   ],
+   "widgets": {
+    "cadence": null,
+    "runs": [],
+    "latestTopics": [],
+    "sources": [],
+    "watches": []
+   },
+   "records": [
+    {
+     "id": "prj-ai-research",
+     "type": "project",
+     "fields": {
+      "d": [
+       "3시간마다 AI 뉴스(aibriefing.dev), Hacker News, GitHub 트렌딩, Reddit r/cscareerquestions에서 새 AI 소식을 모은다. 우리 팀이 쓰는 API(Anthropic, OpenAI)의 가격·정책 변경은 확인할 일로 올린다."
+      ],
+      "t": [
+       "AI 리서치 3시간 갱신"
+      ],
+      "x": [
+       "active"
+      ]
+     },
+     "links": []
+    },
+    {
+     "id": "src-deepseek-flash-news",
+     "type": "source",
+     "fields": {
+      "d": [
+       "aibriefing.dev의 2026-10-18 게시 뉴스에 따르면 DeepSeek V4.1-Flash는 MIT 라이선스로 공개됐으며 DeepSWE v1.1 77.0점, 1M 컨텍스트, 1M tokens당 입력 $0.30·출력 $1.20이다."
+      ],
+      "ref": [
+       "https://aibriefing.dev/2026-10-18/deepseek-v41-flash"
+      ],
+      "t": [
+       "DeepSeek V4.1-Flash 공개 소식"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "id": "src-deepseek-flash-hn",
+     "type": "source",
+     "fields": {
+      "d": [
+       "2026-10-19 09:10 KST 게시된 Hacker News의 “DeepSeek-v4.1-Flash-1017”은 사용자 제공 2026-10-19T15:01:00+09:00 실행 수집 결과에서 1,204 points, 902 comments를 기록했다."
+      ],
+      "ref": [
+       "https://news.ycombinator.com/item?id=45612301"
+      ],
+      "t": [
+       "Hacker News의 DeepSeek 토론"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "id": "src-graphify-trending",
+     "type": "source",
+     "fields": {
+      "d": [
+       "사용자 제공 2026-10-19T15:01:00+09:00 실행의 GitHub 트렌딩 결과에서 Graphify-Labs/graphify는 오늘 +1,040★이며 이전 수집에서는 코드베이스·문서·SQL 스키마를 질의 가능한 지식 그래프로 변환하는 도구로 소개됐다."
+      ],
+      "ref": [
+       "https://github.com/Graphify-Labs/graphify"
+      ],
+      "t": [
+       "GitHub 트렌딩 Graphify"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "id": "src-junior-hiring-reddit",
+     "type": "source",
+     "fields": {
+      "d": [
+       "Reddit r/cscareerquestions에 2026-10-19 07:40 KST 게시된 “AI 때문에 신입 개발자 채용이 끝났다는 논쟁”을 수집했으며 이 제목만으로 실제 채용 종료가 입증되지는 않는다."
+      ],
+      "ref": [
+       "https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/"
+      ],
+      "t": [
+       "Reddit의 AI와 신입 개발자 채용 논쟁"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "id": "ctx-research-noon-run",
+     "type": "context",
+     "fields": {
+      "d": [
+       "자동화 실행 기준 시각은 사용자 제공 2026-10-19T12:01:00+09:00이며 네 출처의 사전 수집 결과를 웹 재검색·독립 검증 없이 기록했고 제공 자료에는 Anthropic·OpenAI API 가격·정책 변경 정보가 없어 관련 확인 과제를 추가하지 않았다."
+      ],
+      "source": [
+       "src-deepseek-flash-news",
+       "src-deepseek-flash-hn",
+       "src-graphify-trending",
+       "src-junior-hiring-reddit"
+      ],
+      "t": [
+       "AI 리서치 정오 실행 결과"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "id": "src-gemini-argon-news",
+     "type": "source",
+     "fields": {
+      "d": [
+       "사용자 제공 수집 결과에 따르면 aibriefing.dev는 2026-10-19 “Gemini 4 Argon 미리보기 공개”를 게시했다."
+      ],
+      "ref": [
+       "https://aibriefing.dev/2026-10-19/gemini-4-argon"
+      ],
+      "t": [
+       "Gemini 4 Argon 미리보기 공개 소식"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "id": "src-gemini-argon-hn",
+     "type": "source",
+     "fields": {
+      "d": [
+       "사용자 제공 수집 결과에서 2026-10-19 13:30 KST 게시된 “Gemini 4 Argon hands-on”은 412 points를 기록했다."
+      ],
+      "ref": [
+       "https://news.ycombinator.com/item?id=45619999"
+      ],
+      "t": [
+       "Hacker News의 Gemini 4 Argon 사용기"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "id": "src-anthropic-pricing",
+     "type": "source",
+     "fields": {
+      "d": [
+       "사용자 제공 수집 결과에 따르면 aibriefing.dev는 2026-10-19 Anthropic이 2026-10-25부터 Claude API 가격을 15% 인상한다고 보도했으며 적용일은 이번 실행 이후다."
+      ],
+      "ref": [
+       "https://aibriefing.dev/2026-10-19/anthropic-pricing"
+      ],
+      "t": [
+       "Claude API 가격 인상 보도"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "id": "task-claude-price-check",
+     "type": "task",
+     "fields": {
+      "d": [
+       "2026-10-25부터 15% 인상된다는 aibriefing.dev 보도의 공식 가격·적용 범위 및 팀 API 비용 영향을 확인해야 한다."
+      ],
+      "source": [
+       "src-anthropic-pricing"
+      ],
+      "t": [
+       "Claude API 가격 인상 영향 확인"
+      ],
+      "x": [
+       "open"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    },
+    {
+     "id": "ctx-research-afternoon-run",
+     "type": "context",
+     "fields": {
+      "d": [
+       "사용자 제공 기준 시각 2026-10-19T15:01:00+09:00의 사전 수집 결과만 웹 재검색·독립 검증 없이 기록했고 DeepSeek·Graphify의 기존 출처를 갱신하고 Gemini 두 출처와 Claude 가격 인상 보도·확인 과제를 추가했으며 Reddit r/cscareerquestions는 요청 시간 초과로 이번 실행에서 읽지 못해 이전 기록을 유지했다."
+      ],
+      "source": [
+       "src-deepseek-flash-hn",
+       "src-graphify-trending",
+       "src-gemini-argon-news",
+       "src-gemini-argon-hn",
+       "src-anthropic-pricing"
+      ],
+      "t": [
+       "AI 리서치 오후 실행 결과"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-ai-research"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "monitoring",
+   "document": "@mounts/v-ulwhut6erxeh6b73nf5oi/e2e-authoring/monitoring-a.gram",
+   "runs": [
+    {
+     "now": "2026-10-19T15:00:00+09:00",
+     "exit": 0,
+     "seconds": 50,
+     "calls": [
+      {
+       "tool": "gram_projects",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_brief",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_capabilities",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "failed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_list",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_context",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_patch",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_context",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_read",
+       "status": "completed"
+      }
+     ],
+     "last": "지정 문서에 Sui `testnet-v1.82.1`, Sei 변화 없음, OVH 유지보수 일정과 재부팅·전원 차단 위험을 기록했습니다. `monitoring-a.gram` revision 1에 저장·동기화하고 재확인했으며, 위험은 `monitoring-a.gram#risk-ovh-node-power`에 `open`으로 등록했습니다."
+    },
+    {
+     "now": "2026-10-19T16:00:00+09:00",
+     "exit": 0,
+     "seconds": 42,
+     "calls": [
+      {
+       "tool": "gram_projects",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_capabilities",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_brief",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "failed"
+      },
+      {
+       "tool": "gram_list",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_context",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_profile",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_patch",
+       "status": "completed"
+      },
+      {
+       "tool": "gram_context",
+       "status": "completed"
+      }
+     ],
+     "last": "지정 문서 `monitoring-a.gram`의 기존 기록 `evd-sui-testnet-release`, `evd-sei-mainnet-check`, `evd-ovh-maintenance`를 revision 2로 갱신하고 저장·동기화와 재조회를 확인했습니다. Sui 변화 없음, Sei #212 통과 및 업그레이드 높이 152,000,000·예상 시각 10월 22일 09:00 KST, OVH 점검 진행 중·종료 예정 10월 24일 00:00 KST를 기록했습니다."
+    }
+   ],
+   "score": {
+    "passed": 10,
+    "total": 38
+   },
+   "checks": [
+    {
+     "name": "run records",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "run 1 at 2026-10-19T15:00:00+09:00",
+     "pass": false
+    },
+    {
+     "name": "run 1 failed sources",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "run 2 at 2026-10-19T16:00:00+09:00",
+     "pass": false
+    },
+    {
+     "name": "run 2 failed sources",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1 recorded once",
+     "pass": true,
+     "detail": [
+      "evd-sui-testnet-release"
+     ]
+    },
+    {
+     "name": "item https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1 ref",
+     "pass": true
+    },
+    {
+     "name": "item https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1 at",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1 source tag",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "item https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1 derives from its run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-chain-watch"
+      }
+     ]
+    },
+    {
+     "name": "item https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1 derives from no later run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-chain-watch"
+      }
+     ]
+    },
+    {
+     "name": "item https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a recorded once",
+     "pass": true,
+     "detail": [
+      "evd-ovh-maintenance"
+     ]
+    },
+    {
+     "name": "item https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a ref",
+     "pass": true
+    },
+    {
+     "name": "item https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a at",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a source tag",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "item https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a derives from its run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-chain-watch"
+      }
+     ]
+    },
+    {
+     "name": "item https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a derives from no later run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-chain-watch"
+      }
+     ]
+    },
+    {
+     "name": "item https://www.mintscan.io/sei/proposals/212 recorded once",
+     "pass": true,
+     "detail": [
+      "evd-sei-mainnet-check"
+     ]
+    },
+    {
+     "name": "item https://www.mintscan.io/sei/proposals/212 ref",
+     "pass": true
+    },
+    {
+     "name": "item https://www.mintscan.io/sei/proposals/212 at",
+     "pass": false,
+     "detail": null
+    },
+    {
+     "name": "item https://www.mintscan.io/sei/proposals/212 source tag",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "item https://www.mintscan.io/sei/proposals/212 derives from its run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-chain-watch"
+      }
+     ]
+    },
+    {
+     "name": "item https://www.mintscan.io/sei/proposals/212 derives from no later run",
+     "pass": false,
+     "detail": [
+      {
+       "predicate": "part-of",
+       "target": "prj-chain-watch"
+      }
+     ]
+    },
+    {
+     "name": "task for https://www.mintscan.io/sei/proposals/212",
+     "pass": false
+    },
+    {
+     "name": "task due 2026-10-22",
+     "pass": false
+    },
+    {
+     "name": "risk for https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a",
+     "pass": true
+    },
+    {
+     "name": "target sui-testnet once",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "detection related to sui-testnet",
+     "pass": false
+    },
+    {
+     "name": "target sei-mainnet once",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "detection related to sei-mainnet",
+     "pass": false
+    },
+    {
+     "name": "target ovh-node-4 once",
+     "pass": false,
+     "detail": []
+    },
+    {
+     "name": "detection related to ovh-node-4",
+     "pass": false
+    },
+    {
+     "name": "event at 2026-10-12T14:00:00+09:00",
+     "pass": false
+    },
+    {
+     "name": "event end 2026-10-24T00:00:00+09:00",
+     "pass": false
+    },
+    {
+     "name": "event at 2026-10-22T09:00:00+09:00",
+     "pass": false
+    },
+    {
+     "name": "no task created overdue",
+     "pass": true,
+     "detail": []
+    },
+    {
+     "name": "no status in titles",
+     "pass": true,
+     "detail": []
+    },
+    {
+     "name": "every record placed",
+     "pass": true,
+     "detail": []
+    }
+   ],
+   "widgets": {
+    "cadence": null,
+    "runs": [],
+    "latestTopics": [],
+    "sources": [],
+    "watches": []
+   },
+   "records": [
+    {
+     "id": "prj-chain-watch",
+     "type": "project",
+     "fields": {
+      "d": [
+       "매시간 sui-testnet, sei-mainnet 체인의 릴리스·거버넌스와 OVH 서버 ovh-node-4(Rack LIM0314A04A)의 유지보수 공지를 확인한다. 우리 노드에 영향이 있으면 할 일이나 위험으로 올린다."
+      ],
+      "t": [
+       "체인 업그레이드·서버 점검 알림"
+      ],
+      "x": [
+       "active"
+      ]
+     },
+     "links": []
+    },
+    {
+     "id": "evd-sui-testnet-release",
+     "type": "evidence",
+     "fields": {
+      "d": [
+       "2026-10-19 16:00 KST 실행에 제공된 결과: sui-testnet은 변화 없이 최신 릴리스가 testnet-v1.82.1이며, 노드 적용 여부와 업그레이드 필요성은 미확인이다."
+      ],
+      "ref": [
+       "https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1"
+      ],
+      "t": [
+       "Sui 테스트넷 릴리스 확인"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-chain-watch"
+      }
+     ]
+    },
+    {
+     "id": "evd-sei-mainnet-check",
+     "type": "evidence",
+     "fields": {
+      "d": [
+       "2026-10-19 16:00 KST 실행에 제공된 거버넌스 결과: sei-mainnet 제안 #212 \"v6.2 software upgrade\"가 통과했으며 업그레이드 높이는 152,000,000, 예상 시각은 2026-10-22 09:00 KST이고 실제 업그레이드 수행은 미확인이다."
+      ],
+      "ref": [
+       "https://www.mintscan.io/sei/proposals/212"
+      ],
+      "t": [
+       "Sei 메인넷 v6.2 업그레이드 제안 통과"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-chain-watch"
+      }
+     ]
+    },
+    {
+     "id": "evd-ovh-maintenance",
+     "type": "evidence",
+     "fields": {
+      "d": [
+       "2026-10-19 16:00 KST 실행에 제공된 결과: ovh-node-4의 LIM0314A04A 전기 유지보수는 여전히 진행 중이고 예정 종료는 2026-10-24 00:00 KST 그대로이며, 기존 공지의 재부팅·전원 차단 위험은 해소가 확인되지 않았다."
+      ],
+      "ref": [
+       "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a"
+      ],
+      "t": [
+       "OVH 전기 유지보수 진행 중"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-chain-watch"
+      }
+     ]
+    },
+    {
+     "id": "risk-ovh-node-power",
+     "type": "risk",
+     "fields": {
+      "d": [
+       "Rack LIM0314A04A의 진행 중인 전기 유지보수로 ovh-node-4에 재부팅·전원 차단 가능성이 있으며, 예정 종료는 2026-10-24 00:00 KST이고 실제 장애 발생 여부는 미확인이다."
+      ],
+      "ref": [
+       "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a"
+      ],
+      "t": [
+       "ovh-node-4 재부팅·전원 차단 위험"
+      ],
+      "x": [
+       "open"
+      ]
+     },
+     "links": [
+      {
+       "predicate": "part-of",
+       "target": "prj-chain-watch"
+      },
+      {
+       "predicate": "related",
+       "target": "evd-ovh-maintenance"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "finishedAt": "2026-10-19T08:25:56.877Z",
+ "skill_label": "thegram-memory 3.2.2 (def22b5)"
+}

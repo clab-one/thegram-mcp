@@ -114,8 +114,19 @@ Closing a record:
 - For coding repositories, the adapter binds a document by `repo:<host/owner/name>` on its root project record, in any folder of an accessible vault (selected vault first). An explicit `projects.json` mapping wins. Without a binding tag the fallback is `<vault>/<repository>.gram`; reuse a moved document and follow the adapter's `bind` instruction rather than creating another.
 - Several repositories can share one document through a directory mapping in `~/.config/thegram-memory/projects.json`. Put the current repository in `s` on its new records so `gram_recall {scope}` can filter it; do not add repository tags to unrelated personal purposes.
 - Every document uses the same record types and statuses; shape it by its sections and records. Schedules use an event per occurrence and a completion time in `done`.
-- Each document has one dashboard, editable by anyone who can write. Its view follows the records (Project Tracker, Journal, Knowledge, Operations), and a person can apply a dashboard starter in the app. An older document's `template` line only hints the view; leave it.
+- Each document has one dashboard, editable by anyone who can write. Its view follows the records (Project Tracker, Journal, Knowledge, Operations; a document with `run` events opens on the automation widgets), and a person can apply a dashboard starter in the app. An older document's `template` line only hints the view; leave it.
 - Link only within the document. For a record in another document, cite its URL in `ref` (cross-document targets stay unresolved).
+
+### Scheduled automations
+
+A document a scheduled run writes (a research digest, a monitor, a collected log) has one shape, and the 리서치, 감시·알림 and 수집 일지 dashboards read exactly it. Write each run as one patch:
+
+1. Read what earlier runs left (`gram_list {path, select: {type}}`, `gram_recall` by URL or title). An item already recorded (same URL, release, notice or message) is not added again: `set` only the fields that changed on the existing record and leave its links alone, so it keeps pointing at the run that first found it.
+2. Add one run record: `event`, `t` such as "리서치 실행", `at` the actual run time with its zone, `x` `confirmed`, `tag` `run` plus `failed:<source>` for every source that could not be read, `d` saying what was checked and how many new items, `part-of` the project. A run that finds nothing still records itself.
+3. Each new item: `knowledge` for a news item, post or finding; `event` for something that happened or is scheduled (`at`, and `end` when the source gives one). Give it `ref` (the original URL), `at` (when it was published or happens; leave it out when the source gives no time), `tag` `source:<name>` (`news`, `hn`, `github`, `reddit`, `gmail`, `slack`, `calendar`, …) and `topic:<slug>` (one slug per story, the same on every source that covers it), link `derives` to this run only, and place it. Its ID comes from the item (`k-hn-41234567`, `ev-sui-testnet-v1-82-1`), never from the run time.
+4. Each watched thing (a chain, server, repository or mailbox) is one record tagged `target`, created once and reused; every detection links `related` to its target.
+5. What needs a person follows the automation's own rule in the root project's `d`. A change still ahead that someone must act on (an upgrade to apply, a price change to review) becomes a `task` due by its start; a possible harm nobody here can act on (a reboot during a provider's maintenance) is a `risk`, with `p` only when stated. A task is never created already overdue. Link either `related` to its item. Status belongs in `x` and dates, never in a title (`[완료]`, `[과거]`).
+6. The schedule itself (cadence, sources, scope) is the root project's `d`; the dashboard reads the cadence from the runs, so never invent a run that did not happen.
 
 ## 6. Body and dashboard
 
@@ -141,6 +152,7 @@ Widgets select stored records, their template states, relationships and real his
 | Calendar/timeline | event `at`, metric `observed`, other records' supported `due` | omit unknown dates; a source commit date is not every fact's occurrence date |
 | Metric trend | same ID, numeric `value`, same `unit`, sourced `observed` and available history | retain real observations; never create revisions just to draw a line |
 | Activity/revision history | actual runtime recording time and loaded revision history | imports remain recorded today; no fake commit-era activity |
+| Automation (new items, runs, sources, watched targets) | `run` events; items with `derives` to their run, `ref`, `at`, `source:`/`topic:` tags; `target` records and `related` detections | one run record per real run; reuse items and targets; see Scheduled automations in 5 |
 | Sync/team/presence/workspace | runtime/capability data | document records cannot fabricate live sync, membership, presence or access |
 
 The inspected newer widget model counts completion as done ÷ (open + done), excluding closed and unknown states; older Core tracker summaries can use all-task totals. Check the target's current contract and selected records before explaining a percentage. Details, version limits and offline selector checks are in [widget-data.md](references/widget-data.md).

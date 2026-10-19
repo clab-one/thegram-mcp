@@ -1521,6 +1521,32 @@
         "absent_links": [["evd-signup-crash", "supports", "risk-signup-crash"]],
         "coverage": {}
       }
+    },
+    {
+      "id": "automation-second-run",
+      "source_text": "Scheduled research run at 2026-10-19T18:01:00+09:00 checked news, HN, GitHub and Reddit; Reddit timed out. HN still lists 'DeepSeek-v4.1-Flash-1017', already recorded by the 15:01 run. New: aibriefing.dev reports 'DeepSeek V4.1-Flash released under MIT' (published 2026-10-18), and GitHub trending shows Graphify-Labs/graphify (+626 stars today).",
+      "initial": [
+        {"type": "project", "id": "prj-ai-research", "fields": {"t": ["AI research digest"], "x": ["active"], "d": ["Every three hours, collects new AI items from news, HN, GitHub and Reddit."]}, "links": []},
+        {"type": "event", "id": "run-20261019-1501", "fields": {"t": ["리서치 실행"], "at": ["2026-10-19T15:01:00+09:00"], "x": ["confirmed"], "tag": ["run"], "d": ["Checked 4 sources; 1 new item."]}, "links": [["part-of", "prj-ai-research"]]},
+        {"type": "knowledge", "id": "k-hn-45612301", "fields": {"t": ["DeepSeek-v4.1-Flash-1017 on HN"], "ref": ["https://news.ycombinator.com/item?id=45612301"], "at": ["2026-10-19T09:10:00+09:00"], "tag": ["source:hn", "topic:deepseek-v41-flash"]}, "links": [["derives", "run-20261019-1501"]]}
+      ],
+      "plan": {
+        "operations": [
+          {"op": "add", "record": {"type": "event", "id": "run-20261019-1801", "fields": {"t": ["리서치 실행"], "at": ["2026-10-19T18:01:00+09:00"], "x": ["confirmed"], "tag": ["run", "failed:reddit"], "d": ["Checked news, HN and GitHub; Reddit timed out. 2 new items."]}, "links": [["part-of", "prj-ai-research"]]}, "place": {"section": "Log"}},
+          {"op": "add", "record": {"type": "knowledge", "id": "k-news-deepseek-v41-flash", "fields": {"t": ["DeepSeek V4.1-Flash released under MIT"], "ref": ["https://aibriefing.dev/"], "at": ["2026-10-18"], "tag": ["source:news", "topic:deepseek-v41-flash"]}, "links": [["derives", "run-20261019-1801"]]}, "place": {"section": "Log"}},
+          {"op": "add", "record": {"type": "knowledge", "id": "k-gh-graphify-labs-graphify", "fields": {"t": ["Graphify turns codebases into a queryable knowledge graph"], "d": ["GitHub trending, +626 stars today."], "ref": ["https://github.com/Graphify-Labs/graphify"], "at": ["2026-10-19"], "tag": ["source:github", "topic:graphify"]}, "links": [["derives", "run-20261019-1801"]]}, "place": {"section": "Log"}}
+        ]
+      },
+      "expect": {
+        "additions": {"run-20261019-1801": "event", "k-news-deepseek-v41-flash": "knowledge", "k-gh-graphify-labs-graphify": "knowledge"},
+        "fields": {
+          "run-20261019-1801": {"tag": ["run", "failed:reddit"]},
+          "k-hn-45612301": {"tag": ["source:hn", "topic:deepseek-v41-flash"]}
+        },
+        "links": [["k-news-deepseek-v41-flash", "derives", "run-20261019-1801"], ["k-gh-graphify-labs-graphify", "derives", "run-20261019-1801"], ["k-hn-45612301", "derives", "run-20261019-1501"]],
+        "absent_links": [["k-hn-45612301", "derives", "run-20261019-1801"]],
+        "coverage": {}
+      }
     }
   ]
 }

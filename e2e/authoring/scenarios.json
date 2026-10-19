@@ -1,0 +1,102 @@
+{
+  "note": "Scheduled-automation runs a real agent records through one skill version. Inputs are what the automation already fetched, so the run tests writing, not browsing. expect is the contract the automation dashboards read.",
+  "prompt": "이 작업은 '{automation}' 예약 자동화의 한 번 실행이다. 기록할 Thegram 문서: {path}\n지금 시각: {now} (Asia/Seoul). 이 문서에 이 자동화의 결과를 기록하는 것은 허락되어 있다.\n이번 실행에서 출처별로 이미 가져온 결과(웹을 다시 찾지 말 것):\n{inputs}\n이번 실행 결과를 이 문서에 기록하고, 무엇을 기록했는지 한두 문장으로 답해.",
+  "scenarios": [
+    {
+      "id": "research",
+      "automation": "AI 리서치 3시간 갱신",
+      "document": {
+        "title": "AI 리서치 자동화",
+        "project": { "id": "prj-ai-research", "t": "AI 리서치 3시간 갱신", "d": "3시간마다 AI 뉴스(aibriefing.dev), Hacker News, GitHub 트렌딩, Reddit r/cscareerquestions에서 새 AI 소식을 모은다. 우리 팀이 쓰는 API(Anthropic, OpenAI)의 가격·정책 변경은 확인할 일로 올린다." }
+      },
+      "runs": [
+        {
+          "now": "2026-10-19T12:01:00+09:00",
+          "inputs": [
+            "- aibriefing.dev 뉴스: \"DeepSeek V4.1-Flash, MIT 라이선스로 공개\" (2026-10-18 게시) https://aibriefing.dev/2026-10-18/deepseek-v41-flash — DeepSWE v1.1 77.0점, 1M 컨텍스트, 입력/출력 $0.30/$1.20 per 1M tokens.",
+            "- Hacker News: \"DeepSeek-v4.1-Flash-1017\" 875 points, 664 comments (2026-10-19 09:10 KST 게시) https://news.ycombinator.com/item?id=45612301",
+            "- GitHub 트렌딩: Graphify-Labs/graphify, 오늘 +626★ — 코드베이스·문서·SQL 스키마를 질의 가능한 지식 그래프로 변환 https://github.com/Graphify-Labs/graphify",
+            "- Reddit r/cscareerquestions: \"AI 때문에 신입 개발자 채용이 끝났다는 논쟁\" (2026-10-19 07:40 KST 게시) https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/"
+          ]
+        },
+        {
+          "now": "2026-10-19T15:01:00+09:00",
+          "inputs": [
+            "- Hacker News: \"DeepSeek-v4.1-Flash-1017\" 1,204 points, 902 comments https://news.ycombinator.com/item?id=45612301",
+            "- aibriefing.dev 뉴스: \"Gemini 4 Argon 미리보기 공개\" (2026-10-19 게시) https://aibriefing.dev/2026-10-19/gemini-4-argon",
+            "- Hacker News: \"Gemini 4 Argon hands-on\" 412 points (2026-10-19 13:30 KST 게시) https://news.ycombinator.com/item?id=45619999",
+            "- aibriefing.dev 뉴스: \"Anthropic, 10월 25일부터 Claude API 가격 15% 인상\" (2026-10-19 게시) https://aibriefing.dev/2026-10-19/anthropic-pricing — 2026-10-25부터 적용.",
+            "- GitHub 트렌딩: Graphify-Labs/graphify, 오늘 +1,040★ https://github.com/Graphify-Labs/graphify",
+            "- Reddit r/cscareerquestions: 요청 시간 초과로 읽지 못함"
+          ]
+        }
+      ],
+      "expect": {
+        "runs": [{ "at": "2026-10-19T12:01:00+09:00", "failed": [] }, { "at": "2026-10-19T15:01:00+09:00", "failed": ["reddit"] }],
+        "items": [
+          { "url": "https://aibriefing.dev/2026-10-18/deepseek-v41-flash", "run": 0 },
+          { "url": "https://news.ycombinator.com/item?id=45612301", "run": 0 },
+          { "url": "https://github.com/Graphify-Labs/graphify", "run": 0, "at": false },
+          { "url": "https://www.reddit.com/r/cscareerquestions/comments/1o9xyz/", "run": 0 },
+          { "url": "https://aibriefing.dev/2026-10-19/gemini-4-argon", "run": 1 },
+          { "url": "https://news.ycombinator.com/item?id=45619999", "run": 1 },
+          { "url": "https://aibriefing.dev/2026-10-19/anthropic-pricing", "run": 1 }
+        ],
+        "same_topic": [
+          ["https://aibriefing.dev/2026-10-18/deepseek-v41-flash", "https://news.ycombinator.com/item?id=45612301"],
+          ["https://aibriefing.dev/2026-10-19/gemini-4-argon", "https://news.ycombinator.com/item?id=45619999"]
+        ],
+        "tasks": [{ "url": "https://aibriefing.dev/2026-10-19/anthropic-pricing", "due": "2026-10-25" }],
+        "risks": [],
+        "targets": [],
+        "ranges": []
+      }
+    },
+    {
+      "id": "monitoring",
+      "automation": "체인 업그레이드·서버 점검 알림",
+      "document": {
+        "title": "체인·서버 감시",
+        "project": { "id": "prj-chain-watch", "t": "체인 업그레이드·서버 점검 알림", "d": "매시간 sui-testnet, sei-mainnet 체인의 릴리스·거버넌스와 OVH 서버 ovh-node-4(Rack LIM0314A04A)의 유지보수 공지를 확인한다. 우리 노드에 영향이 있으면 할 일이나 위험으로 올린다." }
+      },
+      "runs": [
+        {
+          "now": "2026-10-19T15:00:00+09:00",
+          "inputs": [
+            "- sui-testnet (GitHub MystenLabs/sui 릴리스): testnet-v1.82.1 (2026-10-13 게시) https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1",
+            "- sei-mainnet (릴리스·거버넌스): 새 릴리스나 거버넌스 변화 없음",
+            "- ovh-node-4 (OVH 상태 페이지): \"LIM0314A04A 전기 유지보수\" 진행 중. 2026-10-12 14:00 KST 시작, 예정 종료 2026-10-24 00:00 KST. 공지상 최악의 경우 재부팅·전원 차단 가능. https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a"
+          ]
+        },
+        {
+          "now": "2026-10-19T16:00:00+09:00",
+          "inputs": [
+            "- sui-testnet: 변화 없음 (최신 여전히 testnet-v1.82.1)",
+            "- sei-mainnet (거버넌스): 제안 #212 \"v6.2 software upgrade\" 통과. 업그레이드 높이 152,000,000, 예상 시각 2026-10-22 09:00 KST. https://www.mintscan.io/sei/proposals/212",
+            "- ovh-node-4: \"LIM0314A04A 전기 유지보수\" 여전히 진행 중, 예정 종료 2026-10-24 00:00 KST 그대로. https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a"
+          ]
+        }
+      ],
+      "expect": {
+        "runs": [{ "at": "2026-10-19T15:00:00+09:00", "failed": [] }, { "at": "2026-10-19T16:00:00+09:00", "failed": [] }],
+        "items": [
+          { "url": "https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1", "run": 0 },
+          { "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a", "run": 0 },
+          { "url": "https://www.mintscan.io/sei/proposals/212", "run": 1 }
+        ],
+        "same_topic": [],
+        "tasks": [{ "url": "https://www.mintscan.io/sei/proposals/212", "due": "2026-10-22" }],
+        "risks": [{ "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a" }],
+        "targets": [
+          { "name": "sui-testnet", "url": "https://github.com/MystenLabs/sui/releases/tag/testnet-v1.82.1" },
+          { "name": "sei-mainnet", "url": "https://www.mintscan.io/sei/proposals/212" },
+          { "name": "ovh-node-4", "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a" }
+        ],
+        "ranges": [
+          { "url": "https://bare-metal-servers.status-ovhcloud.com/incidents/lim0314a04a", "at": "2026-10-12T14:00:00+09:00", "end": "2026-10-24T00:00:00+09:00" },
+          { "url": "https://www.mintscan.io/sei/proposals/212", "at": "2026-10-22T09:00:00+09:00" }
+        ]
+      }
+    }
+  ]
+}
