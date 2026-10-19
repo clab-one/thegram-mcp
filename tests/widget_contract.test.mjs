@@ -1,8 +1,9 @@
-/** Offline tests of authoring fixtures against the actual UI data selectors.
- * THEGRAM_UI_SOURCE=/path/to/thegram-ui node --test tests/widget_contract.test.mjs
- * Reads UI sources only. No browser, live server, document or credentials.
+/** Offline tests of authoring fixtures against the actual UI data selectors and Core's record vocabulary.
+ * THEGRAM_UI_SOURCE=/path/to/thegram-ui GRAM_CORE_BINARY=/path/to/gram node --test tests/widget_contract.test.mjs
+ * Reads UI sources and asks the local Core binary for its vocabulary. No browser, live server, document or credentials.
  */
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { registerHooks } from 'node:module';
 import path from 'node:path';
@@ -14,8 +15,10 @@ registerHooks({ load(url, context, nextLoad) {
 } });
 const root = process.env.THEGRAM_UI_SOURCE;
 if (!root) throw new Error('Set THEGRAM_UI_SOURCE to the read-only UI source checkout under test');
+if (!process.env.GRAM_CORE_BINARY) throw new Error('Set GRAM_CORE_BINARY to the native Core whose vocabulary the UI reads');
 const data = await import(pathToFileURL(path.join(root, 'src/features/dashboard/model/data.ts')));
 const registry = await import(pathToFileURL(path.join(root, 'src/features/dashboard/model/registry.ts')));
+const vocabulary = JSON.parse(execFileSync(process.env.GRAM_CORE_BINARY, { input: JSON.stringify({ op: 'templates' }) }).toString()).templates[0];
 const { cases } = JSON.parse(await readFile(new URL('../skills/thegram-memory/references/classification.json', import.meta.url), 'utf8'));
 const byId = Object.fromEntries(cases.map(c => [c.id, c]));
 const asOwner = record => ({ ...structuredClone(record), args: [], blocks: [], links: record.links.map(([predicate, target]) => ({ predicate, target })) });
@@ -41,7 +44,7 @@ function replay(id) {
     { revision: 0, recordedAt: '2026-10-19T11:00:00Z', changes: c.initial.map(r => ({ id: r.id, change: 'added', fields: [] })) }] : [];
   return { records: [...records.values()], history };
 }
-const context = { template: null, now: new Date('2026-10-19T12:00:00Z') };
+const context = { template: vocabulary, now: new Date('2026-10-19T12:00:00Z') };
 const ids = rows => rows.map(r => r.id);
 const select = (kind, records, options) => data.selection(registry.widgetSpec(kind), records, options);
 
@@ -105,7 +108,7 @@ test('saved widget selection intersects type, exact status and IDs, with no dupl
   assert.deepEqual(select('task-board', repeated, { recordIds: ['missing-task'] }), []);
 });
 
-test('current share excludes closed/unknown status and keeps no-denominator null; template classes win', () => {
+test('current share excludes closed/unknown status and keeps no-denominator null; a type\'s own status list wins', () => {
   const base = asOwner(byId['deployment-report'].initial.find(r => r.id === 'task-verify'));
   const rows = ['completed','active','cancelled',null].map((x,i) => ({ ...base, id: `test-${i}`, fields: { ...base.fields, x: x ? [x] : [] } }));
   assert.deepEqual(data.share(context, rows), { done: 1, total: 2, value: 0.5, closed: 1 });

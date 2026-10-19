@@ -36,7 +36,7 @@ class NativeClassificationTests(unittest.TestCase):
             for c in CASES:
                 with self.subTest(case=c['id']):
                     path=str(Path(temp)/(c['id']+'.gram'))
-                    create=self.call(op='create',path=path,document_id='fixture-'+c['id'],title='Synthetic semantic fixture',base_revision=None,template=c['template'],content={'text':'# Overview\n\n# Architecture\n\n# Plan\n\n# Decisions\n\n# Log\n','records':[native_record(r) for r in c['initial']]})
+                    create=self.call(op='create',path=path,document_id='fixture-'+c['id'],title='Synthetic semantic fixture',base_revision=None,content={'text':'# Overview\n\n# Architecture\n\n# Plan\n\n# Decisions\n\n# Log\n','records':[native_record(r) for r in c['initial']]})
                     operations=c['plan']['operations']
                     if operations:
                         changed=self.call(op='patch',path=path,base_revision=create['revision'],expected_hash=create['file_hash'],request_id='classify-'+c['id'],operations=native_operations(operations))

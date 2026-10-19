@@ -249,7 +249,6 @@
           }
         ]
       },
-      "template": "project@1",
       "request_id": "atlas-establish-memory"
     }
   },

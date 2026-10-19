@@ -4,9 +4,9 @@ Read this when authoring data for a dashboard, timeline, calendar or graph. Corr
 
 ## Inspect the target before promising a display
 
-1. Read the actual template and relevant fields/links. When available, request `gram_profile {path,topic:"presentation"}` for saved selectors, required fields, capability needs, readiness and digest. A template's default view is not proof of the person's saved arrangement.
+1. Read the relevant records, fields and links. When available, request `gram_profile {path,topic:"presentation"}` for saved selectors, required fields, capability needs, readiness and digest. A view's default arrangement is not proof of the person's saved arrangement.
 2. Map each requested widget to existing records and supported atomic facts. Preserve selected IDs, `recordType`, exact `status`, and legitimate gaps. Do not change a valid type/status to force selection. Unknown owner/priority/date stays absent even if readiness wants it.
-3. Save only authorized factual changes. Preserve `ui-layout`, fixed sidebars and other user presentation. New layouts, template changes and publication need their own requested scope. Use an optional `presentation_digest` only if the tool exposes it and a current digest was actually returned, with the required fresh CAS pair.
+3. Save only authorized factual changes. Preserve `ui-layout`, fixed sidebars and other user presentation. New layouts and publication need their own requested scope. Use an optional `presentation_digest` only if the tool exposes it and a current digest was actually returned, with the required fresh CAS pair.
 4. Read back the fields, links, placement and real history. Recheck readiness if available. Report selector/model testing separately from actual host rendering and runtime verification.
 
 A reported `E_CONTEXT_BUDGET` on the presentation profile is an integration gap, not evidence of no saved layout. In a schema exposing only `path/task/topic`, “select fewer fields” cannot be followed: no cursor/field selector exists. Do not guess layout requirements or bypass through an undocumented endpoint. A separate contract repair should return a compact, versioned summary/digest plus paginated per-widget requirements/readiness within the byte budget, with revision-bound cursors; test large layouts, Unicode and stale cursors. This skill does not repair that server contract.
@@ -17,11 +17,11 @@ These are source-backed rules from the newer layout/2 widget model, not a promis
 
 | Widget family | Actual selector or derived input | Required authoring facts and limits |
 |---|---|---|
-| Task checklist/board/tabs | `task`; saved IDs/type/exact status further intersect | real task `x` from template; review queue uses exactly `review` tasks or `proposed` decisions, not merged-commit guesses |
-| Progress rings/status distribution | selected tasks, goals or decisions; template `open/done/closed` classes | newer `share`: done/(open+done), closed and absent-status excluded; no denominator → no ratio; accepted decision means adopted, not implemented |
+| Task checklist/board/tabs | `task`; saved IDs/type/exact status further intersect | real task `x`; review queue uses exactly `review` tasks or `proposed` decisions, not merged-commit guesses |
+| Progress rings/status distribution | selected tasks, goals or decisions; the vocabulary's `open/done/closed` classes | `share`: done/(open+done), closed and absent-status excluded; no denominator → no ratio; accepted decision means adopted, not implemented; the detail list says what it counts and filters by status |
 | Goal progress | tasks with outgoing `part-of` to the goal ID | `related`/`depends` do not count; goal's own status is separate from child-task completion |
-| Attention/waiting | blocked tasks, unresolved blockers, scoped dependencies; attention also high/urgent open risks and overdue records | source real impediments, `blocks`/`depends` direction and deadlines; never invent priority or a due date to appear here |
-| Risk matrix/register | `risk`, actual `p`/`x`, template status class | matrix may show an unknown-priority group; empty register does not prove no risk or live health |
+| Attention/waiting | blocked tasks, unresolved blockers, scoped dependencies; attention also high/urgent risks in the open class (open or mitigated) and overdue records | source real impediments, `blocks`/`depends` direction and deadlines; never invent priority or a due date to appear here |
+| Risk matrix/register | `risk`, actual `p`/`x`, its status class | matrix may show an unknown-priority group; empty register does not prove no risk or live health |
 | Decision log/pending | `decision`, `x`, stored `replaces` | pending uses open status class and age from real native addition time; log derives date from earliest dated implementing event; preserve proposed ADR despite code merge; do not create an event to supply a missing date |
 | Calendar/up-next/countdown | record date: event `at`, metric `observed`, otherwise `due` | source precision/time zone; default dates do not include a source commit date; undated records need no invented timestamp |
 | Day agenda / milestone ranges | agenda: `event` with actual `at`; ranges: event `at→end`, task/goal `start→due` | only ordered compatible date precision becomes a range; ordinary point events remain points; add optional fields only if exposed/supported and sourced |

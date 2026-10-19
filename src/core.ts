@@ -627,7 +627,7 @@ export async function orient(state: MemoryState, cwd: string, prompt?: string, r
 					recalled: false,
 					sections: [
 						state.writable
-							? `No Cloud memory document \`${name}\` exists yet. When this work produces a durable outcome, create that exact path in one gram_create with a root project record and that outcome placed in its section, in the user's language: {"path":"${name}","title":"…","base_revision":null,"template":"project@1","content":{"text":"# Overview\\n\\n[[prj-<slug>]]\\n\\n# Architecture\\n\\n# Plan\\n\\n# Decisions\\n\\n# Log\\n","fields":{"d":["<one-line summary>"]},"records":[{"type":"project","id":"prj-<slug>","fields":{"t":["…"],"d":["…"],"x":["active"]${binding.tag ? `,"tag":["${binding.tag}"]` : ""}}}]}}. Each further record is placed as [[id]] alone on a line in its section and linked to prj-<slug>.${binding.tag ? " The repo tag on the project record keeps this repository bound to the document after it is moved into a folder." : ""} Do not create a folder or switch to another mount.`
+							? `No Cloud memory document \`${name}\` exists yet. When this work produces a durable outcome, create that exact path in one gram_create with a root project record and that outcome placed in its section, in the user's language: {"path":"${name}","title":"…","base_revision":null,"content":{"text":"# Overview\\n\\n[[prj-<slug>]]\\n\\n# Architecture\\n\\n# Plan\\n\\n# Decisions\\n\\n# Log\\n","fields":{"d":["<one-line summary>"]},"records":[{"type":"project","id":"prj-<slug>","fields":{"t":["…"],"d":["…"],"x":["active"]${binding.tag ? `,"tag":["${binding.tag}"]` : ""}}}]}}. Each further record is placed as [[id]] alone on a line in its section and linked to prj-<slug>.${binding.tag ? " The repo tag on the project record keeps this repository bound to the document after it is moved into a folder." : ""} Do not create a folder or switch to another mount.`
 							: `Cloud memory document \`${name}\` does not exist and this API key is read-only. Do not create it or switch to another destination.`,
 					],
 				};
@@ -804,7 +804,7 @@ function recordingReminder(state: MemoryState, lead: string): string {
 		`- a choice the user or you settled ("let's…", "use X, not Y"): decision in Decisions, x accepted, part-of ${project}; a replaced one gets set x superseded plus a replaces link\n` +
 		`- the shipped change: event in Log with at (the commit's author time) and ref (commit/PR/release), implements its decision, else part-of ${project}\n` +
 		"- a caveat, limitation or follow-up you are about to report: risk or task in Plan, x open, related to what it concerns\n" +
-		"- a status change of an existing record, such as a risk this change resolves: set x with old\n" +
+		"- a status change of an existing record, such as a risk this change resolves: set x with old, and in the same patch rewrite d to how it ended; link the evidence that resolved it as related\n" +
 		"Docs: .gram by default; .md only for README or explicit user requests. " +
 		"If nothing qualifies, say in the final answer why no Thegram record was written.\n" +
 		(state.scope ? `Other repositories share this document: give every record you add "s": ["${state.scope}"].\n` : "") +
