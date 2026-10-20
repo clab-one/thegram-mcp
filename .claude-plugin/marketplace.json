@@ -1,9 +1,9 @@
 {
 	"name": "thegram-memory",
 	"owner": {
-		"name": "clab-one"
+		"name": "thegram-one"
 	},
-	"description": "clab-one plugins that connect coding agents to Thegram memory.",
+	"description": "thegram-one plugins that connect coding agents to Thegram memory.",
 	"plugins": [
 		{
 			"name": "thegram-memory",

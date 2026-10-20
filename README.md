@@ -3,7 +3,7 @@
 Gives Claude Code, Codex, OpenCode and OMP shared project memory through [Thegram](https://thegram.one). Connect directly to the same Cloud MCP used by the ChatGPT and Claude OAuth integrations. No desktop app or DMG is required.
 
 The canonical skill and references live at `skills/thegram-memory/` in this repository. ChatGPT and Claude OAuth ZIPs in
-[`clab-one/thegram-plugin`](https://github.com/clab-one/thegram-plugin) import this committed directory and pin each file's hash.
+[`thegram-one/thegram-plugin`](https://github.com/thegram-one/thegram-plugin) import this committed directory and pin each file's hash.
 Their existing cloud skill name stays `thegram-cloud`; only that frontmatter name differs. The body, reference files, classification
 rules, authorization, status semantics, field preconditions, conflict handling and synchronized readback are otherwise identical.
 Cloud packages use OAuth; local coding agents use an API key against the same Cloud MCP. Host context injection and reminders
@@ -35,7 +35,7 @@ Offline validation: `python3 -m unittest discover -s tests -p 'test_*.py' -v`. S
 Claude Code:
 
 ```sh
-claude plugin marketplace add clab-one/thegram-mcp
+claude plugin marketplace add thegram-one/thegram-mcp
 claude plugin install thegram-memory@thegram-memory
 ```
 
@@ -43,14 +43,14 @@ Codex:
 
 ```sh
 codex features enable hooks
-codex plugin marketplace add clab-one/thegram-mcp
+codex plugin marketplace add thegram-one/thegram-mcp
 codex plugin add thegram-memory@thegram-memory
 ```
 
 OMP:
 
 ```sh
-omp plugin marketplace add clab-one/thegram-mcp
+omp plugin marketplace add thegram-one/thegram-mcp
 omp plugin install thegram-memory@thegram-memory
 # Existing installation:
 omp plugin marketplace update thegram-memory
@@ -60,10 +60,10 @@ omp plugin upgrade thegram-memory@thegram-memory --scope user
 OpenCode v2:
 
 ```sh
-opencode plugin add github:clab-one/thegram-mcp
+opencode plugin add github:thegram-one/thegram-mcp
 ```
 
-For OpenCode v1, add `github:clab-one/thegram-mcp` to the `plugin` array in `opencode.json`.
+For OpenCode v1, add `github:thegram-one/thegram-mcp` to the `plugin` array in `opencode.json`.
 
 ## Connect
 
@@ -80,7 +80,7 @@ node dist/thegram-memory.mjs doctor
 
 For a managed secret store, supply `THEGRAM_API_KEY` and `THEGRAM_MCP_MOUNT` through the host's environment instead of saving the key. The MCP endpoint is `https://vault.thegram.one/mcp`. `THEGRAM_MCP_URL` selects an explicitly configured HTTPS endpoint; HTTP is accepted only on a loopback IP for local E2E. A saved key cannot be redirected to another endpoint by changing the URL alone.
 
-Restart the agent session after installation. Remove any old manually registered `thegram` MCP server so only this plugin supplies that binding. All coding hosts use the same API-key connection. ChatGPT and Claude cloud users install their respective OAuth ZIP from `clab-one/thegram-plugin`; updating those ZIPs keeps their stable plugin/server identity rather than replacing OAuth with an API key.
+Restart the agent session after installation. Remove any old manually registered `thegram` MCP server so only this plugin supplies that binding. All coding hosts use the same API-key connection. ChatGPT and Claude cloud users install their respective OAuth ZIP from `thegram-one/thegram-plugin`; updating those ZIPs keeps their stable plugin/server identity rather than replacing OAuth with an API key.
 
 `disconnect` removes this machine's saved credential. To disable a key everywhere, revoke it in Thegram Settings → Agents. The server refuses expired or revoked keys; the plugin never falls back to the desktop app or another storage destination.
 
