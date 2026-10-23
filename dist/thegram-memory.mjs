@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 // src/cli.ts
+import { randomUUID as randomUUID2 } from "node:crypto";
 import { readFile as readFile2, rm as rm2 } from "node:fs/promises";
 import { emitKeypressEvents } from "node:readline";
-import { createInterface as createInterface2 } from "node:readline/promises";
 import * as path2 from "node:path";
 
 // src/core.ts
 import { execFile } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { chmod, mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -113,11 +113,7 @@ async function connectionSettings() {
   if (!envKey && process.env.THEGRAM_MCP_URL && url !== validateEndpoint(savedURL)) {
     throw new ThegramError("E_CONFIG", "Reconnect explicitly before using a stored API key with a different endpoint");
   }
-  const mount = process.env.THEGRAM_MCP_MOUNT ?? str(saved.mount);
-  if (mount !== undefined && !/^@mounts\/[A-Za-z0-9_-]+$/.test(mount)) {
-    throw new ThegramError("E_CONFIG", "Select the exact Cloud vault mount key from gram_projects");
-  }
-  return { url, apiKey, mount };
+  return { url, apiKey };
 }
 async function saveConnection(settings) {
   const dir = configDir();
@@ -231,28 +227,6 @@ async function callTool(name, args, timeoutMs = CALL_TIMEOUT_MS) {
 function configDir() {
   return path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config"), "thegram-memory");
 }
-function expandHome(value) {
-  return value === "~" || value.startsWith("~/") ? path.join(os.homedir(), value.slice(1)) : value;
-}
-async function loadProjectMap() {
-  const raw = await readJsonFile(path.join(configDir(), "projects.json"));
-  const map = {};
-  if (!isJson(raw))
-    return map;
-  for (const [key, value] of Object.entries(raw)) {
-    if (typeof value === "string")
-      map[path.resolve(expandHome(key))] = value;
-  }
-  return map;
-}
-function mappedFolder(map, dir) {
-  let best;
-  for (const root of Object.keys(map)) {
-    if ((dir === root || dir.startsWith(root + path.sep)) && (!best || root.length > best.length))
-      best = root;
-  }
-  return best ? map[best] : undefined;
-}
 function gitCommonDir(dir) {
   const { promise, resolve: resolve2 } = Promise.withResolvers();
   execFile("git", ["-C", dir, "rev-parse", "--path-format=absolute", "--git-common-dir"], { timeout: CALL_TIMEOUT_MS }, (error, stdout) => resolve2(error ? undefined : stdout.trim() || undefined));
@@ -283,57 +257,57 @@ function repositoryId(remote) {
   return host && route ? `${host.toLowerCase()}/${route}` : undefined;
 }
 var REPOSITORY_TAG_PREFIX = "repo:";
-function isDocumentPath(value) {
-  const parts = value.split("/");
-  return parts.length >= 3 && parts[0] === "@mounts" && /^[A-Za-z0-9_-]+$/.test(parts[1]) && parts.slice(2).every((part) => part.trim() === part && part !== "" && part !== "." && part !== ".." && [...part].every((char) => char.charCodeAt(0) >= 32)) && /^[^.].*\.gram$/.test(parts[parts.length - 1]);
-}
-function defaultDocument(mount, root) {
-  const name = path.basename(root);
-  const safe = /^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/.test(name) ? name : `${name.replace(/[^A-Za-z0-9_-]/g, "-").replace(/^[-_]+/, "").slice(0, 80) || "project"}-${createHash("sha256").update(name).digest("hex").slice(0, 12)}`;
-  return `${mount}/${safe}.gram`;
-}
-async function resolveProject(cwd, known) {
-  const map = await loadProjectMap();
+async function repositoryTag(cwd) {
   const dir = path.resolve(cwd);
-  const real = await realpath(dir).catch(() => dir);
   const common = await gitCommonDir(dir);
-  const root = common ? path.basename(common) === ".git" ? path.dirname(common) : common.replace(/\.git$/, "") : undefined;
-  const remote = root ? await gitOutput(root, ["remote", "get-url", "origin"]) : undefined;
+  if (!common)
+    throw new ThegramError("E_PROJECT_IDENTITY", `${dir} is not a Git worktree; supply an exact --repository identity when binding an existing project.`);
+  const root = path.basename(common) === ".git" ? path.dirname(common) : common.replace(/\.git$/, "");
+  const remote = await gitOutput(root, ["remote", "get-url", "origin"]);
   const id = remote ? repositoryId(remote) : undefined;
-  const tag = id ? REPOSITORY_TAG_PREFIX + id : undefined;
-  const name = id ? id.slice(id.lastIndexOf("/") + 1) : root ? path.basename(root) : undefined;
-  const mapped = mappedFolder(map, dir) ?? mappedFolder(map, real) ?? (root && mappedFolder(map, root));
-  if (mapped) {
-    if (!isDocumentPath(mapped)) {
-      throw new ThegramError("E_CONFIG", "Project mappings must name an exact Cloud document: @mounts/<vault-id>/[<folder>/]<project>.gram");
-    }
-    return { path: mapped, via: "mapping", tag, name };
-  }
-  if (!root)
-    return null;
-  const { mount } = await connectionSettings();
-  if (!mount)
-    throw new ThegramError("E_CONFIG", "Select a Cloud vault with the connect command or THEGRAM_MCP_MOUNT");
-  const fallback = defaultDocument(mount, root);
-  if (tag && known && known.via !== "mapping" && known.tag === tag)
-    return known;
-  if (tag) {
-    const listed = await callTool("gram_list", { select: { type: "project", tag } });
-    const claims = new Map;
+  if (!id)
+    throw new ThegramError("E_PROJECT_IDENTITY", `${dir} has no origin remote; supply an exact --repository identity when binding an existing project.`);
+  return REPOSITORY_TAG_PREFIX + id;
+}
+async function repositoryLookup(tag, deadline = Date.now() + ORIENT_BUDGET_MS) {
+  const left = () => deadline - Date.now();
+  if (left() <= 0)
+    throw new ThegramError("E_TIMEOUT", "Repository lookup exceeded its time budget");
+  const projects = await callTool("gram_projects", {}, left());
+  const vaults = new Map(listOf(projects.mounts).filter((item) => item.kind === "vault" && typeof item.key === "string").map((item) => [String(item.key), item]));
+  let cursor;
+  const claims = new Map;
+  do {
+    if (left() <= 0)
+      throw new ThegramError("E_TIMEOUT", "Repository lookup exceeded its time budget");
+    const listed = await callTool("gram_list", { select: { type: "project", tag }, limit: 100, ...cursor === undefined ? {} : { cursor } }, left());
     for (const row of rowsOf(listed.records)) {
       const ref = String(row[0]);
       const at = ref.lastIndexOf("#");
-      if (at > 0 && !claims.has(ref.slice(0, at)))
-        claims.set(ref.slice(0, at), ref.slice(at + 1));
+      if (at <= 0)
+        continue;
+      const documentPath = ref.slice(0, at);
+      const mount = documentPath.split("/", 3).slice(0, 2).join("/");
+      if (vaults.has(mount))
+        claims.set(ref, ref.slice(at + 1));
     }
-    if (claims.size > 0) {
-      const paths = [...claims.keys()].sort((a, b) => Number(!a.startsWith(`${mount}/`)) - Number(!b.startsWith(`${mount}/`)) || a.localeCompare(b));
-      const chosen = claims.has(fallback) ? fallback : paths[0];
-      const others = paths.filter((item) => item !== chosen);
-      return { path: chosen, via: "repository", tag, name, projectId: claims.get(chosen), ...others.length ? { others } : {} };
-    }
+    cursor = listed.more;
+  } while (cursor !== undefined && cursor !== null && cursor !== "");
+  return { claims, vaults };
+}
+async function resolveProject(cwd, deadline = Date.now() + ORIENT_BUDGET_MS) {
+  const tag = await repositoryTag(cwd);
+  const name = tag.slice(tag.lastIndexOf("/") + 1);
+  const { claims, vaults } = await repositoryLookup(tag, deadline);
+  if (claims.size === 0) {
+    throw new ThegramError("E_PROJECT_NOT_FOUND", `No accessible vault project record carries ${tag}. To bind an existing document, run bind --document @mounts/<vault-id>/<document>.gram and choose its project record; no document was created.`);
   }
-  return { path: fallback, via: "default", tag, name };
+  if (claims.size > 1) {
+    throw new ThegramError("E_PROJECT_AMBIGUOUS", `Several accessible project records carry ${tag}: ${[...claims.keys()].map((ref2) => ref2.slice(0, ref2.lastIndexOf("#"))).join(", ")}. Remove duplicate repository associations before continuing.`);
+  }
+  const [ref, projectId] = claims.entries().next().value;
+  const documentPath = ref.slice(0, ref.lastIndexOf("#"));
+  return { path: documentPath, via: "repository", tag, name, projectId, mount: vaults.get(documentPath.split("/").slice(0, 2).join("/")) };
 }
 async function loadPolicy() {
   const base = (await readFile(path.join(PACKAGE_ROOT, "policy.md"), "utf8")).trim();
@@ -367,7 +341,6 @@ function resetMemoryState(state) {
   delete state.next;
   delete state.projectId;
   delete state.scope;
-  delete state.binding;
   Object.assign(state, newMemoryState());
 }
 function renderBrief(name, vault, brief, refs, projectId, scope) {
@@ -467,82 +440,41 @@ function renderHits(hits, seen) {
 ${lines.join(`
 `)}` : undefined;
 }
-function bindingNotes(binding, projectId) {
-  const lines = [];
-  if (binding.via === "default" && binding.tag && projectId) {
-    lines.push(`This repository is bound to \`${binding.path}\` only by its root path. Run \`node "${CLI_PATH}" bind\` here once (it adds the tag "${binding.tag}" to \`${projectId}\`) so the document can be moved into a folder without a duplicate being created.`);
-  }
-  if (binding.others?.length) {
-    lines.push(`Other documents also carry "${binding.tag}": ${binding.others.map((item) => `\`${item}\``).join(", ")}. This session uses \`${binding.path}\`; tell the user so they can merge or untag the others.`);
-  }
-  return lines.length ? lines.join(`
-`) : undefined;
-}
 async function orient(state, cwd, prompt, retried = false) {
-  let name = state.documentPath ?? path.basename(cwd);
+  let name = path.basename(cwd);
   const deadline = Date.now() + ORIENT_BUDGET_MS;
   const left = (cap) => Math.max(0, Math.min(cap, deadline - Date.now()));
   try {
     const connection = await connectionId();
-    const binding = await resolveProject(cwd, state.exists && !state.needBrief ? state.binding : undefined);
-    const documentPath = binding?.path ?? null;
-    if (state.connection !== connection || state.documentPath !== documentPath) {
+    if (state.connection !== connection) {
+      resetMemoryState(state);
+      state.connection = connection;
+    }
+    const binding = await resolveProject(cwd, deadline);
+    const documentPath = binding.path;
+    if (state.documentPath !== documentPath) {
       resetMemoryState(state);
       state.connection = connection;
       state.documentPath = documentPath;
     }
-    state.binding = binding ?? undefined;
-    if (!binding || !documentPath)
-      return;
     name = documentPath;
-    const projects = await callTool("gram_projects", {}, left(CALL_TIMEOUT_MS));
-    const mountKey = name.split("/", 2).join("/");
-    const mount = listOf(projects.mounts).find((item) => item.key === mountKey && item.kind === "vault");
-    if (!mount)
-      throw new ThegramError("E_FORBIDDEN", "The selected Cloud vault is not accessible to this API key");
-    state.vault = str(mount.name);
-    state.writable = mount.access === "write";
+    state.vault = str(binding.mount.name);
+    state.writable = binding.mount.access === "write";
     state.available = true;
     state.unavailableNoticed = false;
     const sections = [];
     let policy;
     if (state.needBrief || !state.next || !state.exists) {
-      let brief;
-      const roots = callTool("gram_list", { path: name, select: { type: "project" } }, left(CALL_TIMEOUT_MS)).catch(() => {
-        return;
-      });
-      try {
-        brief = await callTool("gram_brief", { path: name }, left(BRIEF_TIMEOUT_MS));
-      } catch (error) {
-        if (errorCode(error) !== "E_NOT_FOUND")
-          throw error;
-        const firstNotice = state.needBrief || state.exists;
-        state.exists = false;
-        state.needBrief = false;
-        if (!firstNotice)
-          return;
-        return {
-          project: name,
-          policy: await loadPolicy(),
-          recalled: false,
-          sections: [
-            state.writable ? `No Cloud memory document \`${name}\` exists yet. When this work produces a durable outcome, create that exact path in one gram_create with a root project record and that outcome placed in its section, in the user's language: {"path":"${name}","title":"…","base_revision":null,"content":{"text":"# Overview\\n\\n[[prj-<slug>]]\\n\\n# Architecture\\n\\n# Plan\\n\\n# Decisions\\n\\n# Log\\n","fields":{"d":["<one-line summary>"]},"records":[{"type":"project","id":"prj-<slug>","fields":{"t":["…"],"d":["…"],"x":["active"]${binding.tag ? `,"tag":["${binding.tag}"]` : ""}}}]}}. Each further record is placed as [[id]] alone on a line in its section and linked to prj-<slug>.${binding.tag ? " The repo tag on the project record keeps this repository bound to the document after it is moved into a folder." : ""} Do not create a folder or switch to another mount.` : `Cloud memory document \`${name}\` does not exist and this API key is read-only. Do not create it or switch to another destination.`
-          ]
-        };
-      }
+      const brief = await callTool("gram_brief", { path: name }, left(BRIEF_TIMEOUT_MS));
       state.exists = true;
       state.next = str(brief.next);
       state.needBrief = false;
       state.pendingRecall = true;
       state.briefRefs = [];
-      const root = rowsOf((await roots)?.records).find((row) => row[1] === "project");
-      state.projectId = binding.projectId ?? (root ? String(root[0]) : undefined);
+      state.projectId = binding.projectId;
       state.scope = binding.name && path.basename(name, ".gram") !== binding.name ? binding.name : undefined;
       policy = await loadPolicy();
       sections.push(renderBrief(name, state.vault, brief, state.briefRefs, state.projectId, state.scope));
-      const binds = bindingNotes(binding, state.projectId);
-      if (binds)
-        sections.push(binds);
       if (!state.writable)
         sections.push("This API key is read-only. Do not attempt writes.");
     } else {
@@ -554,7 +486,6 @@ async function orient(state, cwd, prompt, retried = false) {
           throw error;
         state.needBrief = true;
         state.exists = false;
-        delete state.binding;
         return orient(state, cwd, prompt, true);
       }
       state.next = str(delta.next) ?? state.next;
@@ -579,15 +510,17 @@ async function orient(state, cwd, prompt, retried = false) {
       return;
     return { project: name, policy, sections, recalled };
   } catch (error) {
+    const alreadyNotified = state.unavailableNoticed;
+    resetMemoryState(state);
     state.available = false;
-    if (state.unavailableNoticed)
-      return;
     state.unavailableNoticed = true;
+    if (alreadyNotified)
+      return;
     return {
       project: name,
       recalled: false,
       sections: [
-        `Thegram Cloud memory could not be loaded (${errorCode(error)}). Treat project memory as unknown. Check the API key and selected vault; do not switch storage or claim successful writes.`
+        `Thegram Cloud memory could not be loaded (${errorCode(error)}: ${error instanceof Error ? error.message : String(error)}). Treat project memory as unknown; do not switch destinations or claim successful writes.`
       ]
     };
   }
@@ -695,13 +628,13 @@ function stopReminder(state) {
 }
 function needsRecord(state) {
   const turn = state.turn;
-  if (!state.documentPath || !state.available || !state.writable || turn.wrote)
+  if (!state.documentPath || !state.exists || !state.available || !state.writable || turn.wrote)
     return false;
   return turn.committed || turn.shipped === true || turn.mutations >= NUDGE_MUTATIONS;
 }
 function recordingReminder(state, lead) {
   const turn = state.turn;
-  const where = state.exists ? `\`${state.documentPath}\` (gram_brief {path: "${state.documentPath}"} gives the current rev/hash)` : `a new \`${state.documentPath}\` (one gram_create with a root project record in Overview and these records in their sections)`;
+  const where = `\`${state.documentPath}\` (gram_brief {path: "${state.documentPath}"} gives the current rev/hash)`;
   const project = state.projectId ?? "prj-<slug>";
   const changed = [
     `${turn.mutations} file edit${turn.mutations === 1 ? "" : "s"}`,
@@ -952,13 +885,13 @@ async function runMcpProxy() {
 // src/cli.ts
 var USAGE = `thegram-memory <command>
 
-  connect [--mount <key>] [--url <endpoint>]
-                   securely read an API key and choose a Cloud vault
+  connect [--url <endpoint>] securely save and verify an API key
   disconnect       remove this machine's saved credential (does not revoke it)
   mcp              stdio bridge to the Cloud MCP using the API key
   hook             Claude Code / Codex command hook (event JSON on stdin)
   doctor [dir]     check Cloud access and this repository's memory document
-  bind [dir]       tag the memory document's project record with this repository so it can be moved into a folder
+  bind --document <path> [--project <id>] [--repository <host/path>] [dir]
+                   associate an existing project record with this repository
   version          print the package version`;
 async function readStdin() {
   const chunks = [];
@@ -1003,16 +936,11 @@ async function readKey() {
   return promise;
 }
 async function connect(args) {
-  let mount;
   let url = "https://vault.thegram.one/mcp";
   for (let i = 0;i < args.length; i += 2) {
-    const value = args[i + 1];
-    if (!value || !["--mount", "--url"].includes(args[i]))
-      throw new ThegramError("E_CONFIG", "Use connect [--mount <key>] [--url <endpoint>]; provide the API key on stdin");
-    if (args[i] === "--mount")
-      mount = value;
-    else
-      url = value;
+    if (args[i] !== "--url" || !args[i + 1])
+      throw new ThegramError("E_CONFIG", "Use connect [--url <endpoint>]; provide the API key on stdin");
+    url = args[i + 1];
   }
   url = validateEndpoint(url);
   const apiKey = await readKey();
@@ -1021,32 +949,9 @@ async function connect(args) {
   try {
     process.env.THEGRAM_API_KEY = apiKey;
     process.env.THEGRAM_MCP_URL = url;
-    const projects = await callTool("gram_projects", {}, 15000);
-    const mounts = Array.isArray(projects.mounts) ? projects.mounts.filter(isJson).filter((item) => item.kind === "vault") : [];
-    if (!mount && mounts.length === 1)
-      mount = str(mounts[0].key);
-    if (!mount && mounts.length > 1 && process.stdin.isTTY) {
-      for (const [i, item] of mounts.entries())
-        process.stderr.write(`${i + 1}. ${item.name} · ${item.key} · ${item.access}
-`);
-      const input = createInterface2({ input: process.stdin, output: process.stderr });
-      try {
-        const selected = Number(await input.question("Choose a Cloud vault number: "));
-        if (Number.isInteger(selected) && selected > 0)
-          mount = str(mounts[selected - 1]?.key);
-      } finally {
-        input.close();
-      }
-    }
-    if (!mount || !mounts.some((item) => item.key === mount)) {
-      const choices = mounts.map((item) => `${item.name}: ${item.key}`).join(`
-`);
-      throw new ThegramError("E_CONFIG", `Choose an accessible Cloud vault with --mount. Available vaults:
-${choices || "(none; grant this API key access in Thegram Settings → Agents)"}`);
-    }
-    await saveConnection({ url, apiKey, mount });
+    await callTool("gram_projects", {}, 15000);
+    await saveConnection({ url, apiKey });
     process.stdout.write(`Connected to ${url}
-Cloud vault: ${mount}
 Credential: ${connectionFile()} (private)
 `);
     return 0;
@@ -1067,36 +972,16 @@ async function doctor(dir) {
   try {
     const settings = await connectionSettings();
     lines.push(`endpoint: ${settings.url}`);
-    const projects = await callTool("gram_projects", {});
-    const mounts = Array.isArray(projects.mounts) ? projects.mounts.filter(isJson) : [];
-    lines.push(`Cloud: ${mounts.length} accessible mounts · selected ${settings.mount ?? "(not configured)"}`);
-    if (settings.mount && !mounts.some((item) => item.key === settings.mount && item.kind === "vault")) {
-      throw new ThegramError("E_FORBIDDEN", "The selected Cloud vault is not accessible to this API key");
-    }
     const binding = await resolveProject(dir);
-    if (!binding)
-      lines.push(`project: none for ${dir} (not a git repository and no mapping)`);
-    else {
-      const via = binding.via === "repository" ? `bound by ${binding.tag}` : binding.via === "mapping" ? "projects.json mapping" : "root path only (run bind before moving it into a folder)";
-      try {
-        const brief = await callTool("gram_brief", { path: binding.path });
-        const docs = Array.isArray(brief.docs) ? brief.docs.length : 0;
-        lines.push(`project: ${binding.path} · ${docs} memory document · ${via}`);
-      } catch (error) {
-        if (errorCode(error) !== "E_NOT_FOUND")
-          throw error;
-        lines.push(`project: ${binding.path} · not created yet · ${via}`);
-      }
-      if (binding.others?.length)
-        lines.push(`warning: ${binding.tag} is also on ${binding.others.join(", ")}`);
-    }
+    const brief = await callTool("gram_brief", { path: binding.path });
+    const docs = Array.isArray(brief.docs) ? brief.docs.length : 0;
+    lines.push(`project: ${binding.path} · ${docs} memory document · bound by ${binding.tag}`);
   } catch (error) {
     failed = true;
-    lines.push(`Cloud: unavailable (${errorCode(error)}: ${error instanceof Error ? error.message : String(error)})`);
+    lines.push(`Cloud/project: unavailable (${errorCode(error)}: ${error instanceof Error ? error.message : String(error)})`);
   }
-  const mapped = Object.keys(await loadProjectMap()).length;
   const localPolicy = await readFile2(path2.join(configDir(), "policy.md"), "utf8").then(() => "present", () => "absent");
-  lines.push(`config: ${configDir()} · ${mapped} mapped directories · local policy ${localPolicy}`);
+  lines.push(`config: ${configDir()} · local policy ${localPolicy}`);
   lines.push(`hook state: ${stateDir()}`);
   process.stdout.write(`${lines.join(`
 `)}
@@ -1104,44 +989,103 @@ async function doctor(dir) {
   return failed ? 1 : 0;
 }
 async function bind(args) {
-  const projectFlag = args.indexOf("--project");
-  const chosen = projectFlag >= 0 ? args[projectFlag + 1] : undefined;
-  const dirArg = projectFlag >= 0 ? args.filter((_, index) => index !== projectFlag && index !== projectFlag + 1)[0] : args[0];
-  const dir = path2.resolve(dirArg ?? process.cwd());
-  const binding = await resolveProject(dir);
-  if (!binding)
-    throw new ThegramError("E_CONFIG", `${dir} is not a Git repository and has no mapping`);
-  if (!binding.tag)
-    throw new ThegramError("E_CONFIG", "This repository has no origin remote; map it in projects.json instead");
-  if (binding.via === "repository") {
-    process.stdout.write(`${binding.path}#${binding.projectId} already carries ${binding.tag}
+  let document;
+  let project;
+  let explicitRepo;
+  let directory;
+  const seen = new Set;
+  for (let index = 0;index < args.length; index++) {
+    const arg = args[index];
+    if (arg.startsWith("--")) {
+      if (!["--document", "--project", "--repository"].includes(arg) || seen.has(arg)) {
+        throw new ThegramError("E_ARGUMENT", `Unknown or repeated bind option: ${arg}`);
+      }
+      seen.add(arg);
+      const value = args[++index];
+      if (!value || value.startsWith("--"))
+        throw new ThegramError("E_ARGUMENT", `${arg} requires a value`);
+      if (arg === "--document")
+        document = value;
+      else if (arg === "--project")
+        project = value;
+      else
+        explicitRepo = value;
+    } else if (directory === undefined)
+      directory = arg;
+    else
+      throw new ThegramError("E_ARGUMENT", "bind accepts at most one repository directory");
+  }
+  const documentParts = document?.split("/") ?? [];
+  if (!document || documentParts.length < 3 || documentParts[0] !== "@mounts" || !/^[A-Za-z0-9_-]+$/.test(documentParts[1]) || !documentParts.slice(2).every((part) => part && part.trim() === part && part !== "." && part !== ".." && !/[\u0000-\u001f]/.test(part)) || !/^[^.].*\.gram$/.test(documentParts[documentParts.length - 1])) {
+    throw new ThegramError("E_ARGUMENT", "bind requires --document @mounts/<vault-id>/<existing-document>.gram");
+  }
+  const cwd = path2.resolve(directory ?? process.cwd());
+  let identity;
+  if (explicitRepo) {
+    const candidate = explicitRepo.includes("://") || /^[^@\s]+@[^:/\s]+:/.test(explicitRepo) ? explicitRepo : `https://${explicitRepo}`;
+    identity = repositoryId(candidate);
+  } else {
+    identity = (await repositoryTag(cwd)).slice("repo:".length);
+  }
+  if (!identity || identity.split("/").length < 3 || identity.split("/").some((part) => !part || /[\s:@]/.test(part))) {
+    throw new ThegramError("E_ARGUMENT", "Use an exact repository identity such as --repository host/group/subgroup/repository.");
+  }
+  const tag = `repo:${identity}`;
+  const deadline = Date.now() + 15000;
+  const remaining = () => {
+    const milliseconds = deadline - Date.now();
+    if (milliseconds <= 0)
+      throw new ThegramError("E_TIMEOUT", "Project binding exceeded its time budget");
+    return milliseconds;
+  };
+  const { claims, vaults } = await repositoryLookup(tag, deadline);
+  const mount = vaults.get(document.split("/").slice(0, 2).join("/"));
+  if (!mount)
+    throw new ThegramError("E_PROJECT_DESTINATION", "bind requires an accessible Vault document, not another storage provider");
+  if (mount.access !== "write")
+    throw new ThegramError("E_READ_ONLY", "bind requires write access to the target Vault");
+  let cursor;
+  const ids = new Set;
+  do {
+    if (deadline <= Date.now())
+      throw new ThegramError("E_TIMEOUT", "Project record lookup exceeded its time budget");
+    const listed = await callTool("gram_list", { path: document, select: { type: "project" }, limit: 100, ...cursor === undefined ? {} : { cursor } }, remaining());
+    for (const row of rowsOf(listed.records)) {
+      const ref = String(row[0]);
+      const at = ref.lastIndexOf("#");
+      if (ref)
+        ids.add(at >= 0 ? ref.slice(at + 1) : ref);
+    }
+    cursor = listed.more;
+  } while (cursor !== undefined && cursor !== null && cursor !== "");
+  const chosen = project ?? (ids.size === 1 ? ids.values().next().value : undefined);
+  if (!chosen || !ids.has(chosen))
+    throw new ThegramError("E_ARGUMENT", `Choose a project record with --project: ${[...ids].join(", ") || "(none)"}`);
+  const targetRef = `${document}#${chosen}`;
+  if (claims.size > 0) {
+    if (claims.size === 1 && claims.has(targetRef)) {
+      process.stdout.write(`${targetRef} already carries ${tag}
 `);
-    return 0;
+      return 0;
+    }
+    throw new ThegramError("E_PROJECT_AMBIGUOUS", `Repository tag ${tag} already belongs to ${[...claims.keys()].join(", ")}; resolve that association before binding another project record.`);
   }
-  const listed = await callTool("gram_list", { path: binding.path, select: { type: "project" } });
-  const ids = rowsOf(listed.records).map((row) => String(row[0]).slice(String(row[0]).lastIndexOf("#") + 1));
-  if (ids.length === 0)
-    throw new ThegramError("E_NOT_FOUND", `${binding.path} has no project record yet; it is tagged when it is created`);
-  const project = chosen ?? (ids.length === 1 ? ids[0] : undefined);
-  if (!project || !ids.includes(project)) {
-    throw new ThegramError("E_ARGUMENT", `Choose the root project record with --project: ${ids.join(", ")}`);
-  }
-  const context = await callTool("gram_context", { ids: [{ path: binding.path, entity: project }], fields: ["tag"] });
+  const context = await callTool("gram_context", { ids: [{ path: document, entity: chosen }], fields: ["tag"] }, remaining());
   const item = Array.isArray(context.items) ? context.items.find(isJson) : undefined;
   const fields = item && isJson(item.fields) ? item.fields : {};
   const tags = Array.isArray(fields.tag) ? fields.tag.map(String) : [];
-  if (tags.includes(binding.tag)) {
-    process.stdout.write(`${binding.path}#${project} already carries ${binding.tag}
+  if (tags.includes(tag)) {
+    process.stdout.write(`${targetRef} already carries ${tag}
 `);
     return 0;
   }
   const written = await callTool("gram_patch", {
-    path: binding.path,
-    request_id: `bind-${project}-${binding.tag}`.replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 120),
-    operations: [{ op: "set", entity: project, key: "tag", values: [...tags, binding.tag], old: tags.length ? tags : null }]
-  });
+    path: document,
+    request_id: `bind-${randomUUID2()}`,
+    operations: [{ op: "set", entity: chosen, key: "tag", values: [...tags, tag], old: tags.length ? tags : null }]
+  }, remaining());
   const doc = isJson(written.doc) ? written.doc : {};
-  process.stdout.write(`${binding.path}#${project} now carries ${binding.tag} (r${String(doc.rev)}); the document can be moved into a folder.
+  process.stdout.write(`${document}#${chosen} now carries ${tag} (r${String(doc.rev)}).
 `);
   return 0;
 }

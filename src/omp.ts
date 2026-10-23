@@ -100,10 +100,6 @@ export default function thegramMemory(pi: ExtensionAPI): void {
 		handler: async (_args, ctx) => {
 			try {
 				const binding = await resolveProject(ctx.cwd);
-				if (!binding) {
-					ctx.ui.notify("thegram: no project for this directory (not a git repository and no mapping)", "warning");
-					return;
-				}
 				const brief = await callTool("gram_brief", { path: binding.path });
 				const docs = Array.isArray(brief.docs)
 					? brief.docs.map(row => (Array.isArray(row) ? `${row[0]} r${row[2]}` : "")).join(", ")
@@ -111,7 +107,7 @@ export default function thegramMemory(pi: ExtensionAPI): void {
 				const open = Array.isArray(brief.open) ? brief.open.length : 0;
 				ctx.ui.notify(`thegram: ${binding.path} (${binding.via}) · ${docs} · open ${open} · next ${str(brief.next)}`, "info");
 			} catch (error) {
-				ctx.ui.notify(`thegram: unavailable (${errorCode(error)})`, "error");
+				ctx.ui.notify(`thegram: unavailable (${errorCode(error)}): ${error instanceof Error ? error.message : String(error)}`, "error");
 			}
 		},
 	});

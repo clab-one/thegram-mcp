@@ -79,10 +79,15 @@ function createSessions(directory: () => string) {
 	return {
 		async prompt(id: string, text: string): Promise<void> {
 			const session = get(id);
+			const connection = session.state.connection;
+			const document = session.state.documentPath;
 			session.state.turn = newTurn();
 			session.turn = undefined;
 			session.reminder = undefined;
 			const orientation = await orient(session.state, directory(), text);
+			if (!session.state.available || connection !== session.state.connection || document !== session.state.documentPath) {
+				session.memory = [];
+			}
 			if (!orientation) return;
 			const rendered = renderOrientation(orientation);
 			if (orientation.policy) session.memory = [rendered];

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+from contextlib import ExitStack
 import json
 import os
 from pathlib import Path
@@ -32,12 +33,28 @@ def account(method, route, body=None):
 issued = account('POST', '/v1/me/api-keys', {'name': 'Hidden terminal input E2E', 'vaults': {state['vault']: 'read'}, 'drive': {}})
 child, master = None, None
 proof = {'passed': False, 'actualTTY': True}
+
+def stop_terminal():
+    global master
+    if child is not None and child.poll() is None:
+        child.terminate()
+        try:
+            child.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.wait(timeout=5)
+    if master is not None:
+        os.close(master)
+        master = None
+
 try:
-    with tempfile.TemporaryDirectory(prefix='thegram-hidden-tty-') as config:
-        environment = {key: value for key, value in os.environ.items() if key not in ('THEGRAM_API_KEY', 'THEGRAM_MCP_URL', 'THEGRAM_MCP_MOUNT', 'NODE_OPTIONS')}
+    with ExitStack() as resources:
+        config = resources.enter_context(tempfile.TemporaryDirectory(prefix='thegram-hidden-tty-'))
+        resources.callback(stop_terminal)
+        environment = {key: value for key, value in os.environ.items() if key not in ('THEGRAM_API_KEY', 'THEGRAM_MCP_URL', 'NODE_OPTIONS')}
         environment['XDG_CONFIG_HOME'] = config
         master, slave = pty.openpty()
-        child = subprocess.Popen([shutil.which('node'), str(cli), 'connect', '--url', state['server'] + '/mcp', '--mount', '@mounts/' + state['vault']], stdin=slave, stdout=slave, stderr=slave, env=environment, close_fds=True)
+        child = subprocess.Popen([shutil.which('node'), str(cli), 'connect', '--url', state['server'] + '/mcp'], stdin=slave, stdout=slave, stderr=slave, env=environment, close_fds=True)
         os.close(slave)
         captured, sent = b'', False
         deadline = time.monotonic() + 15
@@ -63,10 +80,10 @@ try:
         proof.update({'passed': True, 'secretNotEchoed': True, 'credentialMode': '0600', 'exitCode': code, 'inputSentOnFirstTerminalOutput': True})
         print('PASS real TTY hidden-key connection')
 finally:
-    if child is not None and child.poll() is None:
-        child.terminate()
-        child.wait(timeout=5)
-    if master is not None:
-        os.close(master)
-    account('DELETE', '/v1/me/api-keys/' + issued['id'])
-    report.write_text(json.dumps(proof, indent=2) + '\n')
+    try:
+        stop_terminal()
+    finally:
+        try:
+            account('DELETE', '/v1/me/api-keys/' + issued['id'])
+        finally:
+            report.write_text(json.dumps(proof, indent=2) + '\n')

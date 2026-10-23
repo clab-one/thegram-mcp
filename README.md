@@ -78,9 +78,9 @@ node dist/thegram-memory.mjs connect
 node dist/thegram-memory.mjs doctor
 ```
 
-`connect` hides terminal input, verifies the key and asks you to choose a Cloud vault when more than one is accessible. For noninteractive input, pass the key on stdin and select the exact mount with `--mount @mounts/<vault-id>`. It is saved in `~/.config/thegram-memory/connection.json` with directory mode `0700` and file mode `0600` on POSIX. `XDG_CONFIG_HOME` changes the configuration root. Keep that file private.
+`connect` hides terminal input and verifies the key by discovering the mounts available to that credential. Noninteractive input passes the key on stdin; no vault is selected or persisted locally. The credential is saved in `~/.config/thegram-memory/connection.json` with directory mode `0700` and file mode `0600` on POSIX. `XDG_CONFIG_HOME` changes the configuration root. Keep that file private.
 
-For a managed secret store, supply `THEGRAM_API_KEY` and `THEGRAM_MCP_MOUNT` through the host's environment instead of saving the key. The MCP endpoint is `https://vault.thegram.one/mcp`. `THEGRAM_MCP_URL` selects an explicitly configured HTTPS endpoint; HTTP is accepted only on a loopback IP for local E2E. A saved key cannot be redirected to another endpoint by changing the URL alone.
+For a managed secret store, supply `THEGRAM_API_KEY` through the host's environment instead of saving the key. The MCP endpoint is `https://vault.thegram.one/mcp`. `THEGRAM_MCP_URL` selects an explicitly configured HTTPS endpoint; HTTP is accepted only on a loopback IP for local E2E. A saved key cannot be redirected to another endpoint by changing the URL alone.
 
 Restart the agent session after installation. Remove any old manually registered `thegram` MCP server so only this plugin supplies that binding. All coding hosts use the same API-key connection. ChatGPT and Claude cloud users install their respective OAuth ZIP from `thegram-one/thegram-plugin`; updating those ZIPs keeps their stable plugin/server identity rather than replacing OAuth with an API key.
 
@@ -88,27 +88,20 @@ Restart the agent session after installation. Remove any old manually registered
 
 ## Project memory
 
-Each Git repository binds to one document: the document whose root project record carries the tag `repo:<host/owner/name>` of its `origin` remote, in any folder of any vault the key can read (the selected vault first), else `@mounts/<selected-vault-id>/<repository>.gram`; worktrees share the same document. Documents created by the plugin carry the tag. For an older document, run `node dist/thegram-memory.mjs bind` in the repository once (`--project <id>` when it has several project records); after that it can be moved into a folder without the plugin creating a duplicate at the root. `doctor` shows how the repository is bound. Names that cannot be Cloud filenames receive a deterministic hash suffix. Existing local-only memory is not uploaded or silently migrated.
+Each Git repository is resolved afresh from the exact `repo:<host>/<repository-path>` tag on an existing project record, searching currently authorized Vault documents and following every result page. Exactly one project record must match, including within a shared document; missing and duplicate associations stop memory use without guessing a path, creating a document or issuing a write reminder. Git worktrees share the origin identity. For an existing document, run `node dist/thegram-memory.mjs bind --document @mounts/<vault-id>/<document>.gram` in the repository (add `--project <id>` if it contains multiple project records); the command only adds the server-side repository tag and refuses an association already claimed elsewhere. A known remote identity may be supplied explicitly with `--repository <host>/<repository-path>`, including nested groups, but is never cached as a local destination. A non-Git directory has no automatic project binding; choose its existing document explicitly for any intended work. `projects.json` and old saved mount selections are ignored and never used as destinations.
 
 At session start the adapter injects the exact document's brief, recalls only within that document and then reads incremental changes. Source edits, commits, pushes, releases and deploys can trigger a reminder; a Stop hook (Claude Code, Codex) or `session_stop` (OMP) can ask once for a continuation. The adapter does not authorize storage: the shared skill requires the person's established purpose/destination authorization, and a read-only key never authorizes a write reminder. The agent records only a qualifying authorized outcome or explains why nothing was saved.
 
-Map a directory to a different Cloud document, folders allowed, in `~/.config/thegram-memory/projects.json` (longest prefix wins; a mapping wins over the tag):
-
-```json
-{ "~/work/my-project": "@mounts/<vault-id>/shared-project.gram" }
-```
-
-Old desktop-folder mappings must be replaced with explicit Cloud document paths. Add personal instructions in `~/.config/thegram-memory/policy.md`. Google Drive access is granted separately in Thegram; these automatic repository bindings select Cloud vault documents, while the MCP tools can access other mounts permitted by the key.
+Add personal instructions in `~/.config/thegram-memory/policy.md`. Google Drive access is granted separately in Thegram; automatic repository discovery selects only Vault documents visible to the current key.
 
 ## Development
 
 ```sh
 bun run bundle
-THEGRAM_E2E_STATE=/path/to/local-fixture-state.json THEGRAM_E2E_REPORT=/path/to/report.json node --experimental-strip-types e2e/cloud.mjs
-python3 e2e/hidden_tty.py --state /path/to/local-fixture-state.json --evidence /path/to/tty-report.json
+python3 e2e/cloud-local.py --vaultd /path/to/vaultd --accessd /path/to/accessd --core /path/to/gram --work /path/to/disposable-work --evidence /path/to/evidence
 ```
 
-The E2Es use the real loopback Vault/key-authority fixture, issue and revoke scratch keys, exercise the packaged CLI, stdio MCP and project hooks, and retain redacted JSON reports. The terminal regression types immediately when the prompt appears and verifies that the key is never echoed. Private temporary configurations are removed; fixtures and writable vaults must be disposable.
+Build all binaries and host adapters first, then run the complete local E2E once. It starts real loopback Vault, Access and Core with isolated synthetic accounts, covers discovery pagination, stale settings, moves, ambiguity, account changes, live grant changes, CLI/stdio and real terminal secret input, and retains redacted `report.json`, `tty.json`, `runner.json` and server logs. Fixture processes stop before their private data is removed. It never accesses production or existing credentials.
 
 ```sh
 node e2e/authoring/run.mjs --skill skills/thegram-memory --variant <name> --doc-root '@mounts/<vault>/<folder>' --out /path/to/evidence --ui /path/to/thegram-ui
