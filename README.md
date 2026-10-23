@@ -21,6 +21,8 @@ The shared references map data to the 60-kind widget catalog, including task/goa
 
 Scheduled automations (3.3.0): a document a scheduled run writes records one `run` event per run (`failed:<source>` tags for unread sources), keeps each found item under one stable ID with `ref`, `at` and `source:`/`topic:` tags linked `derives` only to the run that first found it, and tags watched things `target`. The 리서치, 감시·알림 and 수집 일지 dashboards in thegram-ui 3.31.0 read exactly this shape.
 
+Document chat read mode (3.5.0): `chat_task_get` returns whether a request was sent in read or edit mode. In read mode answer with the reply alone and never submit operations; if an edit is refused with `E_READ_ONLY`, resubmit the reply without operations.
+
 Agent work (3.4.0): an agent records each piece of work as one `task` (`owner` its agent name, `s` the repository, `start`, `done`), moves `x` as the work moves (`review` for the person's review, `waiting` with the question, `blocked` with what stops it, `completed` with the outcome), and records each PR, merge, release, deployment or verification as one step `event` linked `part-of` that task, never one per commit or test run. The AI 작업 보드 dashboard in thegram-ui 3.32.0 reads exactly this shape.
 
 Offline validation: `python3 -m unittest discover -s tests -p 'test_*.py' -v`. Set `GRAM_CORE_BINARY` for native scratch readback tests. Set `THEGRAM_UI_SOURCE` and run `TZ=UTC node --test tests/widget_contract.test.mjs` against the matching UI checkout for actual selector/readiness checks. Tests use synthetic data and do not modify user documents.
