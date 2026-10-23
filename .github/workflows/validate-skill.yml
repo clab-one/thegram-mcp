@@ -1,13 +1,19 @@
-name: Validate shared memory skill
+name: Build memory plugin
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
-  semantic-fixtures:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: '3.12'
-      - run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.14'
+      - run: bun run bundle
+      - run: bun build src/omp.ts src/opencode.ts --target=node --format=esm --outdir=.work/adapters '--external=@oh-my-pi/*'
+      - run: node --check e2e/cloud.mjs
+      - run: python3 -m py_compile e2e/cloud-local.py e2e/hidden_tty.py

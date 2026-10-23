@@ -25,7 +25,16 @@ Document chat read mode (3.5.0): `chat_task_get` returns whether a request was s
 
 Agent work (3.4.0): an agent records each piece of work as one `task` (`owner` its agent name, `s` the repository, `start`, `done`), moves `x` as the work moves (`review` for the person's review, `waiting` with the question, `blocked` with what stops it, `completed` with the outcome), and records each PR, merge, release, deployment or verification as one step `event` linked `part-of` that task, never one per commit or test run. The AI 작업 보드 dashboard in thegram-ui 3.32.0 reads exactly this shape.
 
-Offline validation: `python3 -m unittest discover -s tests -p 'test_*.py' -v`. Set `GRAM_CORE_BINARY` for native scratch readback tests. Set `THEGRAM_UI_SOURCE` and run `TZ=UTC node --test tests/widget_contract.test.mjs` against the matching UI checkout for actual selector/readiness checks. Tests use synthetic data and do not modify user documents.
+## Search-first project memory (3.5.1)
+
+Version 3.5.1 removes local document-path bindings and selected-vault fallback. Existing credentials still work, but `projects.json`, saved mount choices and `THEGRAM_MCP_MOUNT` no longer choose a destination; `connect --mount` is removed. The adapter searches currently authorized Vault documents by the repository tag and requires exactly one matching project record. It does not create a replacement when a document is missing.
+
+Update the plugin and restart the host session. If an existing project record lacks a repository tag, associate that record once with `node dist/thegram-memory.mjs bind --document @mounts/<vault-id>/<document>.gram [--project <id>]` from its repository. No credential replacement or permission expansion is needed. Non-Git directories have no inferred repository identity.
+
+Rollback installs the previous plugin release without changing Cloud documents or credentials; it also restores that release's local-path behavior.
+
+
+Release verification uses the complete local E2E in Development after all builds; the CI workflow builds the distributable and host adapters without running separate unit or slice tests.
 
 ## Requirements
 
